@@ -126,9 +126,7 @@ export default function Variable({ variable, updateVariable }) {
                 newCounts[index] = newHeight;
 
                 // Set the actual counts
-                let newVariable = { ...variable };
-                newVariable = { ...newVariable, counts: newCounts };
-                updateVariable(newVariable);
+                updateVariable(variable.name, "counts", newCounts);
                 setCounts(newCounts);
             });
 
