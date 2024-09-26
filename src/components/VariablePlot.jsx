@@ -2,14 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 
 // Define the Variable Component
-export default function Variable({ variable, updateVariable }) {
+export default function VariablePlot({ variable, updateVariable }) {
     const [counts, setCounts] = useState([]);
 
     // Draw initial empty histogram
     useEffect(() => {
-        console.log("init histogram")
+        console.log("counts changed", variable.counts);
         setCounts(variable.counts);
-    }, []);
+    }, [variable.counts]);
 
     useEffect(() => {
         console.log("update counts")

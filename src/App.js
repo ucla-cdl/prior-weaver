@@ -7,6 +7,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path={routes.home} element={<Workspace />}></Route>
         <Route path={routes.workspace} element={<Workspace />}></Route>
       </Routes>
     </Router>
