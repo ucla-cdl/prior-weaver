@@ -23,8 +23,8 @@ export default function Workspace(props) {
 
     const [selectedVariables, setSelectedVariables] = useState([]);
 
-    const [bivariateVar1, setBivariateVar1] = useState('');
-    const [bivariateVar2, setBivariateVar2] = useState('');
+    const [bivariateVarName1, setBivariateVarName1] = useState('');
+    const [bivariateVarName2, setBivariateVarName2] = useState('');
     const [biVariableDict, setBiVariableDict] = useState({});
 
     const addNewVariable = () => {
@@ -59,26 +59,37 @@ export default function Workspace(props) {
             }
         };
 
+        // Add a bivariable relationship
+        Object.entries(variablesDict).forEach(([varName, variable]) => {
+            let biVarName = varName + "-" + newVarName;
+            console.log("add bi-var relation:", newVarName, varName);
+            setBiVariableDict(prev => ({
+                ...prev,
+                [biVarName]: {
+                    name: biVarName,
+                    predictionDots: [],
+                    chipDots: []
+                }
+            }))
+        })
+
         setVariablesDict(prev => ({ ...prev, [newVariable.name]: newVariable }));
     };
 
     const updateVariable = (name, key, value) => {
+        console.log("update variable", name, key, value);
         setVariablesDict(prev => ({
             ...prev,
             [name]: { ...prev[name], [key]: value }
         }));
     }
 
-    useEffect(() => {
-        if (bivariateVar1 && bivariateVar2) {
-            console.log("update bivars");
-            setBivariateVar1(variablesDict[bivariateVar1.name]);
-            setBivariateVar2(variablesDict[bivariateVar2.name]);
-        }
-    }, [variablesDict]);
-
     const updateBivariable = (name, key, value) => {
-
+        console.log("update bivariable", name, key, value);
+        setBiVariableDict(prev => ({
+            ...prev,
+            [name]: { ...(prev[name] || {}), [key]: value }
+        }));
     }
 
     useEffect(() => {
@@ -88,7 +99,7 @@ export default function Workspace(props) {
     const handleClickVar = (varName) => {
         if (selectedVariables.includes(varName)) {
             let updatedvariables = selectedVariables;
-            updatedvariables = updatedvariables.splice(updatedvariables.indexOf(varName), 1)
+            updatedvariables = updatedvariables.filter(item => item !== varName)
             setSelectedVariables(updatedvariables);
         }
         else {
@@ -130,11 +141,11 @@ export default function Workspace(props) {
     }
 
     const handleSelectBiVar1 = (event) => {
-        setBivariateVar1(variablesDict[event.target.value]);
+        setBivariateVarName1(event.target.value);
     }
 
     const handleSelectBiVar2 = (event) => {
-        setBivariateVar2(variablesDict[event.target.value]);
+        setBivariateVarName2(event.target.value);
     }
 
     const addNewRelation = () => {
@@ -285,13 +296,13 @@ export default function Workspace(props) {
                             <InputLabel id="var-1-label">Variable 1</InputLabel>
                             <Select
                                 labelId='var-1-label'
-                                value={bivariateVar1 ? bivariateVar1.name : ''}
+                                value={bivariateVarName1}
                                 label="Variable 1"
                                 onChange={handleSelectBiVar1}
                             >
                                 {Object.entries(variablesDict).map(([varName, curVar], i) => {
                                     return (
-                                        <MenuItem disabled={varName == bivariateVar2?.name} key={i} value={varName}>{varName}</MenuItem>
+                                        <MenuItem disabled={varName == bivariateVarName2} key={i} value={varName}>{varName}</MenuItem>
                                     )
                                 })}
                             </Select>
@@ -300,21 +311,26 @@ export default function Workspace(props) {
                             <InputLabel id="var-2-label">Variable 2</InputLabel>
                             <Select
                                 labelId='var-2-label'
-                                value={bivariateVar2 ? bivariateVar2.name : ''}
+                                value={bivariateVarName2}
                                 label="Variable 2"
                                 onChange={handleSelectBiVar2}
                             >
                                 {Object.entries(variablesDict).map(([varName, curVar], i) => {
                                     return (
-                                        <MenuItem disabled={varName == bivariateVar1?.name} key={i} value={varName}>{varName}</MenuItem>
+                                        <MenuItem disabled={varName == bivariateVarName1} key={i} value={varName}>{varName}</MenuItem>
                                     )
                                 })}
                             </Select>
                         </FormControl>
                     </Box>
 
-                    {bivariateVar1 && bivariateVar2 ?
-                        <BiVariablePlot biVariable1={bivariateVar1} biVariable2={bivariateVar2} updateVariable={updateVariable} updateBivariable={updateBivariable} />
+                    {bivariateVarName1 !== '' && bivariateVarName2 !== ''?
+                        <BiVariablePlot
+                            biVariableDict={biVariableDict}
+                            biVariable1={variablesDict[bivariateVarName1]}
+                            biVariable2={variablesDict[bivariateVarName2]}
+                            updateVariable={updateVariable}
+                            updateBivariable={updateBivariable} />
                         :
                         <></>}
                 </Grid2>

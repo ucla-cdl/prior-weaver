@@ -3,18 +3,11 @@ import * as d3 from 'd3';
 
 // Define the Variable Component
 export default function VariablePlot({ variable, updateVariable }) {
-    const [counts, setCounts] = useState([]);
-
-    // Draw initial empty histogram
+    
     useEffect(() => {
-        console.log("counts changed", variable.counts);
-        setCounts(variable.counts);
-    }, [variable.counts]);
-
-    useEffect(() => {
-        console.log("update counts")
+        console.log("draw IV plot");
         drawIVHistogram();
-    }, [counts])
+    }, [variable.counts]);
 
     const drawIVHistogram = () => {
         const chartWidth = 600;
@@ -22,7 +15,7 @@ export default function VariablePlot({ variable, updateVariable }) {
         const offsetX = 60;
         const offsetY = 60;
 
-        let temporaryCounts = [...counts]; // A temporary copy for live preview
+        let temporaryCounts = [...variable.counts]; // A temporary copy for live preview
 
         // Clear the existing SVG
         document.getElementById("iv-distribution-" + variable.name).innerHTML = "";
@@ -36,7 +29,7 @@ export default function VariablePlot({ variable, updateVariable }) {
             .domain([variable.min, variable.max])
             .range([offsetX, chartWidth - offsetX]);
 
-        let maxY = d3.max(counts) < 8 ? 10 : d3.max(counts) + 2;
+        let maxY = d3.max(temporaryCounts) < 8 ? 10 : d3.max(temporaryCounts) + 2;
         let yScale = d3.scaleLinear()
             .domain([0, maxY])
             .range([chartHeight - offsetY, offsetY]);
@@ -122,22 +115,21 @@ export default function VariablePlot({ variable, updateVariable }) {
                 newHeight = Math.max(0, Math.min(newHeight, maxY));
 
                 // Update counts array
-                let newCounts = [...counts];
+                let newCounts = [...variable.counts];
                 newCounts[index] = newHeight;
 
                 // Set the actual counts
                 updateVariable(variable.name, "counts", newCounts);
-                setCounts(newCounts);
             });
 
 
         svg.selectAll('circle.toggle')
-            .data(d3.range(counts.length))  // Use the index range as data
+            .data(d3.range(temporaryCounts.length))  // Use the index range as data
             .enter()
             .append('circle')
             .attr('class', 'toggle')
             .attr('cx', (d, i) => (xScale(variable.binEdges[i]) + xScale(variable.binEdges[i + 1])) / 2)
-            .attr('cy', d => yScale(counts[d]))  // Use counts[d] since d is the index now
+            .attr('cy', d => yScale(temporaryCounts[d]))  // Use counts[d] since d is the index now
             .attr('r', 5)
             .attr('fill', 'white')
             .attr('stroke', 'black')
