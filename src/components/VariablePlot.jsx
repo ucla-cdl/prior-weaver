@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 
 // Define the Variable Component
 export default function VariablePlot({ variable, updateVariable }) {
-    
+
     useEffect(() => {
         console.log("draw IV plot");
         drawIVHistogram();
@@ -14,8 +14,7 @@ export default function VariablePlot({ variable, updateVariable }) {
         const chartHeight = 400;
         const offsetX = 60;
         const offsetY = 60;
-
-        let temporaryCounts = [...variable.counts]; // A temporary copy for live preview
+        const toggleHeight = 8;
 
         // Clear the existing SVG
         document.getElementById("iv-distribution-" + variable.name).innerHTML = "";
@@ -29,7 +28,7 @@ export default function VariablePlot({ variable, updateVariable }) {
             .domain([variable.min, variable.max])
             .range([offsetX, chartWidth - offsetX]);
 
-        let maxY = d3.max(temporaryCounts) < 8 ? 10 : d3.max(temporaryCounts) + 2;
+        let maxY = d3.max(variable.counts) < 8 ? 10 : d3.max(variable.counts) + 2;
         let yScale = d3.scaleLinear()
             .domain([0, maxY])
             .range([chartHeight - offsetY, offsetY]);
@@ -54,7 +53,7 @@ export default function VariablePlot({ variable, updateVariable }) {
 
         // Draw Histogram Bars
         let bars = svg.selectAll('rect')
-            .data(temporaryCounts)
+            .data(variable.counts)
             .enter()
             .append('rect')
             .attr('x', (d, i) => xScale(variable.binEdges[i]))
@@ -66,7 +65,7 @@ export default function VariablePlot({ variable, updateVariable }) {
 
         // Add labels on top of bars
         let labels = svg.selectAll('text.label')
-            .data(temporaryCounts)
+            .data(variable.counts)
             .enter()
             .append('text')
             .attr('class', 'label')
@@ -82,55 +81,44 @@ export default function VariablePlot({ variable, updateVariable }) {
             .on('drag', function (event) {
                 // Find the index of the current circle (toggle) being dragged
                 const index = d3.select(this).datum();
-
                 // Convert y-coordinate to bin height (rounded to nearest integer)
                 let newHeight = Math.round(yScale.invert(event.y));
-
                 // Ensure newHeight is constrained to valid values
                 newHeight = Math.max(0, Math.min(newHeight, maxY));
-
-                // Update the temporary counts array for live preview
-                temporaryCounts[index] = newHeight;
-
-                // Update the bar height for live preview
+                // Update the bar height
                 d3.select(bars.nodes()[index])
                     .attr('y', yScale(newHeight))
                     .attr('height', chartHeight - offsetY - yScale(newHeight));
-
-                // Update the label position and value
+                // Update the label
                 d3.select(labels.nodes()[index])
                     .attr('y', yScale(newHeight) - 10)
                     .text(newHeight);
-
-                // Update the position of the toggle circle
+                // Update the position of the toggle
                 d3.select(this)
-                    .attr('cy', yScale(newHeight));
+                    .attr('y', yScale(newHeight) - toggleHeight);
             })
             .on('end', function (event) {
                 // Find the index of the current circle (toggle) being dragged
                 const index = d3.select(this).datum();
-
                 // Convert y-coordinate to bin height (rounded to nearest integer)
                 let newHeight = Math.round(yScale.invert(event.y));
                 newHeight = Math.max(0, Math.min(newHeight, maxY));
-
                 // Update counts array
                 let newCounts = [...variable.counts];
                 newCounts[index] = newHeight;
-
-                // Set the actual counts
                 updateVariable(variable.name, "counts", newCounts);
             });
 
-
-        svg.selectAll('circle.toggle')
-            .data(d3.range(temporaryCounts.length))  // Use the index range as data
+        svg.selectAll('rect.toggle')
+            .data(d3.range(variable.counts.length))  // Use the index range as data
             .enter()
-            .append('circle')
+            .append('rect')
             .attr('class', 'toggle')
-            .attr('cx', (d, i) => (xScale(variable.binEdges[i]) + xScale(variable.binEdges[i + 1])) / 2)
-            .attr('cy', d => yScale(temporaryCounts[d]))  // Use counts[d] since d is the index now
-            .attr('r', 5)
+            .attr('x', d => xScale(variable.binEdges[d]))
+            .attr('y', d => yScale(variable.counts[d]) - toggleHeight)  // Use counts[d] since d is the index now
+            .attr('width', d => xScale(variable.binEdges[d + 1]) - xScale(variable.binEdges[d]))
+            .attr('height', toggleHeight)
+            .attr('rx', 5)
             .attr('fill', 'white')
             .attr('stroke', 'black')
             .attr('stroke-width', '1px')

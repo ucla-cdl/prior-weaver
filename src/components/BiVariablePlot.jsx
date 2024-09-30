@@ -11,13 +11,11 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
     const mainPlotWidth = chartWidth - margin.left - margin.right - marginalPlotWidth;
     const mainPlotHeight = chartHeight - margin.top - margin.bottom - marginalPlotHeight;
     const dotRadius = 5; // Radius of each dot
+    const toggleHeight = 7;
+    const labelOffset = 12;
 
     const MODES = ["PREDICT", "CHIP"];
     const [bivariateMode, setBivariateMode] = useState('PREDICT');
-
-    const [xScale, setXScale] = useState('');
-    const [yScale, setYScale] = useState('');
-    const [biVariable, setBivariable] = useState();
     const biVarName = biVariable1.name + "-" + biVariable2.name;
 
     useEffect(() => {
@@ -138,10 +136,11 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
         let chipDots = biVariableDict[biVarName].chipDots;
 
         // create marginal dot plot (top) - variable 1
-        let maxDotY = d3.max(biVariable1.counts) < 8 ? 10 : d3.max(biVariable1.counts) + 2;
-        let maxDotX = d3.max(biVariable2.counts) < 8 ? 10 : d3.max(biVariable2.counts) + 2;
+        let maxMarginDotX = d3.max(biVariable1.counts) < 8 ? 10 : d3.max(biVariable1.counts) + 2;
+        let maxMarginDotY = d3.max(biVariable2.counts) < 8 ? 10 : d3.max(biVariable2.counts) + 2;
 
         let xDotData = [];
+        let xHistData = [];
         biVariable1.counts.forEach((count, index) => {
             const x0 = biVariable1.binEdges[index];
             const x1 = biVariable1.binEdges[index + 1];
@@ -156,10 +155,17 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                     used: i < usedDotsCnt ? true : false
                 });
             }
+
+            xHistData.push({
+                posStart: x0,
+                posEnd: x1,
+                height: count
+            })
         });
 
         // create marginal dot plot (right) - variable 2
         let yDotData = [];
+        let yHistData = [];
         biVariable2.counts.forEach((count, index) => {
             const y0 = biVariable2.binEdges[index];
             const y1 = biVariable2.binEdges[index + 1];
@@ -174,43 +180,210 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                     used: i < usedDotsCnt ? true : false
                 });
             }
+
+            yHistData.push({
+                posStart: y0,
+                posEnd: y1,
+                height: count
+            })
         });
 
-        // Define the x-scale to control how the dots stack horizontally
-        const xDotScale = d3.scaleLinear()
-            .domain([0, maxDotX])
+        // Define the scale to control how the dots stack horizontally
+        const marginDotYScale = d3.scaleLinear()
+            .domain([0, maxMarginDotY])
             .range([0, marginalPlotWidth]); // Dots will stack leftwards
-        // Define the y-scale to control how the dots stack
-        const yDotScale = d3.scaleLinear()
-            .domain([0, maxDotY])
+        // Define the scale to control how the dots stack vertically
+        const marginDotXScale = d3.scaleLinear()
+            .domain([0, maxMarginDotX])
             .range([marginalPlotHeight, 0]); // Dots will stack upwards
-        // Append the margin dots for the marginal x-axis dot plot
+        // Draw marginal x-axis dot plot
         let marginalXPlot = svg.append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`)
             .attr("id", "margin-x-plot");
+        // Append Marginal X Histogram
+        let marginHistX = marginalXPlot
+            .selectAll("rect")
+            .data(xHistData)
+            .enter()
+            .append("rect")
+            .attr("class", "x-margin-rect")
+            .attr('x', d => xScale(d.posStart))
+            .attr('y', d => marginDotXScale(d.height))
+            .attr('width', d => xScale(d.posEnd) - xScale(d.posStart))
+            .attr('height', d => marginalPlotHeight - marginDotXScale(d.height))
+            .style('fill', 'lightblue')  // Light color for preview
+            .style('stroke', 'black');
+        // Add labels on top of bars
+        let marginXlabels = marginalXPlot.selectAll('text.label')
+            .data(xHistData)
+            .enter()
+            .append('text')
+            .attr('class', 'x-margin-label')
+            .attr('x', d => (xScale(d.posEnd) + xScale(d.posStart)) / 2)
+            .attr('y', d => marginDotXScale(d.height) - labelOffset)
+            .attr('text-anchor', 'middle')
+            .text(d => d.height)
+            .style('font-size', 12)
+            .style('font-family', 'Times New Roman')
+            .style('fill', 'black');
+
+        let dragBehaviorX =
+            d3.drag()
+                .on('drag', function (event) {
+                    // Find the index of the current circle (toggle) being dragged
+                    const index = d3.select(this).datum();
+                    // Convert y-coordinate to bin height (rounded to nearest integer)
+                    let newHeight = Math.round(marginDotXScale.invert(event.y));
+                    // Ensure newHeight is constrained to valid values
+                    newHeight = Math.max(0, Math.min(newHeight, maxMarginDotX));
+                    // Update the bar height for live preview
+                    d3.select(marginHistX.nodes()[index])
+                        .attr('y', marginDotXScale(newHeight))
+                        .attr('height', marginalPlotHeight - marginDotXScale(newHeight));
+
+                    // Update the label position and value
+                    d3.select(marginXlabels.nodes()[index])
+                        .attr('y', marginDotXScale(newHeight) - labelOffset)
+                        .text(newHeight);
+
+                    // Update the position of the toggle circle
+                    d3.select(this)
+                        .attr('y', marginDotXScale(newHeight) - toggleHeight);
+                })
+                .on('end', function (event) {
+                    // Find the index of the current circle (toggle) being dragged
+                    const index = d3.select(this).datum();
+
+                    // Convert y-coordinate to bin height (rounded to nearest integer)
+                    let newHeight = Math.round(marginDotXScale.invert(event.y));
+                    newHeight = Math.max(0, Math.min(newHeight, maxMarginDotX));
+
+                    // Update counts array
+                    let newCounts = [...biVariable1.counts];
+                    newCounts[index] = newHeight;
+
+                    // Set the actual counts
+                    updateVariable(biVariable1.name, "counts", newCounts);
+                })
+
+        // Append Marginal X Toggle
+        marginalXPlot.selectAll('rect.toggle')
+            .data(d3.range(xHistData.length))  // Use the index range as data
+            .enter()
+            .append('rect')
+            .attr('class', 'x-margin-rect-toggle')
+            .attr('x', d => xScale(xHistData[d].posStart))
+            .attr('y', d => marginDotXScale(xHistData[d].height) - toggleHeight)
+            .attr('width', d => xScale(xHistData[d].posEnd) - xScale(xHistData[d].posStart))
+            .attr('height', toggleHeight)
+            .attr('rx', 5)
+            .attr('fill', 'white')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '1px')
+            .call(dragBehaviorX);
+        // Append Marginal X Dots
         marginalXPlot
             .selectAll("circle")
             .data(xDotData)
             .enter()
             .append("circle")
-            .attr("class", "x-dot")
+            .attr("class", "x-margin-dot")
             .attr("cx", d => xScale(d.position)) // Place dot at the bin's center on the x-axis
-            .attr("cy", d => yDotScale(d.row + 1)) // Stack dots by their row value
+            .attr("cy", d => marginDotXScale(d.row) - dotRadius) // Stack dots by their row value
             .attr("r", dotRadius) // Set radius of the dot
             .style("fill", d => d.used ? "gray" : "white")
             .style("stroke", "black")
             .style("stroke-width", "1px")
-        // Append the margin dots for the marginal y-axis dot plot
+
+        // Draw marginal y-axis plot
         let marginalYPlot = svg.append("g")
             .attr("transform", `translate(${margin.left + mainPlotWidth}, ${margin.top + marginalPlotHeight})`)
             .attr("id", "margin-y-plot");
+        // Append Marginal Y Histogram
+        let marginHistY = marginalYPlot
+            .selectAll("rect")
+            .data(yHistData)
+            .enter()
+            .append("rect")
+            .attr("class", "y-margin-rect")
+            .attr('x', d => 0)
+            .attr('y', d => yScale(d.posEnd))
+            .attr('width', d => marginDotYScale(d.height))
+            .attr('height', d => yScale(d.posStart) - yScale(d.posEnd))
+            .style('fill', 'lightblue')  // Light color for preview
+            .style('stroke', 'black');
+        // Add Marginal Y labels
+        let marginYlabels = marginalYPlot.selectAll('text.label')
+            .data(yHistData)
+            .enter()
+            .append('text')
+            .attr('class', 'y-margin-label')
+            .attr('x', d => marginDotYScale(d.height) + labelOffset)
+            .attr('y', d => (yScale(d.posEnd) + yScale(d.posStart)) / 2)
+            .attr('text-anchor', 'middle')
+            .text(d => d.height)
+            .style('font-size', 12)
+            .style('font-family', 'Times New Roman')
+            .style('fill', 'black');
+
+        let dragBehaviorY = d3.drag()
+            .on('drag', function (event) {
+                // Find the index of the current circle (toggle) being dragged
+                const index = d3.select(this).datum();
+                // Convert y-coordinate to bin height (rounded to nearest integer)
+                let newWidth = Math.round(marginDotYScale.invert(event.x));
+                // Ensure newHeight is constrained to valid values
+                newWidth = Math.max(0, Math.min(newWidth, maxMarginDotY));
+                d3.select(marginHistY.nodes()[index])
+                    .attr('width', marginDotYScale(newWidth));
+
+                // Update the label position and value
+                d3.select(marginYlabels.nodes()[index])
+                    .attr('x', marginDotYScale(newWidth) + labelOffset)
+                    .text(newWidth);
+
+                d3.select(this)
+                    .attr('x', marginDotYScale(newWidth));
+            })
+            .on('end', function (event) {
+                // Find the index of the current circle (toggle) being dragged
+                const index = d3.select(this).datum();
+
+                // Convert y-coordinate to bin height (rounded to nearest integer)
+                let newWidth = Math.round(marginDotYScale.invert(event.x));
+                newWidth = Math.max(0, Math.min(newWidth, maxMarginDotY));
+
+                // Update counts array
+                let newCounts = [...biVariable2.counts];
+                newCounts[index] = newWidth;
+
+                // Set the actual counts
+                updateVariable(biVariable2.name, "counts", newCounts);
+            })
+
+        // Append Marginal Y Toggle
+        marginalYPlot.selectAll('rect.toggle')
+            .data(d3.range(yHistData.length))  // Use the index range as data
+            .enter()
+            .append('rect')
+            .attr('class', 'y-margin-rect-toggle')
+            .attr('x', d => marginDotYScale(yHistData[d].height))
+            .attr('y', d => yScale(yHistData[d].posEnd))
+            .attr('width', toggleHeight)
+            .attr('height', d => yScale(yHistData[d].posStart) - yScale(yHistData[d].posEnd))
+            .attr('rx', 5)
+            .attr('fill', 'white')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '1px')
+            .call(dragBehaviorY);
+        // Append Marginal Y Dots
         marginalYPlot
             .selectAll("circle")
             .data(yDotData)
             .enter()
             .append("circle")
-            .attr("class", "y-dot")
-            .attr("cx", d => xDotScale(d.row + 1)) // Stack dots by their row value (horizontally)
+            .attr("class", "y-margin-dot")
+            .attr("cx", d => dotRadius + marginDotYScale(d.row)) // Stack dots by their row value (horizontally)
             .attr("cy", d => yScale(d.position)) // Place dot at the bin's center on the y-axis
             .attr("r", dotRadius) // Set radius of the dot
             .style("fill", d => d.used ? "gray" : "white")
@@ -294,10 +467,10 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                         if (xAvailableChip && yAvailableChip) {
                             console.log(`move chip to (${clickValueX}, ${clickValueY})`)
                             // set the two available chips as used
-                            d3.selectAll(".x-dot")
+                            d3.selectAll(".x-margin-dot")
                                 .filter(d => d.position === xAvailableChip.position && d.row === xAvailableChip.row)
                                 .style("fill", "gray");
-                            d3.selectAll(".y-dot")
+                            d3.selectAll(".y-margin-dot")
                                 .filter(d => d.position === yAvailableChip.position && d.row === yAvailableChip.row)
                                 .style("fill", "gray");
                             xAvailableChip.used = true;
@@ -425,11 +598,11 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
             .filter(d => d.position === (biVariable2.binEdges[binIndexY] + biVariable2.binEdges[binIndexY + 1]) / 2 && d.used)
             .sort((a, b) => b.row - a.row)[0];
 
-        d3.selectAll(".x-dot")
+        d3.selectAll(".x-margin-dot")
             .filter(d => d.position === revokeXDot.position && d.row === revokeXDot.row)
             .style("fill", "white");
 
-        d3.selectAll(".y-dot")
+        d3.selectAll(".y-margin-dot")
             .filter(d => d.position === revokeYDot.position && d.row === revokeYDot.row)
             .style("fill", "white");
 
