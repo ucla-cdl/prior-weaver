@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { graphviz } from "d3-graphviz";
 import "./Workspace.css";
-import { Button, TextField, Slider, Typography, Box, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Grid2, InputLabel, FormControl } from '@mui/material';
+import { Button, TextField, Slider, Typography, Box, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Grid2, InputLabel, FormControl, Stack } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 
@@ -50,7 +50,6 @@ export default function Workspace(props) {
             name: newVarName,
             min: newMin,
             max: newMax,
-            numBins: newBins,
             binEdges: binEdges,
             counts: Array(newBins).fill(0),
             relations: {
@@ -68,6 +67,7 @@ export default function Workspace(props) {
                 [biVarName]: {
                     name: biVarName,
                     predictionDots: [],
+                    populateDots: [],
                     chipDots: []
                 }
             }))
@@ -75,6 +75,14 @@ export default function Workspace(props) {
 
         setVariablesDict(prev => ({ ...prev, [newVariable.name]: newVariable }));
     };
+
+    useEffect(() => {
+        let newVariableDict = {};
+        Object.entries(variablesDict).forEach(([varName, variable]) => {
+            let newBinEdges = d3.range(newBins + 1).map(i => variable.min + i * (variable.max - variable.min) / newBins);
+            // TODO: how to deal with the change of bin number? how to split the counts?
+        })
+    }, [newBins])
 
     const updateVariable = (name, key, value) => {
         console.log("update variable", name, key, value);
@@ -202,16 +210,6 @@ export default function Workspace(props) {
                         onChange={(e) => setNewMax(parseFloat(e.target.value))}
                     />
                     <Typography gutterBottom>Number of Bins</Typography>
-                    <Slider
-                        value={newBins}
-                        onChange={(e, val) => setNewBins(val)}
-                        aria-labelledby="bins-slider"
-                        valueLabelDisplay="auto"
-                        step={1}
-                        marks
-                        min={5}
-                        max={50}
-                    />
                 </DialogContent>
                 <DialogActions>
                     <Button color='danger' onClick={handleCloseAddVariableDialog}>Cancel</Button>
@@ -278,12 +276,26 @@ export default function Workspace(props) {
 
             <Grid2 container spacing={1}>
                 <Grid2 size={5}>
-                    <Box className="module-div" sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
-                        <div id='conceptual-model-div'></div>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box className="module-div">
+                        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: "space-around" }}>
                             <Button variant="outlined" onClick={addNewVariable}>Add Variable</Button>
-                            <Button sx={{ my: 1 }} variant="outlined" onClick={addNewRelation}>Add Relation</Button>
+                            <Button variant="outlined" onClick={addNewRelation}>Add Relation</Button>
+                            <Stack spacing={1} direction="row" sx={{ alignItems: 'center' }}>
+                                <Typography sx={{ fontWeight: 'bold' }}># of Bin:</Typography>
+                                <Slider
+                                    sx={{ width: "200px" }}
+                                    value={newBins}
+                                    onChange={(e, val) => setNewBins(val)}
+                                    aria-labelledby="bins-slider"
+                                    valueLabelDisplay="auto"
+                                    step={1}
+                                    marks
+                                    min={2}
+                                    max={20}
+                                />
+                            </Stack>
                         </Box>
+                        <div id='conceptual-model-div'></div>
                     </Box>
                 </Grid2>
 
