@@ -97,6 +97,7 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
 
                 mainPlot.append("rect")
                     .attr("class", "grids")
+                    .attr("id", `grid-${i}-${j}`)
                     .attr("x", curGridX)
                     .attr("y", nextGridY)
                     .attr("width", nextGridX - curGridX)
@@ -466,6 +467,13 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                         // Find a Available CHIP
                         if (xAvailableChip && yAvailableChip) {
                             console.log(`move chip to (${clickValueX}, ${clickValueY})`)
+
+                            d3.select(`#grid-${binIndexX}-${binIndexY}`)
+                            .attr('fill', 'lightgreen')  // Change the color to red
+                            .transition()  // Transition back after 1 second
+                            .delay(500)
+                            .attr('fill', 'transparent');
+
                             // set the two available chips as used
                             d3.selectAll(".x-margin-dot")
                                 .filter(d => d.position === xAvailableChip.position && d.row === xAvailableChip.row)
@@ -491,6 +499,13 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                                 })
 
                             updateChipDots(xScale, yScale)
+                        }
+                        else {
+                            d3.select(`#grid-${binIndexX}-${binIndexY}`)
+                                .attr('fill', 'lightcoral')  // Change the color to red
+                                .transition()  // Transition back after 1 second
+                                .delay(500)
+                                .attr('fill', 'transparent');
                         }
                     }
                 }
@@ -619,9 +634,9 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
 
     return (
         <div>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyItems: "center" }}>
                 <Button variant={bivariateMode == "PREDICT" ? "contained" : "outlined"} onClick={() => changeBivariateMode("PREDICT")}>PREDICT</Button>
-                <Button variant={bivariateMode == "CHIP" ? "contained" : "outlined"} onClick={() => changeBivariateMode("CHIP")}>CHIP</Button>
+                <Button sx={{ mx: 1 }} variant={bivariateMode == "CHIP" ? "contained" : "outlined"} onClick={() => changeBivariateMode("CHIP")}>CHIP</Button>
             </Box>
             <div id='bivariate-distribution-div'>
 

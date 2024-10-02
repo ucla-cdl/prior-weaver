@@ -1,6 +1,13 @@
 .workspace-div {
     width: 100%;
     height: 100%;
-    padding: 50px;
+    padding: 30px;
+    background-color: whitesmoke;
+}
+
+.module-div {
     background-color: white;
+    padding: 30pt;
+    border-radius: 15pt;
+    margin-top: 10pt;
 }

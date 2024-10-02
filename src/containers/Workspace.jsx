@@ -179,10 +179,8 @@ export default function Workspace(props) {
         setIsAddingRelation(false);
     }
 
-
     return (
         <div className='workspace-div'>
-            <Button onClick={addNewVariable}>Add Variable</Button>
             <Dialog open={isAddingVariable} sx={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 4 }}>
                 <DialogTitle>Adding a New Variable</DialogTitle>
                 <DialogContent>
@@ -278,20 +276,24 @@ export default function Workspace(props) {
                 </DialogActions>
             </Dialog>
 
-            <Grid2 container spacing={2}>
-                <Grid2 size={6}>
-                    <div id='conceptual-model-div'></div>
+            <Grid2 container spacing={1}>
+                <Grid2 size={5}>
+                    <Box className="module-div" sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
+                        <div id='conceptual-model-div'></div>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Button variant="outlined" onClick={addNewVariable}>Add Variable</Button>
+                            <Button sx={{ my: 1 }} variant="outlined" onClick={addNewRelation}>Add Relation</Button>
+                        </Box>
+                    </Box>
                 </Grid2>
 
-                <Grid2 size={6}>
-                    <Button onClick={addNewRelation}>Add a Relation</Button>
+                <Grid2 size={7}>
                 </Grid2>
             </Grid2>
 
-            <Grid2 container spacing={2}>
-
-                <Grid2 size={7}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Grid2 container spacing={1}>
+                <Grid2 className="module-div" size={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyItems: "center" }}>
                         <FormControl sx={{ minWidth: 120 }}>
                             <InputLabel id="var-1-label">Variable 1</InputLabel>
                             <Select
@@ -324,7 +326,7 @@ export default function Workspace(props) {
                         </FormControl>
                     </Box>
 
-                    {bivariateVarName1 !== '' && bivariateVarName2 !== ''?
+                    {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
                         <BiVariablePlot
                             biVariableDict={biVariableDict}
                             biVariable1={variablesDict[bivariateVarName1]}
@@ -335,10 +337,10 @@ export default function Workspace(props) {
                         <></>}
                 </Grid2>
 
-                <Grid2 size={5}>
+                <Grid2 size={6}>
                     {Object.entries(variablesDict).map(([varName, curVar], i) => {
                         return (
-                            <div key={varName}>
+                            <div className="module-div" key={varName}>
                                 <Button variant={selectedVariables.includes(varName) ? 'contained' : 'outlined'} onClick={() => handleClickVar(varName)}>{varName}</Button>
                                 {selectedVariables.includes(varName) ?
                                     <VariablePlot variable={curVar} updateVariable={updateVariable} />
