@@ -1,70 +1,104 @@
-# Getting Started with Create React App
+# Bi-Level Prior Elicitation
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Prior specification, where an analyst incorporates knowledge from outside the dataset as a univariate distribution, is essential to Bayesian analysis. However, precisely specifying such knowledge can be labor-intensive, even for experienced statisticians, let alone novices.
 
-## Available Scripts
+In order to lower the barrier of this process, we develop an interactive prior elicitation system. Our system provides (i) a three-stage scaffold for prior specification, (ii) a flexbile and iterative specification process, (iii) direct manipulation for intuitive specification, and (iv) a mapping of user intentions to specifications (WIP).
 
-In the project directory, you can run:
+## Table of Contents
 
-### `npm start`
+- [Features](#features)
+- [Technologies Used](#technologies-used)
+- [Installation](#installation)
+- [Usage](#usage)
+<!-- - [Contributing](#contributing)
+- [License](#license) -->
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Three-stage Scaffold
+Users are offered three modules that correspond to three levels of abstraction in the prior elicitation process (i.e., conceptual model, bivariate relationship, and univariate distribution).
 
-### `npm test`
+[Figure: conceptual model -> bivariate -> marginal]
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Flexible and Iterative Specification
+Users are able to freely navigate between different stages of the specification process, making adjustments and assumptions in a non-linear manner. 
 
-### `npm run build`
+### Direct Manipulation
+Users can modify distrbutions by simple interactions, such as draging and clicking.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Mapping of User Intentions to Specifications
+[WIP]
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Technologies Used
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- [React](https://reactjs.org/)
+- [D3.js](https://www.d3js.org)
 
-### `npm run eject`
+## Installation
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+The node and npm version used in the developent are as follows:
+```bash
+node = v21.2.0
+npm = 10.8.3
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+To get a local copy up and running, follow these steps:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/realxavierx/Prior-Elicitation.git
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+2. Navigate into the project directory:
+   ```bash
+   cd Prior-Elicitation
+   ```
 
-## Learn More
+3. Install the dependencies:
+   ```bash
+   npm install
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+4. Start the  server:
+   ```bash
+   npm start
+   ```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+   Your application will be running at `http://localhost:3000`.
 
-### Code Splitting
+## Usage
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Adding a Variable
+Click `Add Variable` to add a new variable in your analysis by specifying the `name` and `range` of this variable.
 
-### Analyzing the Bundle Size
+### Adding a Causal Relationship
+Click `Add Relation` to add a new causal relation between two variables.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Specifying a Bivariate Relationship
+After choosing two variables using the selector, a bivariate plot would be automatically generated. There are three modes you could select:
 
-### Making a Progressive Web App
+- Predict: Add a anchor point that draws up a trend line.
+- Populate: Add a data point. 
+- Chip: Add a data point by allocating two available "chips" from the marginal plot.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Specifying a Univariate Relationship
+Drag and drop the toggle point on each bin to adjust the histogram.
 
-### Advanced Configuration
+### ...
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+<!-- ## Contributing
 
-### Deployment
+Contributions are welcome! Please follow these steps:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/AmazingFeature`).
+3. Make your changes.
+4. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+5. Push to the branch (`git push origin feature/AmazingFeature`).
+6. Open a Pull Request.
 
-### `npm run build` fails to minify
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Distributed under the MIT License. See `LICENSE` for more information. -->
+
+---
