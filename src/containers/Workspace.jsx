@@ -61,7 +61,7 @@ export default function Workspace(props) {
         // Add a bivariable relationship
         Object.entries(variablesDict).forEach(([varName, variable]) => {
             let biVarName = varName + "-" + newVarName;
-            console.log("add bi-var relation:", newVarName, varName);
+            console.log("add bi-var relation:", biVarName);
             setBiVariableDict(prev => ({
                 ...prev,
                 [biVarName]: {
@@ -96,7 +96,7 @@ export default function Workspace(props) {
         console.log("update bivariable", name, key, value);
         setBiVariableDict(prev => ({
             ...prev,
-            [name]: { ...(prev[name] || {}), [key]: value }
+            [name]: { ...prev[name], [key]: value }
         }));
     }
 
@@ -231,7 +231,7 @@ export default function Workspace(props) {
                             >
                                 {Object.entries(variablesDict).map(([varName, curVar], i) => {
                                     return (
-                                        <MenuItem disabled={varName == relatedVar2?.name} key={varName} value={curVar}>{varName}</MenuItem>
+                                        <MenuItem disabled={varName === relatedVar2?.name} key={varName} value={curVar}>{varName}</MenuItem>
                                     )
                                 })}
                             </Select>
@@ -261,7 +261,7 @@ export default function Workspace(props) {
                             >
                                 {Object.entries(variablesDict).map(([varName, curVar], i) => {
                                     return (
-                                        <MenuItem disabled={varName == relatedVar1?.name} key={varName} value={curVar}>{varName}</MenuItem>
+                                        <MenuItem disabled={varName === relatedVar1?.name} key={varName} value={curVar}>{varName}</MenuItem>
                                     )
                                 })}
                             </Select>
@@ -316,7 +316,7 @@ export default function Workspace(props) {
                             >
                                 {Object.entries(variablesDict).map(([varName, curVar], i) => {
                                     return (
-                                        <MenuItem disabled={varName == bivariateVarName2} key={i} value={varName}>{varName}</MenuItem>
+                                        <MenuItem disabled={varName === bivariateVarName2} key={i} value={varName}>{varName}</MenuItem>
                                     )
                                 })}
                             </Select>
@@ -331,7 +331,7 @@ export default function Workspace(props) {
                             >
                                 {Object.entries(variablesDict).map(([varName, curVar], i) => {
                                     return (
-                                        <MenuItem disabled={varName == bivariateVarName1} key={i} value={varName}>{varName}</MenuItem>
+                                        <MenuItem disabled={varName === bivariateVarName1} key={i} value={varName}>{varName}</MenuItem>
                                     )
                                 })}
                             </Select>
