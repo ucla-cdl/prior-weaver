@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
+import { logUserBehavior } from '../utils/BehaviorListener';
 
 // Define the Variable Component
 export default function VariablePlot({ variable, updateVariable }) {
@@ -105,6 +106,7 @@ export default function VariablePlot({ variable, updateVariable }) {
                 newHeight = Math.max(0, Math.min(newHeight, maxY));
                 // Update counts array
                 let newCounts = [...variable.counts];
+                logUserBehavior(`uni-plot(${variable.name})`, "drag", `adjust distribution at bin-${index}`, `${newCounts[index]} -> ${newHeight}`)
                 newCounts[index] = newHeight;
                 updateVariable(variable.name, "counts", newCounts);
             });
