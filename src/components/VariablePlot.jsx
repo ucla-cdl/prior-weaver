@@ -16,6 +16,7 @@ export default function VariablePlot({ variable, updateVariable }) {
         const offsetX = 60;
         const offsetY = 60;
         const toggleHeight = 8;
+        const titleOffset = 50;
 
         // Clear the existing SVG
         document.getElementById("iv-distribution-" + variable.name).innerHTML = "";
@@ -43,6 +44,13 @@ export default function VariablePlot({ variable, updateVariable }) {
             .selectAll(".tick text")
             .style("font-size", 15)
             .style("font-family", "Times New Roman");
+
+        svg.append("text")
+            .attr("text-anchor", "middle")
+            .attr("x", chartWidth / 2)
+            .attr("y", chartHeight - offsetY + titleOffset)
+            .style("font-size", "16px")
+            .text(variable.name);
 
         // Draw Y axis
         svg.append('g')

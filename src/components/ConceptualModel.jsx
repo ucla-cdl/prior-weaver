@@ -48,8 +48,6 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
         });
 
         conceptualModel += "}";
-        console.log(conceptualModel)
-
         d3.select("#conceptual-model-div")
             .graphviz()
             .renderDot(conceptualModel);
@@ -124,7 +122,6 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
     const confirmAddRelation = () => {
         let newRelations = { ...relatedVar1.relations };
         newRelations[relation].push(relatedVar2.name);
-        console.log("new relation", newRelations);
         logUserBehavior("conceptual-model", "click button", "add a relation", `${relatedVar1}-${relation}-${relatedVar2}`);
         updateVariable(relatedVar1.name, "relations", newRelations);
         handleCloseAddRelationDialog();
@@ -137,104 +134,25 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
         setIsAddingRelation(false);
     }
 
-    return (
-        <Grid2 container spacing={1}>
-            <Grid2 size={5}>
-                <Box className="module-div" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: "space-around" }}>
-                        <h3>Conceptual Model</h3>
-                        <Button sx={{ m: 5 }} variant="outlined" onClick={addNewVariable}>Add Variable</Button>
-                        <Dialog open={isAddingVariable}>
-                            <DialogTitle>Adding a New Variable</DialogTitle>
-                            <DialogContent>
-                                <TextField
-                                    sx={{ m: '10px' }}
-                                    label="Variable Name"
-                                    value={newVarName}
-                                    onChange={(e) => setNewVarName(e.target.value)}
-                                />
-                                <Box>
-                                    <TextField
-                                        sx={{ m: '10px' }}
-                                        label="Min Value"
-                                        type="number"
-                                        value={newMin}
-                                        onChange={(e) => setNewMin(parseFloat(e.target.value))}
-                                    />
-                                    <TextField
-                                        sx={{ m: '10px' }}
-                                        label="Max Value"
-                                        type="number"
-                                        value={newMax}
-                                        onChange={(e) => setNewMax(parseFloat(e.target.value))}
-                                    />
-                                </Box>
-                            </DialogContent>
-                            <DialogActions>
-                                <Button color='danger' onClick={handleCloseAddVariableDialog}>Cancel</Button>
-                                <Button variant="contained" onClick={confirmAddVariable}>Confirm</Button>
-                            </DialogActions>
-                        </Dialog>
+    const checkVariable = () => {
 
-                        <Button variant="outlined" onClick={addNewRelation}>Add Relation</Button>
-                        <Dialog open={isAddingRelation}>
-                            <DialogTitle>Add a New Relation</DialogTitle>
-                            <DialogContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <FormControl sx={{ minWidth: 120 }}>
-                                        <InputLabel id="var-1-label">Variable 1</InputLabel>
-                                        <Select
-                                            labelId='var-1-label'
-                                            value={relatedVar1}
-                                            label="Variable 1"
-                                            onChange={handleSelectRelatedVar1}
-                                        >
-                                            {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                                                return (
-                                                    <MenuItem disabled={varName === relatedVar2?.name} key={varName} value={curVar}>{varName}</MenuItem>
-                                                )
-                                            })}
-                                        </Select>
-                                    </FormControl>
-                                    <FormControl sx={{ m: 1, minWidth: 120 }}>
-                                        <InputLabel id="relation-label">Relation</InputLabel>
-                                        <Select
-                                            labelId='relation-label'
-                                            value={relation}
-                                            label="Relation"
-                                            onChange={handleSelectRelation}
-                                        >
-                                            {RELATIONS.map((RELATION, i) => {
-                                                return (
-                                                    <MenuItem key={i} value={RELATION}>{RELATION}</MenuItem>
-                                                )
-                                            })}
-                                        </Select>
-                                    </FormControl>
-                                    <FormControl sx={{ m: 1, minWidth: 120 }}>
-                                        <InputLabel id="var-2-label">Variable 2</InputLabel>
-                                        <Select
-                                            labelId='var-2-label'
-                                            value={relatedVar2}
-                                            label="Variable 2"
-                                            onChange={handleSelectRelatedVar2}
-                                        >
-                                            {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                                                return (
-                                                    <MenuItem disabled={varName === relatedVar1?.name} key={varName} value={curVar}>{varName}</MenuItem>
-                                                )
-                                            })}
-                                        </Select>
-                                    </FormControl>
-                                </Box>
-                            </DialogContent>
-                            <DialogActions>
-                                <Button color='danger' onClick={handleCloseAddRelationDialog}>Cancel</Button>
-                                <Button variant="contained" onClick={confirmAddRelation}>Confirm</Button>
-                            </DialogActions>
-                        </Dialog>
-                        {/* # of Bin */}
-                        {/* <Stack spacing={1} direction="row" sx={{ alignItems: 'center' }}>
+    }
+
+    const modifyRelation = (variable, relatedVarName, formerRelation, targetRelation) => {
+        let newRelations = { ...variable.relations };
+        newRelations[formerRelation] = newRelations[formerRelation].filter(varName => varName !== relatedVarName)
+        newRelations[targetRelation].push(relatedVarName);
+        logUserBehavior("conceptual-model", "select", "modify a relation", `${variable.name}-${relatedVarName}: ${formerRelation} -> ${targetRelation}`);
+        updateVariable(variable.name, "relations", newRelations);
+    }
+
+    return (
+        <Grid2 container spacing={3}>
+            <Grid2 size={5} className="module-div">
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <h3>Conceptual Model</h3>
+                    {/* # of Bin */}
+                    {/* <Stack spacing={1} direction="row" sx={{ alignItems: 'center' }}>
                             <Typography sx={{ fontWeight: 'bold' }}># of Bin:</Typography>
                             <Slider
                                 sx={{ width: "200px" }}
@@ -247,14 +165,146 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
                                 min={2}
                                 max={20}
                             />
-                        </Stack> */}
-                    </Box>
-
+                    </Stack> */}
                     <div id='conceptual-model-div'></div>
                 </Box>
             </Grid2>
 
-            <Grid2 size={7}>
+            {/* Variable List */}
+            <Grid2 size={3} className="module-div">
+                <h3>Variables</h3>
+                {Object.entries(variablesDict).map(([varName, variable]) => (
+                    <div key={varName}>
+                        <p><strong>
+                            {varName}
+                        </strong></p>
+                    </div>
+                ))}
+                <Button sx={{ m: 2 }} variant="outlined" onClick={addNewVariable}>Add Variable</Button>
+                <Dialog open={isAddingVariable}>
+                    <DialogTitle>Adding a New Variable</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            sx={{ m: '10px' }}
+                            label="Variable Name"
+                            value={newVarName}
+                            onChange={(e) => setNewVarName(e.target.value)}
+                        />
+                        <Box>
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Min Value"
+                                type="number"
+                                value={newMin}
+                                onChange={(e) => setNewMin(parseFloat(e.target.value))}
+                            />
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Max Value"
+                                type="number"
+                                value={newMax}
+                                onChange={(e) => setNewMax(parseFloat(e.target.value))}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button color='danger' onClick={handleCloseAddVariableDialog}>Cancel</Button>
+                        <Button variant="contained" onClick={confirmAddVariable}>Confirm</Button>
+                    </DialogActions>
+                </Dialog>
+            </Grid2>
+
+            {/* Relation List */}
+            <Grid2 size={4} className="module-div">
+                <h3>Relationships</h3>
+                {Object.entries(variablesDict).map(([varName, variable]) => (
+                    <div key={varName}>
+                        {Object.entries(variable["relations"]).map(([relationType, relations]) => (
+                            <div key={relationType}>
+                                {relations.map((relatedVarName, index) => (
+                                    <Box key={index} sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+                                        <p><strong>
+                                            {varName}
+                                        </strong></p>
+                                        <Select
+                                            sx={{ mx: 4 }}
+                                            variant='standard'
+                                            size='small'
+                                            value={relationType}
+                                            onChange={(e) => modifyRelation(variable, relatedVarName, relationType, e.target.value)}
+                                        >
+                                            {RELATIONS.map((RELATION, i) => {
+                                                return (
+                                                    <MenuItem key={i} value={RELATION}>{RELATION}</MenuItem>
+                                                )
+                                            })}
+                                        </Select>
+                                        <p><strong>
+                                            {relatedVarName}
+                                        </strong></p>
+                                    </Box>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                ))}
+                <Button sx={{ m: 2 }} variant="outlined" onClick={addNewRelation}>Add Relation</Button>
+                <Dialog open={isAddingRelation}>
+                    <DialogTitle>Add a New Relation</DialogTitle>
+                    <DialogContent>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <FormControl sx={{ minWidth: 120 }}>
+                                <InputLabel id="var-1-label">Variable 1</InputLabel>
+                                <Select
+                                    labelId='var-1-label'
+                                    value={relatedVar1}
+                                    label="Variable 1"
+                                    onChange={handleSelectRelatedVar1}
+                                >
+                                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
+                                        return (
+                                            <MenuItem disabled={varName === relatedVar2?.name} key={varName} value={curVar}>{varName}</MenuItem>
+                                        )
+                                    })}
+                                </Select>
+                            </FormControl>
+                            <FormControl sx={{ m: 1, minWidth: 120 }}>
+                                <InputLabel id="relation-label">Relation</InputLabel>
+                                <Select
+                                    labelId='relation-label'
+                                    value={relation}
+                                    label="Relation"
+                                    onChange={handleSelectRelation}
+                                >
+                                    {RELATIONS.map((RELATION, i) => {
+                                        return (
+                                            <MenuItem key={i} value={RELATION}>{RELATION}</MenuItem>
+                                        )
+                                    })}
+                                </Select>
+                            </FormControl>
+                            <FormControl sx={{ m: 1, minWidth: 120 }}>
+                                <InputLabel id="var-2-label">Variable 2</InputLabel>
+                                <Select
+                                    labelId='var-2-label'
+                                    value={relatedVar2}
+                                    label="Variable 2"
+                                    onChange={handleSelectRelatedVar2}
+                                >
+                                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
+                                        return (
+                                            <MenuItem disabled={varName === relatedVar1?.name} key={varName} value={curVar}>{varName}</MenuItem>
+                                        )
+                                    })}
+                                </Select>
+                            </FormControl>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button color='danger' onClick={handleCloseAddRelationDialog}>Cancel</Button>
+                        <Button variant="contained" onClick={confirmAddRelation}>Confirm</Button>
+                    </DialogActions>
+                </Dialog>
             </Grid2>
         </Grid2>
     )

@@ -5,12 +5,14 @@ import Workspace from "./containers/Workspace";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path={routes.home} element={<Workspace />}></Route>
-        <Route path={routes.workspace} element={<Workspace />}></Route>
-      </Routes>
-    </Router>
+    <div className="App">
+      <Router>
+        <Routes>
+          <Route path={routes.home} element={<Workspace />}></Route>
+          <Route path={routes.workspace} element={<Workspace />}></Route>
+        </Routes>
+      </Router>
+    </div>
   );
 }
 

@@ -61,67 +61,73 @@ export default function Workspace(props) {
 
     return (
         <div className='workspace-div'>
-            <ConceptualModel variablesDict={variablesDict} setVariablesDict={setVariablesDict} setBiVariableDict={setBiVariableDict} updateVariable={updateVariable}/>
+            <ConceptualModel variablesDict={variablesDict} setVariablesDict={setVariablesDict} setBiVariableDict={setBiVariableDict} updateVariable={updateVariable} />
 
-            <Grid2 container spacing={1}>
+            <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Grid2 className="module-div" size={6}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyItems: "center" }}>
-                        <FormControl sx={{ minWidth: 120 }}>
-                            <InputLabel id="var-1-label">Variable 1</InputLabel>
-                            <Select
-                                labelId='var-1-label'
-                                value={bivariateVarName1}
-                                label="Variable 1"
-                                onChange={handleSelectBiVar1}
-                            >
-                                {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                                    return (
-                                        <MenuItem disabled={varName === bivariateVarName2} key={i} value={varName}>{varName}</MenuItem>
-                                    )
-                                })}
-                            </Select>
-                        </FormControl>
-                        <FormControl sx={{ m: 1, minWidth: 120 }}>
-                            <InputLabel id="var-2-label">Variable 2</InputLabel>
-                            <Select
-                                labelId='var-2-label'
-                                value={bivariateVarName2}
-                                label="Variable 2"
-                                onChange={handleSelectBiVar2}
-                            >
-                                {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                                    return (
-                                        <MenuItem disabled={varName === bivariateVarName1} key={i} value={varName}>{varName}</MenuItem>
-                                    )
-                                })}
-                            </Select>
-                        </FormControl>
-                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <h3>Bivariate Distribution</h3>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: "center" }}>
+                            <FormControl sx={{ m: 1, minWidth: 120 }}>
+                                <InputLabel id="var-1-label">Variable 1</InputLabel>
+                                <Select
+                                    labelId='var-1-label'
+                                    value={bivariateVarName1}
+                                    label="Variable 1"
+                                    onChange={handleSelectBiVar1}
+                                >
+                                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
+                                        return (
+                                            <MenuItem disabled={varName === bivariateVarName2} key={i} value={varName}>{varName}</MenuItem>
+                                        )
+                                    })}
+                                </Select>
+                            </FormControl>
+                            <FormControl sx={{ m: 1, minWidth: 120 }}>
+                                <InputLabel id="var-2-label">Variable 2</InputLabel>
+                                <Select
+                                    labelId='var-2-label'
+                                    value={bivariateVarName2}
+                                    label="Variable 2"
+                                    onChange={handleSelectBiVar2}
+                                >
+                                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
+                                        return (
+                                            <MenuItem disabled={varName === bivariateVarName1} key={i} value={varName}>{varName}</MenuItem>
+                                        )
+                                    })}
+                                </Select>
+                            </FormControl>
+                        </Box>
 
-                    {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
-                        <BiVariablePlot
-                            biVariableDict={biVariableDict}
-                            biVariable1={variablesDict[bivariateVarName1]}
-                            biVariable2={variablesDict[bivariateVarName2]}
-                            updateVariable={updateVariable}
-                            updateBivariable={updateBivariable} />
-                        :
-                        <></>}
+                        {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
+                            <BiVariablePlot
+                                biVariableDict={biVariableDict}
+                                biVariable1={variablesDict[bivariateVarName1]}
+                                biVariable2={variablesDict[bivariateVarName2]}
+                                updateVariable={updateVariable}
+                                updateBivariable={updateBivariable} />
+                            :
+                            <></>}
+                    </Box>
                 </Grid2>
 
                 <Grid2 size={6}>
-                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                        return (
-                            <div className="module-div" key={varName}>
-                                <Button variant={selectedVariables.includes(varName) ? 'contained' : 'outlined'} onClick={() => handleClickVar(varName)}>{varName}</Button>
-                                {selectedVariables.includes(varName) ?
-                                    <VariablePlot variable={curVar} updateVariable={updateVariable} />
-                                    :
-                                    <></>
-                                }
-                            </div>
-                        )
-                    })}
+                    <Box className="module-div" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <h3>Univariate Distribution</h3>
+                        {Object.entries(variablesDict).map(([varName, curVar], i) => {
+                            return (
+                                <div key={varName}>
+                                    <Button variant={selectedVariables.includes(varName) ? 'contained' : 'outlined'} onClick={() => handleClickVar(varName)}>{varName}</Button>
+                                    {selectedVariables.includes(varName) ?
+                                        <VariablePlot variable={curVar} updateVariable={updateVariable} />
+                                        :
+                                        <></>
+                                    }
+                                </div>
+                            )
+                        })}
+                    </Box>
                 </Grid2>
             </Grid2>
         </div>

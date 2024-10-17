@@ -142,7 +142,6 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
             .domain([biVariable2.min, biVariable2.max])
             .range([mainPlotHeight, 0]);
 
-        console.log("bi var", biVariableDict[biVarName])
         let predictionDots = biVariableDict[biVarName].predictionDots;
         let populateDots = biVariableDict[biVarName].populateDots;
         let chipDots = biVariableDict[biVarName].chipDots;
@@ -697,13 +696,13 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
     }
 
     return (
-        <div>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyItems: "center" }}>
-                <Button variant={bivariateMode === MODES.PREDICT ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.PREDICT)}>PREDICT</Button>
-                <Button sx={{ mx: 1 }} variant={bivariateMode === MODES.POPULATE ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.POPULATE)}>POPULATE</Button>
-                <Button sx={{ mx: 1 }} variant={bivariateMode === MODES.CHIP ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.CHIP)}>CHIP</Button>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+                <Button sx={{ m: 2 }} variant={bivariateMode === MODES.PREDICT ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.PREDICT)}>PREDICT</Button>
+                <Button sx={{ m: 2 }} variant={bivariateMode === MODES.POPULATE ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.POPULATE)}>POPULATE</Button>
+                <Button sx={{ m: 2 }} variant={bivariateMode === MODES.CHIP ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.CHIP)}>CHIP</Button>
             </Box>
             <div id='bivariate-distribution-div'></div>
-        </div>
+        </Box>
     )
 }
