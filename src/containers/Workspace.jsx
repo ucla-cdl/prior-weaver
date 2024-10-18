@@ -114,17 +114,17 @@ export default function Workspace(props) {
 
                 <Grid2 size={6}>
                     <Box className="module-div" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <h3>Univariate Distribution</h3>
+                        <h3>Univariate Distributions</h3>
                         {Object.entries(variablesDict).map(([varName, curVar], i) => {
                             return (
-                                <div key={varName}>
+                                <Box key={varName} sx={{ width: '100%', height: '100%' }}>
                                     <Button variant={selectedVariables.includes(varName) ? 'contained' : 'outlined'} onClick={() => handleClickVar(varName)}>{varName}</Button>
                                     {selectedVariables.includes(varName) ?
                                         <VariablePlot variable={curVar} updateVariable={updateVariable} />
                                         :
                                         <></>
                                     }
-                                </div>
+                                </Box>
                             )
                         })}
                     </Box>

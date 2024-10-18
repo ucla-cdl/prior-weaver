@@ -1,31 +1,53 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { logUserBehavior } from '../utils/BehaviorListener';
+import axios from "axios";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Card, CardActions, CardContent, Grid2, Paper, Typography } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 // Define the Variable Component
 export default function VariablePlot({ variable, updateVariable }) {
+    const chartHeight = 400;
+    const offsetX = 60;
+    const offsetY = 60;
+    const toggleHeight = 8;
+    const titleOffset = 50;
+
+    const [fittedDistributions, setFittedDistributions] = useState([]);
 
     useEffect(() => {
-        console.log("draw IV plot");
+        drawPlot();
+        console.log("draw plot")
+    }, []);
+
+    useEffect(() => {
         drawIVHistogram();
     }, [variable.counts]);
 
-    const drawIVHistogram = () => {
-        const chartWidth = 600;
-        const chartHeight = 400;
-        const offsetX = 60;
-        const offsetY = 60;
-        const toggleHeight = 8;
-        const titleOffset = 50;
+    const drawPlot = () => {
+        const divID = "univariate-div-" + variable.name;
+        document.getElementById(divID).innerHTML = "";
+        const chartWidth = document.getElementById(divID).clientWidth;
 
-        // Clear the existing SVG
-        document.getElementById("iv-distribution-" + variable.name).innerHTML = "";
-
-        let svg = d3.select("#iv-distribution-" + variable.name).append("svg")
-            .attr("id", "svg-" + variable.name)
+        let svg = d3.select("#" + divID).append("svg")
+            .attr("id", "univariate-svg-" + variable.name)
             .attr("width", chartWidth)
             .attr("height", chartHeight);
 
+        svg.append("g")
+            .attr("id", "univariate-histogram-" + variable.name);
+
+        svg.append("g")
+            .attr("id", "univariate-distribution-" + variable.name);
+    }
+
+    const drawIVHistogram = () => {
+        // Clear the existing SVG
+        document.getElementById("univariate-histogram-" + variable.name).innerHTML = "";
+        let histogramPlot = d3.select("#univariate-histogram-" + variable.name);
+        histogramPlot.lower();
+
+        const chartWidth = document.getElementById("univariate-div-" + variable.name).clientWidth;
         let xScale = d3.scaleLinear()
             .domain([variable.min, variable.max])
             .range([offsetX, chartWidth - offsetX]);
@@ -36,7 +58,7 @@ export default function VariablePlot({ variable, updateVariable }) {
             .range([chartHeight - offsetY, offsetY]);
 
         // Draw X axis
-        svg.append('g')
+        histogramPlot.append('g')
             .attr('transform', `translate(0, ${chartHeight - offsetY})`)
             .call(d3.axisBottom(xScale)
                 .tickValues(variable.binEdges)
@@ -45,7 +67,7 @@ export default function VariablePlot({ variable, updateVariable }) {
             .style("font-size", 15)
             .style("font-family", "Times New Roman");
 
-        svg.append("text")
+        histogramPlot.append("text")
             .attr("text-anchor", "middle")
             .attr("x", chartWidth / 2)
             .attr("y", chartHeight - offsetY + titleOffset)
@@ -53,7 +75,7 @@ export default function VariablePlot({ variable, updateVariable }) {
             .text(variable.name);
 
         // Draw Y axis
-        svg.append('g')
+        histogramPlot.append('g')
             .attr('transform', `translate(${offsetX}, 0)`)
             .call(d3.axisLeft(yScale))
             .selectAll(".tick text")
@@ -61,7 +83,7 @@ export default function VariablePlot({ variable, updateVariable }) {
             .style("font-family", "Times New Roman");
 
         // Draw Histogram Bars
-        let bars = svg.selectAll('rect')
+        let bars = histogramPlot.selectAll('rect')
             .data(variable.counts)
             .enter()
             .append('rect')
@@ -73,7 +95,7 @@ export default function VariablePlot({ variable, updateVariable }) {
             .style('stroke', 'black');
 
         // Add labels on top of bars
-        let labels = svg.selectAll('text.label')
+        let labels = histogramPlot.selectAll('text.label')
             .data(variable.counts)
             .enter()
             .append('text')
@@ -119,7 +141,7 @@ export default function VariablePlot({ variable, updateVariable }) {
                 updateVariable(variable.name, "counts", newCounts);
             });
 
-        svg.selectAll('rect.toggle')
+        histogramPlot.selectAll('rect.toggle')
             .data(d3.range(variable.counts.length))  // Use the index range as data
             .enter()
             .append('rect')
@@ -135,9 +157,101 @@ export default function VariablePlot({ variable, updateVariable }) {
             .call(dragBehavior);
     }
 
+    const fitData = () => {
+        axios
+            .post(window.BACKEND_ADDRESS + "/fitVarDist", {
+                bin_edges: variable.binEdges,
+                counts: variable.counts
+            })
+            .then((resp) => {
+                console.log(resp.data);
+                setFittedDistributions(resp.data);
+            })
+    }
+
+    const drawFittedDistribution = (name, fittedX, fittedY) => {
+        document.getElementById("univariate-distribution-" + variable.name).innerHTML = "";
+        let distributionPlot = d3.select("#univariate-distribution-" + variable.name);
+
+        const chartWidth = document.getElementById("univariate-div-" + variable.name).clientWidth;
+        const xPdfScale = d3.scaleLinear()
+            .domain([variable.min, variable.max])
+            .range([offsetX, chartWidth - offsetX]);
+
+        const yPdfScale = d3.scaleLinear()
+            .domain([0, d3.max(fittedY)])
+            .range([chartHeight - offsetY, offsetY]);
+
+        // Draw Y axis
+        distributionPlot.append('g')
+            .attr('transform', `translate(${chartWidth - offsetX}, 0)`)
+            .call(d3.axisRight(yPdfScale))
+            .selectAll(".tick text")
+            .style("font-size", 15)
+            .style("font-family", "Times New Roman");
+
+        const line = d3.line()
+            .x((d, i) => xPdfScale(fittedX[i]))
+            .y((d, i) => yPdfScale(fittedY[i]));
+
+        distributionPlot.append("path")
+            .datum(fittedY)
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+    }
+
+    const showFittedPDF = (fittedData) => {
+        drawFittedDistribution(fittedData.name, fittedData.x, fittedData.p)
+    }
+
     return (
-        <div>
-            <div id={"iv-distribution-" + variable.name}></div>
-        </div>
+        <Grid2 container spacing={2} >
+            <Grid2 size={8}>
+                <Paper elevation={3} sx={{ width: "100%", height: chartHeight }} id={"univariate-div-" + variable.name}></Paper>
+            </Grid2>
+            <Grid2 size={4}>
+                <Paper elevation={5} sx={{ height: chartHeight, overflowY: 'auto' }}>
+                    <Button onClick={fitData}>Fit</Button>
+                    {fittedDistributions?.map((fittedData, index) => (
+                        <Card elevation={2} sx={{ m: 2, border: '1px solid black' }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="h5" component="div">
+                                        {fittedData.name}
+                                    </Typography>
+                                    <Box sx={{ mx: 2, textAlign: 'left' }}>
+                                        {Object.entries(fittedData.params).map(([param, value]) => (
+                                            <Typography key={param}>
+                                                {param}: {value}
+                                            </Typography>
+                                        ))}
+                                    </Box>
+                                </Box>
+                                <Accordion>
+                                    <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
+                                        <Typography>
+                                            Metrics
+                                        </Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        {Object.entries(fittedData.metrics).map(([metric, value]) => (
+                                            <Typography key={metric} sx={{ color: 'text.secondary' }}>
+                                                {metric}: {value}
+                                            </Typography>
+                                        ))}
+                                    </AccordionDetails>
+                                </Accordion>
+                            </CardContent>
+                            <CardActions>
+                                <Button onClick={() => showFittedPDF(fittedData)}>Show</Button>
+                                <Button>Select</Button>
+                            </CardActions>
+                        </Card>
+                    ))}
+                </Paper>
+            </Grid2>
+        </Grid2>
     );
 };

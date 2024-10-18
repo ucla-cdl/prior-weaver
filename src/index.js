@@ -5,6 +5,8 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+window.BACKEND_ADDRESS = 'http://127.0.0.1:8000';
+
 root.render(
   <React.StrictMode>
     <App />
