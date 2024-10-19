@@ -13,6 +13,7 @@ export default function VariablePlot({ variable, updateVariable }) {
     const toggleHeight = 8;
     const titleOffset = 50;
 
+    const [isFitting, setIsFitting] = useState(false);
     const [fittedDistributions, setFittedDistributions] = useState([]);
 
     useEffect(() => {
@@ -38,7 +39,10 @@ export default function VariablePlot({ variable, updateVariable }) {
             .attr("id", "univariate-histogram-" + variable.name);
 
         svg.append("g")
-            .attr("id", "univariate-distribution-" + variable.name);
+            .attr("id", "univariate-selected-distribution-" + variable.name);
+
+        svg.append("g")
+            .attr("id", "univariate-fitted-distribution-" + variable.name);
     }
 
     const drawIVHistogram = () => {
@@ -166,20 +170,26 @@ export default function VariablePlot({ variable, updateVariable }) {
             .then((resp) => {
                 console.log(resp.data);
                 setFittedDistributions(resp.data);
+                setIsFitting(true);
             })
     }
 
     const drawFittedDistribution = (name, fittedX, fittedY) => {
-        document.getElementById("univariate-distribution-" + variable.name).innerHTML = "";
-        let distributionPlot = d3.select("#univariate-distribution-" + variable.name);
+        document.getElementById("univariate-fitted-distribution-" + variable.name).innerHTML = "";
+        let distributionPlot = d3.select("#univariate-fitted-distribution-" + variable.name);
 
         const chartWidth = document.getElementById("univariate-div-" + variable.name).clientWidth;
         const xPdfScale = d3.scaleLinear()
             .domain([variable.min, variable.max])
             .range([offsetX, chartWidth - offsetX]);
 
+        let maxY = d3.max(fittedY);
+        if (variable.distributions.length > 0) {
+            maxY = d3.max([d3.max(variable.distributions[variable.distributions.length - 1].p), maxY]);
+        }
+
         const yPdfScale = d3.scaleLinear()
-            .domain([0, d3.max(fittedY)])
+            .domain([0, maxY])
             .range([chartHeight - offsetY, offsetY]);
 
         // Draw Y axis
@@ -206,52 +216,153 @@ export default function VariablePlot({ variable, updateVariable }) {
         drawFittedDistribution(fittedData.name, fittedData.x, fittedData.p)
     }
 
+    const drawSelectedDistribution = (fittedX, fittedY) => {
+        document.getElementById("univariate-selected-distribution-" + variable.name).innerHTML = "";
+        document.getElementById("univariate-fitted-distribution-" + variable.name).innerHTML = "";
+
+        let distributionPlot = d3.select("#univariate-selected-distribution-" + variable.name);
+
+        const chartWidth = document.getElementById("univariate-div-" + variable.name).clientWidth;
+        const xPdfScale = d3.scaleLinear()
+            .domain([variable.min, variable.max])
+            .range([offsetX, chartWidth - offsetX]);
+
+        let maxY = d3.max(fittedY);
+        // if (variable.distributions.length > 0) {
+        //     maxY = d3.max([d3.max(variable.distributions[-1].p), maxY]);
+        // }
+
+        const yPdfScale = d3.scaleLinear()
+            .domain([0, maxY])
+            .range([chartHeight - offsetY, offsetY]);
+
+        // Draw Y axis
+        distributionPlot.append('g')
+            .attr('transform', `translate(${chartWidth - offsetX}, 0)`)
+            .call(d3.axisRight(yPdfScale))
+            .selectAll(".tick text")
+            .style("font-size", 15)
+            .style("font-family", "Times New Roman");
+
+        const line = d3.line()
+            .x((d, i) => xPdfScale(fittedX[i]))
+            .y((d, i) => yPdfScale(fittedY[i]));
+
+        distributionPlot.append("path")
+            .datum(fittedY)
+            .attr("fill", "none")
+            .attr("stroke", "orange")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+    }
+
+    const selectFittedPDF = (fittedData) => {
+        let newDistributions = [...variable.distributions];
+        newDistributions.push(fittedData);
+        drawSelectedDistribution(fittedData.x, fittedData.p);
+        updateVariable(variable.name, "distributions", newDistributions);
+        setIsFitting(false);
+    }
+
     return (
         <Grid2 container spacing={2} >
             <Grid2 size={8}>
                 <Paper elevation={3} sx={{ width: "100%", height: chartHeight }} id={"univariate-div-" + variable.name}></Paper>
             </Grid2>
-            <Grid2 size={4}>
-                <Paper elevation={5} sx={{ height: chartHeight, overflowY: 'auto' }}>
-                    <Button onClick={fitData}>Fit</Button>
-                    {fittedDistributions?.map((fittedData, index) => (
-                        <Card elevation={2} sx={{ m: 2, border: '1px solid black' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2 }}>
-                                    <Typography variant="h5" component="div">
-                                        {fittedData.name}
-                                    </Typography>
-                                    <Box sx={{ mx: 2, textAlign: 'left' }}>
-                                        {Object.entries(fittedData.params).map(([param, value]) => (
-                                            <Typography key={param}>
-                                                {param}: {value}
-                                            </Typography>
-                                        ))}
-                                    </Box>
-                                </Box>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
-                                        <Typography>
-                                            Metrics
-                                        </Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        {Object.entries(fittedData.metrics).map(([metric, value]) => (
-                                            <Typography key={metric} sx={{ color: 'text.secondary' }}>
-                                                {metric}: {value}
-                                            </Typography>
-                                        ))}
-                                    </AccordionDetails>
-                                </Accordion>
-                            </CardContent>
-                            <CardActions>
-                                <Button onClick={() => showFittedPDF(fittedData)}>Show</Button>
-                                <Button>Select</Button>
-                            </CardActions>
-                        </Card>
-                    ))}
+            <Grid2 size={4} >
+                <Paper elevation={5} sx={{ height: chartHeight, overflowY: 'scroll' }}>
+                    {isFitting ?
+                        <Box>
+                            <h4>Fitted Distributions</h4>
+                            {fittedDistributions?.map((fittedData, index) => (
+                                <Card elevation={2} sx={{ m: 2, border: '1px solid black' }}>
+                                    <CardContent>
+                                        <h5>
+                                            {fittedData.name}
+                                        </h5>
+                                        {/* Parameters */}
+                                        <Accordion>
+                                            <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
+                                                <Typography>
+                                                    Parameters
+                                                </Typography>
+                                            </AccordionSummary>
+                                            <AccordionDetails>
+                                                {Object.entries(fittedData.params).map(([param, value]) => (
+                                                    <Typography key={param} sx={{ color: 'text.secondary' }}>
+                                                        {param}: {value}
+                                                    </Typography>
+                                                ))}
+                                            </AccordionDetails>
+                                        </Accordion>
+                                        {/* Evaluation Metrics */}
+                                        <Accordion>
+                                            <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
+                                                <Typography>
+                                                    Metrics
+                                                </Typography>
+                                            </AccordionSummary>
+                                            <AccordionDetails>
+                                                {Object.entries(fittedData.metrics).map(([metric, value]) => (
+                                                    <Typography key={metric} sx={{ color: 'text.secondary' }}>
+                                                        {metric}: {value}
+                                                    </Typography>
+                                                ))}
+                                            </AccordionDetails>
+                                        </Accordion>
+                                    </CardContent>
+                                    <CardActions>
+                                        <Button onClick={() => showFittedPDF(fittedData)}>Show</Button>
+                                        <Button onClick={() => selectFittedPDF(fittedData)}>Select</Button>
+                                    </CardActions>
+                                </Card>
+                            ))}
+                        </Box>
+                        :
+                        <Box>
+                            <h4>Distributions</h4>
+                            <Button variant="outlined" onClick={fitData}>Fit New Distributions</Button>
+                            {variable.distributions.reverse().map((distribution, index) => (
+                                <Card>
+                                    <CardContent>
+                                        <h5>#{variable.distributions.length - index} {distribution.name}</h5>
+                                        {/* Parameters */}
+                                        <Accordion>
+                                            <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
+                                                <Typography>
+                                                    Parameters
+                                                </Typography>
+                                            </AccordionSummary>
+                                            <AccordionDetails>
+                                                {Object.entries(distribution.params).map(([param, value]) => (
+                                                    <Typography key={param} sx={{ color: 'text.secondary' }}>
+                                                        {param}: {value}
+                                                    </Typography>
+                                                ))}
+                                            </AccordionDetails>
+                                        </Accordion>
+                                        {/* Evaluation Metrics */}
+                                        <Accordion>
+                                            <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
+                                                <Typography>
+                                                    Metrics
+                                                </Typography>
+                                            </AccordionSummary>
+                                            <AccordionDetails>
+                                                {Object.entries(distribution.metrics).map(([metric, value]) => (
+                                                    <Typography key={metric} sx={{ color: 'text.secondary' }}>
+                                                        {metric}: {value}
+                                                    </Typography>
+                                                ))}
+                                            </AccordionDetails>
+                                        </Accordion>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </Box>
+                    }
                 </Paper>
             </Grid2>
-        </Grid2>
+        </Grid2 >
     );
 };

@@ -1,11 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import * as d3 from 'd3';
-import { graphviz } from "d3-graphviz";
 import "./Workspace.css";
-import { Button, TextField, Slider, Typography, Box, Dialog, DialogTitle, DialogContent, DialogActions, Select, MenuItem, Grid2, InputLabel, FormControl, Stack } from '@mui/material';
+import { Button, Box, Select, MenuItem, Grid2, InputLabel, FormControl } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
-import { logUserBehavior } from '../utils/BehaviorListener';
 import ConceptualModel from '../components/ConceptualModel';
 
 // Main Component for Adding Variables and Histograms

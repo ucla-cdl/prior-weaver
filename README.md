@@ -33,6 +33,7 @@ Users can modify distrbutions by simple interactions, such as draging and clicki
 
 - [React](https://reactjs.org/)
 - [D3.js](https://www.d3js.org)
+- [Fitter](https://fitter.readthedocs.io/en/latest/index.html)
 
 ## Installation
 
@@ -64,7 +65,7 @@ To get a local copy up and running, follow these steps:
    npm start
    ```
 
-   Your application will be running at `http://localhost:3000`.
+   The web interface will be running at `http://localhost:3000` and the backend will be running at `http://localhost:8000`.
 
 ## Usage
 
@@ -84,7 +85,8 @@ After choosing two variables using the selector, a bivariate plot would be autom
 ### Specifying a Univariate Relationship
 Drag and drop the toggle point on each bin to adjust the histogram.
 
-### ...
+### Choose an Appropriate Distribution
+Click `Fit Distribution` to automatically fit the discrete histogram data to possible distributions. The available distrbutions will be shown on the panel right next to the univariate plot, click `Show` to inspect the distribution and click `Select` to pick.   
 
 <!-- ## Contributing
 

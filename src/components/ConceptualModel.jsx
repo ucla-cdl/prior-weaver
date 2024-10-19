@@ -82,7 +82,8 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
             relations: {
                 "causes": [],
                 "associates": []
-            }
+            },
+            distributions: []
         };
 
         // Add a bivariable relationship
