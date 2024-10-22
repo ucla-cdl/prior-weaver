@@ -96,7 +96,8 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
                     name: biVarName,
                     predictionDots: [],
                     populateDots: [],
-                    chipDots: []
+                    chipDots: [],
+                    fittedRelation: {}
                 }
             }))
         })

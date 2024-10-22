@@ -26,6 +26,9 @@ export default function VariablePlot({ variable, updateVariable }) {
 
     useEffect(() => {
         drawIVHistogram();
+        if (variable.distributions.length > 0) {
+            drawSelectedDistribution(variable.distributions[variable.distributions.length - 1]);
+        }
     }, [variable.counts]);
 
     const drawPlot = () => {
@@ -177,13 +180,10 @@ export default function VariablePlot({ variable, updateVariable }) {
             })
     }
 
-    // TODO: 
-    // 1. yscale adaption - redraw selected if fitted cause change in yscale; ===done=== 
-    // 1.1 y axis not update ===done===
-    // 2. material ui - TAB for univariate distributions ===done===
-    // 3. adding cues and titles for each feature so users can understand  
-    // 4. linear regression for bivar
-    const drawFittedDistribution = (name, fittedX, fittedY) => {
+    const drawFittedDistribution = (fittedData) => {
+        const fittedX = fittedData.x;
+        const fittedY = fittedData.p;
+
         document.getElementById("univariate-fitted-distribution-" + variable.name).innerHTML = "";
         let distributionPlot = d3.select("#univariate-fitted-distribution-" + variable.name);
 
@@ -198,7 +198,7 @@ export default function VariablePlot({ variable, updateVariable }) {
             let selectedDistribution = variable.distributions[variable.distributions.length - 1];
             let selectedMaxY = d3.max(selectedDistribution.p);
             if (selectedMaxY < maxY) {
-                drawSelectedDistribution(selectedDistribution.x, selectedDistribution.p, maxY);
+                drawSelectedDistribution(fittedData, maxY);
             }
             else {
                 maxY = selectedMaxY;
@@ -234,10 +234,12 @@ export default function VariablePlot({ variable, updateVariable }) {
     }
 
     const showFittedPDF = (fittedData) => {
-        drawFittedDistribution(fittedData.name, fittedData.x, fittedData.p)
+        drawFittedDistribution(fittedData)
     }
 
-    const drawSelectedDistribution = (fittedX, fittedY, maxValueY = null) => {
+    const drawSelectedDistribution = (fittedData, maxValueY = null) => {
+        const fittedX = fittedData.x;
+        const fittedY = fittedData.p;
         document.getElementById("univariate-selected-distribution-" + variable.name).innerHTML = "";
         document.getElementById("univariate-fitted-distribution-" + variable.name).innerHTML = "";
 
@@ -280,7 +282,7 @@ export default function VariablePlot({ variable, updateVariable }) {
     const selectFittedPDF = (fittedData) => {
         let newDistributions = [...variable.distributions];
         newDistributions.push(fittedData);
-        drawSelectedDistribution(fittedData.x, fittedData.p);
+        drawSelectedDistribution(fittedData);
         updateVariable(variable.name, "distributions", newDistributions);
         setIsFitting(false);
     }

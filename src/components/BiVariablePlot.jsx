@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { Box, Button, Grid2 } from '@mui/material';
 import { logUserBehavior } from '../utils/BehaviorListener';
+import axios from "axios";
 
 export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable2, updateVariable, updateBivariable }) {
     const chartWidth = 800;
@@ -553,6 +554,10 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                     }
                 }
             })
+
+        if (biVariableDict[biVarName].fittedRelation?.fittedLine) {
+            drawFittedRelation(biVariableDict[biVarName].fittedRelation.fittedLine);
+        }
     }
 
     const findGird = (x, y) => {
@@ -695,12 +700,59 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
         setBivariateMode(mode);
     }
 
+    // Use Populate Dot and Chip Dot to do Regression
+    const fitRelation = () => {
+        const biVarName = biVariable1.name + "-" + biVariable2.name;
+
+        console.log(biVariableDict[biVarName].populateDots)
+        console.log(biVariableDict[biVarName].chipDots)
+
+        axios
+            .post(window.BACKEND_ADDRESS + "/fitBiVarRelation", {
+                populateDots: biVariableDict[biVarName].populateDots,
+                chipDots: biVariableDict[biVarName].chipDots
+            })
+            .then((resp) => {
+                console.log(resp.data);
+                updateBivariable(biVarName, "fittedRelation", resp.data);
+                drawFittedRelation(resp.data.fittedLine);
+            })
+    }
+
+    const drawFittedRelation = (fittedLine) => {
+        let mainPlot = d3.select("#bivariate-main-plot");
+        let xScale = d3.scaleLinear()
+            .domain([biVariable1.min, biVariable1.max])
+            .range([0, mainPlotWidth]);
+        let yScale = d3.scaleLinear()
+            .domain([biVariable2.min, biVariable2.max])
+            .range([mainPlotHeight, 0]);
+
+        d3.select("#bivariate-plot-relation")?.remove()
+        let g = mainPlot.append("g")
+            .attr("id", "bivariate-plot-relation");
+
+        // Line for the Regression Fit
+        const line = d3.line()
+            .x(d => xScale(d.x))
+            .y(d => yScale(d.y));
+
+        g.append("path")
+            .datum(fittedLine)
+            .attr("class", "line")
+            .attr("fill", "none")
+            .attr("stroke", "red")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+    }
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
                 <Button sx={{ m: 2 }} variant={bivariateMode === MODES.PREDICT ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.PREDICT)}>PREDICT</Button>
                 <Button sx={{ m: 2 }} variant={bivariateMode === MODES.POPULATE ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.POPULATE)}>POPULATE</Button>
                 <Button sx={{ m: 2 }} variant={bivariateMode === MODES.CHIP ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.CHIP)}>CHIP</Button>
+                <Button sx={{ m: 2 }} onClick={fitRelation}>Fit</Button>
             </Box>
             <div id='bivariate-distribution-div'></div>
         </Box>
