@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import "./Workspace.css";
-import { Button, Box, Select, MenuItem, Grid2, InputLabel, FormControl } from '@mui/material';
+import { Button, Box, Select, MenuItem, Grid2, InputLabel, FormControl, Tabs, Tab } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
@@ -8,7 +8,8 @@ import ConceptualModel from '../components/ConceptualModel';
 // Main Component for Adding Variables and Histograms
 export default function Workspace(props) {
     const [variablesDict, setVariablesDict] = useState({});
-    const [selectedVariables, setSelectedVariables] = useState([]);
+    const [selectedVarName, setSelectedVarName] = useState('');
+    const [selectedVariable, setSelectedVariable] = useState('');
     const [bivariateVarName1, setBivariateVarName1] = useState('');
     const [bivariateVarName2, setBivariateVarName2] = useState('');
     const [biVariableDict, setBiVariableDict] = useState({});
@@ -37,16 +38,11 @@ export default function Workspace(props) {
         }));
     }
 
-    const handleClickVar = (varName) => {
-        if (selectedVariables.includes(varName)) {
-            let updatedvariables = selectedVariables;
-            updatedvariables = updatedvariables.filter(item => item !== varName)
-            setSelectedVariables(updatedvariables);
-        }
-        else {
-            setSelectedVariables(prev => ([...prev, varName]));
-        }
-    }
+    const handleSelectedVariableChange = (event, value) => {
+        console.log("select", value)
+        setSelectedVarName(value);
+        setSelectedVariable(variablesDict[value]);
+    };
 
     const handleSelectBiVar1 = (event) => {
         setBivariateVarName1(event.target.value);
@@ -112,11 +108,23 @@ export default function Workspace(props) {
                 <Grid2 size={6}>
                     <Box className="module-div" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <h3>Univariate Distributions</h3>
+                        <Tabs
+                            value={selectedVarName}
+                            onChange={handleSelectedVariableChange}
+                            variant="scrollable"
+                            scrollButtons="auto"
+                            sx={{ my: 2 }}
+                        >
+                            {Object.entries(variablesDict).map(([varName, curVar], i) => {
+                                return (
+                                    <Tab key={i} label={varName} value={varName} />
+                                )
+                            })}
+                        </Tabs>
                         {Object.entries(variablesDict).map(([varName, curVar], i) => {
                             return (
                                 <Box key={varName} sx={{ width: '100%', height: '100%' }}>
-                                    <Button variant={selectedVariables.includes(varName) ? 'contained' : 'outlined'} onClick={() => handleClickVar(varName)}>{varName}</Button>
-                                    {selectedVariables.includes(varName) ?
+                                    {selectedVarName === varName ?
                                         <VariablePlot variable={curVar} updateVariable={updateVariable} />
                                         :
                                         <></>

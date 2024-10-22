@@ -2,8 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { logUserBehavior } from '../utils/BehaviorListener';
 import axios from "axios";
-import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Card, CardActions, CardContent, Grid2, Paper, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Card, CardActions, CardContent, Grid2, IconButton, Paper, Typography } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
 
 // Define the Variable Component
 export default function VariablePlot({ variable, updateVariable }) {
@@ -174,6 +177,12 @@ export default function VariablePlot({ variable, updateVariable }) {
             })
     }
 
+    // TODO: 
+    // 1. yscale adaption - redraw selected if fitted cause change in yscale; ===done=== 
+    // 1.1 y axis not update ===done===
+    // 2. material ui - TAB for univariate distributions ===done===
+    // 3. adding cues and titles for each feature so users can understand  
+    // 4. linear regression for bivar
     const drawFittedDistribution = (name, fittedX, fittedY) => {
         document.getElementById("univariate-fitted-distribution-" + variable.name).innerHTML = "";
         let distributionPlot = d3.select("#univariate-fitted-distribution-" + variable.name);
@@ -184,21 +193,33 @@ export default function VariablePlot({ variable, updateVariable }) {
             .range([offsetX, chartWidth - offsetX]);
 
         let maxY = d3.max(fittedY);
+        let drawAxisY = false;
         if (variable.distributions.length > 0) {
-            maxY = d3.max([d3.max(variable.distributions[variable.distributions.length - 1].p), maxY]);
+            let selectedDistribution = variable.distributions[variable.distributions.length - 1];
+            let selectedMaxY = d3.max(selectedDistribution.p);
+            if (selectedMaxY < maxY) {
+                drawSelectedDistribution(selectedDistribution.x, selectedDistribution.p, maxY);
+            }
+            else {
+                maxY = selectedMaxY;
+            }
+        }
+        else {
+            drawAxisY = true;
         }
 
         const yPdfScale = d3.scaleLinear()
             .domain([0, maxY])
             .range([chartHeight - offsetY, offsetY]);
 
-        // Draw Y axis
-        distributionPlot.append('g')
-            .attr('transform', `translate(${chartWidth - offsetX}, 0)`)
-            .call(d3.axisRight(yPdfScale))
-            .selectAll(".tick text")
-            .style("font-size", 15)
-            .style("font-family", "Times New Roman");
+        if (drawAxisY) {
+            distributionPlot.append('g')
+                .attr('transform', `translate(${chartWidth - offsetX}, 0)`)
+                .call(d3.axisRight(yPdfScale))
+                .selectAll(".tick text")
+                .style("font-size", 15)
+                .style("font-family", "Times New Roman");
+        }
 
         const line = d3.line()
             .x((d, i) => xPdfScale(fittedX[i]))
@@ -216,7 +237,7 @@ export default function VariablePlot({ variable, updateVariable }) {
         drawFittedDistribution(fittedData.name, fittedData.x, fittedData.p)
     }
 
-    const drawSelectedDistribution = (fittedX, fittedY) => {
+    const drawSelectedDistribution = (fittedX, fittedY, maxValueY = null) => {
         document.getElementById("univariate-selected-distribution-" + variable.name).innerHTML = "";
         document.getElementById("univariate-fitted-distribution-" + variable.name).innerHTML = "";
 
@@ -228,9 +249,9 @@ export default function VariablePlot({ variable, updateVariable }) {
             .range([offsetX, chartWidth - offsetX]);
 
         let maxY = d3.max(fittedY);
-        // if (variable.distributions.length > 0) {
-        //     maxY = d3.max([d3.max(variable.distributions[-1].p), maxY]);
-        // }
+        if (maxValueY) {
+            maxY = maxValueY;
+        }
 
         const yPdfScale = d3.scaleLinear()
             .domain([0, maxY])
@@ -275,7 +296,7 @@ export default function VariablePlot({ variable, updateVariable }) {
                         <Box>
                             <h4>Fitted Distributions</h4>
                             {fittedDistributions?.map((fittedData, index) => (
-                                <Card elevation={2} sx={{ m: 2, border: '1px solid black' }}>
+                                <Card key={index} elevation={2} sx={{ m: 2, border: '1px solid black' }}>
                                     <CardContent>
                                         <h5>
                                             {fittedData.name}
@@ -312,8 +333,15 @@ export default function VariablePlot({ variable, updateVariable }) {
                                         </Accordion>
                                     </CardContent>
                                     <CardActions>
-                                        <Button onClick={() => showFittedPDF(fittedData)}>Show</Button>
-                                        <Button onClick={() => selectFittedPDF(fittedData)}>Select</Button>
+                                        <IconButton onClick={() => showFittedPDF(fittedData)}>
+                                            <ShowChartIcon />
+                                        </IconButton>
+                                        <IconButton onClick={() => selectFittedPDF(fittedData)}>
+                                            <CheckCircleIcon />
+                                        </IconButton>
+                                        <IconButton>
+                                            <DeleteIcon />
+                                        </IconButton>
                                     </CardActions>
                                 </Card>
                             ))}
@@ -322,8 +350,9 @@ export default function VariablePlot({ variable, updateVariable }) {
                         <Box>
                             <h4>Distributions</h4>
                             <Button variant="outlined" onClick={fitData}>Fit New Distributions</Button>
+                            {/* Selected Distributions */}
                             {variable.distributions.reverse().map((distribution, index) => (
-                                <Card>
+                                <Card key={index} elevation={2} sx={{ m: 2, border: index == 0 ? '2px solid orange' : '1px solid black' }}>
                                     <CardContent>
                                         <h5>#{variable.distributions.length - index} {distribution.name}</h5>
                                         {/* Parameters */}
