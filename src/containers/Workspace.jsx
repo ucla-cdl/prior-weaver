@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import "./Workspace.css";
-import { Button, Box, Select, MenuItem, Grid2, InputLabel, FormControl, Tabs, Tab } from '@mui/material';
+import { Button, Box, Select, MenuItem, Grid2, InputLabel, FormControl, Tabs, Tab, Typography } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
@@ -54,6 +54,13 @@ export default function Workspace(props) {
 
     return (
         <div className='workspace-div'>
+            <Box className="module-div" sx={{ width: "100%", my: 2 }}>
+                <h3>Analysis Context</h3>
+                <Typography>
+                You are a social science researcher interested in analyze the influence of adults' background and demographics on their monthly income.
+                </Typography>
+            </Box>
+
             <ConceptualModel variablesDict={variablesDict} setVariablesDict={setVariablesDict} setBiVariableDict={setBiVariableDict} updateVariable={updateVariable} />
 
             <Grid2 sx={{ my: 2 }} container spacing={3}>

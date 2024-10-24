@@ -654,7 +654,8 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                 .attr("y1", dot1.attr("cy"))
                 .attr("x2", dot2.attr("cx"))
                 .attr("y2", dot2.attr("cy"))
-                .attr("stroke", "black")
+                .attr("stroke", "gray")
+                .attr("stroke-dasharray", "5,5") 
                 .attr("stroke-width", 2);
         }
     }
@@ -703,19 +704,15 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
     // Use Populate Dot and Chip Dot to do Regression
     const fitRelation = () => {
         const biVarName = biVariable1.name + "-" + biVariable2.name;
-
-        console.log(biVariableDict[biVarName].populateDots)
-        console.log(biVariableDict[biVarName].chipDots)
-
         axios
             .post(window.BACKEND_ADDRESS + "/fitBiVarRelation", {
                 populateDots: biVariableDict[biVarName].populateDots,
                 chipDots: biVariableDict[biVarName].chipDots
             })
             .then((resp) => {
-                console.log(resp.data);
                 updateBivariable(biVarName, "fittedRelation", resp.data);
                 drawFittedRelation(resp.data.fittedLine);
+                logUserBehavior(`bi-plot(${biVarName})`, "click", `fit bvariate relationship`, `${resp.data.equation}`)
             })
     }
 

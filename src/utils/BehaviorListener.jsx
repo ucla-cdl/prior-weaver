@@ -20,8 +20,8 @@ export const logUserBehavior = (component, action, func, details) => {
         "details": details,
     };
 
-    const logs = JSON.parse(sessionStorage.getItem('userLogs')) || [];
+    const logs = JSON.parse(localStorage.getItem('userLogs')) || [];
     logs.push(logEntry);
-    sessionStorage.setItem('userLogs', JSON.stringify(logs));
+    localStorage.setItem('userLogs', JSON.stringify(logs));
 };
 

@@ -41,7 +41,7 @@ def root():
 
 
 class VariableData(BaseModel):
-    bin_edges: List[int]
+    bin_edges: List[float]
     counts: List[int]
 
 

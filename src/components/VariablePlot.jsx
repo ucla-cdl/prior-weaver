@@ -174,9 +174,9 @@ export default function VariablePlot({ variable, updateVariable }) {
                 counts: variable.counts
             })
             .then((resp) => {
-                console.log(resp.data);
                 setFittedDistributions(resp.data);
                 setIsFitting(true);
+                logUserBehavior(`uni-plot(${variable.name})`, 'click', 'fit distribution', `version ${variable.distributions.length}`);
             })
     }
 
@@ -234,7 +234,7 @@ export default function VariablePlot({ variable, updateVariable }) {
     }
 
     const showFittedPDF = (fittedData) => {
-        drawFittedDistribution(fittedData)
+        drawFittedDistribution(fittedData);
     }
 
     const drawSelectedDistribution = (fittedData, maxValueY = null) => {
@@ -285,12 +285,67 @@ export default function VariablePlot({ variable, updateVariable }) {
         drawSelectedDistribution(fittedData);
         updateVariable(variable.name, "distributions", newDistributions);
         setIsFitting(false);
+        logUserBehavior(`uni-plot(${variable.name})`, 'select', 'fitted distribution', `${fittedData.name}`);
     }
 
     return (
         <Grid2 container spacing={2} >
             <Grid2 size={8}>
                 <Paper elevation={3} sx={{ width: "100%", height: chartHeight }} id={"univariate-div-" + variable.name}></Paper>
+                {variable.distributions.length > 0 ? (
+                    <Box>
+                        {(() => {
+                            const lastDistribution = variable.distributions[variable.distributions.length - 1];
+                            const { name, params } = lastDistribution;
+
+                            // Dynamically render the distribution notation based on the distribution type
+                            switch (name) {
+                                case 'norm':
+                                    return (
+                                        <h6>
+                                            X &sim; Normal(&mu; = {params.loc}, &sigma;<sup>2</sup> = {Math.pow(params.scale, 2)})
+                                        </h6>
+                                    );
+                                case 'expon':
+                                    return (
+                                        <h6>
+                                            X &sim; Exponential(&lambda; = {1 / params.scale})
+                                        </h6>
+                                    );
+                                case 'lognorm':
+                                    return (
+                                        <h6>
+                                            X &sim; Log-Normal(&mu; = {Math.log(params.scale)}, &sigma; = {params.s})
+                                        </h6>
+                                    );
+                                case 'gamma':
+                                    return (
+                                        <h6>
+                                            X &sim; Gamma(&alpha; = {params.a}, &beta; = {1 / params.scale})
+                                        </h6>
+                                    );
+                                case 'beta':
+                                    return (
+                                        <h6>
+                                            X &sim; Beta({params.a}, {params.b}, loc = {params.loc}, scale = {params.scale})
+                                        </h6>
+                                    );
+                                case 'uniform':
+                                    return (
+                                        <h6>
+                                            X &sim; Uniform(a = {params.loc}, b = {params.loc + params.scale})
+                                        </h6>
+                                    );
+                                default:
+                                    return (
+                                        <h6>Unknown distribution: {name}</h6>
+                                    );
+                            }
+                        })()}
+                    </Box>
+                ) : (
+                    <></>
+                )}
             </Grid2>
             <Grid2 size={4} >
                 <Paper elevation={5} sx={{ height: chartHeight, overflowY: 'scroll' }}>
@@ -334,16 +389,16 @@ export default function VariablePlot({ variable, updateVariable }) {
                                             </AccordionDetails>
                                         </Accordion>
                                     </CardContent>
-                                    <CardActions>
+                                    <CardActions sx={{ display: 'flex', justifyContent: 'center' }}>
                                         <IconButton onClick={() => showFittedPDF(fittedData)}>
                                             <ShowChartIcon />
                                         </IconButton>
                                         <IconButton onClick={() => selectFittedPDF(fittedData)}>
                                             <CheckCircleIcon />
                                         </IconButton>
-                                        <IconButton>
+                                        {/* <IconButton>
                                             <DeleteIcon />
-                                        </IconButton>
+                                        </IconButton> */}
                                     </CardActions>
                                 </Card>
                             ))}
@@ -353,7 +408,7 @@ export default function VariablePlot({ variable, updateVariable }) {
                             <h4>Distributions</h4>
                             <Button variant="outlined" onClick={fitData}>Fit New Distributions</Button>
                             {/* Selected Distributions */}
-                            {variable.distributions.reverse().map((distribution, index) => (
+                            {variable.distributions.toReversed().map((distribution, index) => (
                                 <Card key={index} elevation={2} sx={{ m: 2, border: index == 0 ? '2px solid orange' : '1px solid black' }}>
                                     <CardContent>
                                         <h5>#{variable.distributions.length - index} {distribution.name}</h5>
