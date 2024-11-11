@@ -55,14 +55,21 @@ To get a local copy up and running, follow these steps:
    cd Prior-Elicitation
    ```
 
-3. Install the dependencies:
+3. Install the frontend dependencies:
    ```bash
    npm install
    ```
 
-4. Start the  server:
+4. Install the backend dependencies:
    ```bash
-   npm start
+   conda env create -f environment.yml
+   conda activate interactive_prior_elicitation
+   pip install -r requirements.txt
+   ```
+
+5. Start the  server:
+   ```bash
+   sh run.sh
    ```
 
    The web interface will be running at `http://localhost:3000` and the backend will be running at `http://localhost:8000`.
