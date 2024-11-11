@@ -15,7 +15,7 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
     const [isAddingRelation, setIsAddingRelation] = useState(false);
     const [relatedVar1, setRelatedVar1] = useState('');
     const [relatedVar2, setRelatedVar2] = useState('');
-    const RELATIONS = ["causes", "associates"]
+    const RELATIONS = ["causes", "associates_with"]
     const [relation, setRelation] = useState('');
 
     useEffect(() => {
@@ -36,8 +36,9 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
                             conceptualModel += `${varName} -> ${relatedVar} [label="causes"];\n`;
                             break;
 
-                        case "associates":
+                        case "associates_with":
                             conceptualModel += `${varName} -> ${relatedVar} [label="assoc."];\n`;
+                            conceptualModel += `${relatedVar} -> ${varName} [label="assoc."];\n`;
                             break;
 
                         default:
@@ -81,7 +82,7 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
             counts: Array(newBins).fill(0),
             relations: {
                 "causes": [],
-                "associates": []
+                "associates_with": []
             },
             distributions: []
         };

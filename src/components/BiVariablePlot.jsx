@@ -7,12 +7,13 @@ import axios from "axios";
 export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable2, updateVariable, updateBivariable }) {
     const chartWidth = 800;
     const chartHeight = 800;
-    const margin = { top: 40, right: 40, bottom: 40, left: 60 };
-    const marginalPlotWidth = 100; // y-axis marginal hist
-    const marginalPlotHeight = 100; // x-axis marginal hist
+    const margin = { top: 30, right: 30, bottom: 80, left: 80 };
+    const marginalPlotWidth = 80; // y-axis marginal hist
+    const marginalPlotHeight = 80; // x-axis marginal hist
     const mainPlotWidth = chartWidth - margin.left - margin.right - marginalPlotWidth;
     const mainPlotHeight = chartHeight - margin.top - margin.bottom - marginalPlotHeight;
     const dotRadius = 5; // Radius of each dot
+    const marginDotRadius = 4;
     const toggleHeight = 7;
     const labelOffset = 12;
     const titleOffset = 40;
@@ -302,8 +303,8 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
             .append("circle")
             .attr("class", "x-margin-dot")
             .attr("cx", d => xScale(d.position)) // Place dot at the bin's center on the x-axis
-            .attr("cy", d => marginDotXScale(d.row) - dotRadius) // Stack dots by their row value
-            .attr("r", dotRadius) // Set radius of the dot
+            .attr("cy", d => marginDotXScale(d.row) - marginDotRadius) // Stack dots by their row value
+            .attr("r", marginDotRadius) // Set radius of the dot
             .style("fill", d => d.used ? "gray" : "white")
             .style("stroke", "black")
             .style("stroke-width", "1px")
@@ -397,9 +398,9 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
             .enter()
             .append("circle")
             .attr("class", "y-margin-dot")
-            .attr("cx", d => dotRadius + marginDotYScale(d.row)) // Stack dots by their row value (horizontally)
+            .attr("cx", d => marginDotRadius + marginDotYScale(d.row)) // Stack dots by their row value (horizontally)
             .attr("cy", d => yScale(d.position)) // Place dot at the bin's center on the y-axis
-            .attr("r", dotRadius) // Set radius of the dot
+            .attr("r", marginDotRadius) // Set radius of the dot
             .style("fill", d => d.used ? "gray" : "white")
             .style("stroke", "black")
             .style("stroke-width", "1px")
@@ -749,7 +750,7 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                 <Button sx={{ m: 2 }} variant={bivariateMode === MODES.PREDICT ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.PREDICT)}>PREDICT</Button>
                 <Button sx={{ m: 2 }} variant={bivariateMode === MODES.POPULATE ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.POPULATE)}>POPULATE</Button>
                 <Button sx={{ m: 2 }} variant={bivariateMode === MODES.CHIP ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.CHIP)}>CHIP</Button>
-                <Button sx={{ m: 2 }} onClick={fitRelation}>Fit</Button>
+                <Button sx={{ m: 2 }} variant="outlined" color='success' onClick={fitRelation}>Fit</Button>
             </Box>
             <div id='bivariate-distribution-div'></div>
         </Box>

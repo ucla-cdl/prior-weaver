@@ -3,6 +3,8 @@ import './App.css';
 import routes from './shared/routes';
 import Workspace from "./containers/Workspace";
 import Logger from "./containers/Logger";
+import Home from "./containers/Home";
+import Admin from "./containers/Admin";
 
 function App() {
   return (
@@ -12,6 +14,7 @@ function App() {
           <Route path={routes.home} element={<Workspace />}></Route>
           <Route path={routes.workspace} element={<Workspace />}></Route>
           <Route path={routes.logger} element={<Logger />}></Route>
+          <Route path={routes.admin} element={<Admin />}></Route>
         </Routes>
       </Router>
     </div>

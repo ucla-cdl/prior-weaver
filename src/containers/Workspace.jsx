@@ -1,9 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import "./Workspace.css";
-import { Button, Box, Select, MenuItem, Grid2, InputLabel, FormControl, Tabs, Tab, Typography } from '@mui/material';
+import { Button, Box, Select, MenuItem, Grid2, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
+import HelpIcon from '@mui/icons-material/Help';
+
+const context = {
+    "human_growth_model": "During the early stages of life the stature of female and male are about the same,\
+                but their stature start to clearly to differ during growth and in the later stages of life.\
+                In the early stage man and female are born roughly with the same stature, around 45cm - 55cm.\
+                By the time they are born reaching around 2.5 years old, both male and female present the highest growth rate (centimetres pey year).\
+                It is the time they grow the fastest. During this period, man has higher growth rate compared to female.\
+                For both male and female there is a spurt growth in the pre-adulthood.\
+                For man, this phase shows fast growth rate varying in between 13-17 years old and female varying from 11-15.\
+                Also, male tend to keep growing with roughly constant rate until the age of 17-18, while female with until the age of 15-16.\
+                After this period of life they tend to stablish their statures mostly around 162 - 190cm and 155 - 178cm respectively.",
+    "income_education_age": "Imagine you are a social scientist interested in understanding the factors that influence people's income.\
+                Specifically, you want to assess how the number of years of education and a person's age (or employment years) impact their monthly income in the U.S.\
+                You aim to use this information to better understand socioeconomic patterns and inform policy recommendations.",
+}
 
 // Main Component for Adding Variables and Histograms
 export default function Workspace(props) {
@@ -14,13 +30,7 @@ export default function Workspace(props) {
     const [bivariateVarName2, setBivariateVarName2] = useState('');
     const [biVariableDict, setBiVariableDict] = useState({});
 
-    // useEffect(() => {
-    //     let newVariableDict = {};
-    //     Object.entries(variablesDict).forEach(([varName, variable]) => {
-    //         let newBinEdges = d3.range(newBins + 1).map(i => variable.min + i * (variable.max - variable.min) / newBins);
-    //         // TODO: how to deal with the change of bin number? how to split the counts?
-    //     })
-    // }, [newBins])
+    const [studyContext, setStudyContext] = useState(context["human_growth_model"]);
 
     const updateVariable = (name, key, value) => {
         console.log("update variable", name, key, value);
@@ -52,13 +62,19 @@ export default function Workspace(props) {
         setBivariateVarName2(event.target.value);
     }
 
+
+
     return (
         <div className='workspace-div'>
             <Box className="module-div" sx={{ width: "100%", my: 2 }}>
                 <h3>Analysis Context</h3>
                 <Typography>
-                You are a social science researcher interested in analyze the influence of adults' background and demographics on their monthly income.
+                    {studyContext}
                 </Typography>
+                {/* <Typography sx={{my: 1, fontWeight: 'bold'}}>
+                    Please provide the distribution for statures of males.
+                    Please provide the distributuion for monthly income.
+                </Typography> */}
             </Box>
 
             <ConceptualModel variablesDict={variablesDict} setVariablesDict={setVariablesDict} setBiVariableDict={setBiVariableDict} updateVariable={updateVariable} />
@@ -66,7 +82,22 @@ export default function Workspace(props) {
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Grid2 className="module-div" size={6}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <h3>Bivariate Distribution</h3>
+                        <h3>
+                            Bivariate Relationship
+                            <Tooltip
+                                title={
+                                    <React.Fragment>
+                                        <b>{'Predict Mode'}</b>: {'Draw a trending line.'}<br/>
+                                        <b>{'Populate Mode'}</b>: {'Adding data points.\n'}<br/>
+                                        <b>{'Chip Mode'}</b>: {'Combine marginal data points.\n'}<br/>
+                                        <br/>
+                                        <b>{'Click'}</b> {'to add a point or '} <b>{'Double Click'}</b> {'to delete a point.'}
+                                    </React.Fragment>
+                                }>
+                                <HelpIcon fontSize="small" style={{ marginLeft: '8px', verticalAlign: 'middle' }} />
+                            </Tooltip>
+                        </h3>
+
                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: "center" }}>
                             <FormControl sx={{ m: 1, minWidth: 120 }}>
                                 <InputLabel id="var-1-label">Variable 1</InputLabel>
