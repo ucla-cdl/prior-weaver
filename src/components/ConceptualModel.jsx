@@ -1,26 +1,29 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid2, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { graphviz } from "d3-graphviz";
 import { logUserBehavior } from '../utils/BehaviorListener';
+import DeleteIcon from '@mui/icons-material/Delete';
+import BrushIcon from '@mui/icons-material/Brush';
 
-export default function ConceptualModel({ variablesDict, setVariablesDict, setBiVariableDict, updateVariable }) {
+export default function ConceptualModel({ variablesDict, setVariablesDict, biVariableDict, setBiVariableDict, updateVariable, updateBivariable, selectBivariable }) {
 
     const [isAddingVariable, setIsAddingVariable] = useState(false);
     const [newVarName, setNewVarName] = useState('');
     const [newMin, setNewMin] = useState(0);
     const [newMax, setNewMax] = useState(100);
+    const [newUnitLabel, setNewUnitLabel] = useState('');
     const [newBins, setNewBins] = useState(10);
 
     const [isAddingRelation, setIsAddingRelation] = useState(false);
     const [relatedVar1, setRelatedVar1] = useState('');
     const [relatedVar2, setRelatedVar2] = useState('');
-    const RELATIONS = ["causes", "associates_with"]
+    const RELATIONS = ["causes", "associates with", "not related to"];
     const [relation, setRelation] = useState('');
 
     useEffect(() => {
         drawConceptualModel();
-    }, [variablesDict]);
+    }, [variablesDict, biVariableDict]);
 
     const drawConceptualModel = () => {
         document.getElementById("conceptual-model-div").innerHTML = "";
@@ -28,24 +31,36 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
         let conceptualModel = "digraph {\n";
         Object.entries(variablesDict).forEach(([varName, variable]) => {
             conceptualModel += `${varName};\n`
-            Object.entries(variable.relations).forEach(([relation, relatedVars]) => {
-                for (let index = 0; index < relatedVars.length; index++) {
-                    const relatedVar = relatedVars[index];
-                    switch (relation) {
-                        case "causes":
-                            conceptualModel += `${varName} -> ${relatedVar} [label="causes"];\n`;
-                            break;
+            // Object.entries(variable.relations).forEach(([relation, relatedVars]) => {
+            //     for (let index = 0; index < relatedVars.length; index++) {
+            //         const relatedVar = relatedVars[index];
+            //         switch (relation) {
+            //             case "causes":
+            //                 conceptualModel += `${varName} -> ${relatedVar} [label="causes"];\n`;
+            //                 break;
 
-                        case "associates_with":
-                            conceptualModel += `${varName} -> ${relatedVar} [label="assoc."];\n`;
-                            conceptualModel += `${relatedVar} -> ${varName} [label="assoc."];\n`;
-                            break;
+            //             case "associates_with":
+            //                 conceptualModel += `${varName} -> ${relatedVar} [dir="both" label="assoc."];\n`;
+            //                 break;
 
-                        default:
-                            break;
-                    }
-                }
-            })
+            //             default:
+            //                 break;
+            //         }
+            //     }
+            // })
+        });
+
+        Object.entries(biVariableDict).forEach(([biVarName, biVariable]) => {
+            const [var1, var2] = biVarName.split("-");
+            switch (biVariable.relation) {
+                case "causes":
+                    conceptualModel += `${var1} -> ${var2} [label="causes"];\n`;
+                    break;
+                case "associates with":
+                    conceptualModel += `${var1} -> ${var2} [dir="both" label="assoc."];\n`;
+                default:
+                    break;
+            }
         });
 
         conceptualModel += "}";
@@ -66,6 +81,7 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
 
     const handleCloseAddVariableDialog = () => {
         setNewVarName('');
+        setNewUnitLabel('');
         setNewMin(0);
         setNewMax(100);
         setNewBins(10);
@@ -78,12 +94,9 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
             name: newVarName,
             min: newMin,
             max: newMax,
+            unitLabel: newUnitLabel,
             binEdges: binEdges,
             counts: Array(newBins).fill(0),
-            relations: {
-                "causes": [],
-                "associates_with": []
-            },
             distributions: []
         };
 
@@ -95,10 +108,12 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
                 ...prev,
                 [biVarName]: {
                     name: biVarName,
+                    relation: "not related to",
+                    specified: false,
                     predictionDots: [],
                     populateDots: [],
                     chipDots: [],
-                    fittedRelation: {}
+                    fittedRelation: {},
                 }
             }))
         })
@@ -123,10 +138,8 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
     }
 
     const confirmAddRelation = () => {
-        let newRelations = { ...relatedVar1.relations };
-        newRelations[relation].push(relatedVar2.name);
-        logUserBehavior("conceptual-model", "click button", "add a relation", `${relatedVar1}-${relation}-${relatedVar2}`);
-        updateVariable(relatedVar1.name, "relations", newRelations);
+        updateBivariable(relatedVar1.name + "-" + relatedVar2.name, "relation", relation);
+        logUserBehavior("conceptual-model", "click button", "add a relation", `${relatedVar1.name}-${relation}-${relatedVar2.name}`);
         handleCloseAddRelationDialog();
     }
 
@@ -137,8 +150,11 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
         setIsAddingRelation(false);
     }
 
-    const checkVariable = () => {
-
+    const deleteVar = (name) => {
+        let newVariablesDict = { ...variablesDict };
+        delete newVariablesDict[name];
+        setVariablesDict(newVariablesDict);
+        logUserBehavior("conceptual-model", "click button", "delete a variable", `${name}`);
     }
 
     const modifyRelation = (variable, relatedVarName, formerRelation, targetRelation) => {
@@ -151,37 +167,18 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
 
     return (
         <Grid2 container spacing={3}>
-            <Grid2 size={5} className="module-div">
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <h3>Conceptual Model</h3>
-                    {/* # of Bin */}
-                    {/* <Stack spacing={1} direction="row" sx={{ alignItems: 'center' }}>
-                            <Typography sx={{ fontWeight: 'bold' }}># of Bin:</Typography>
-                            <Slider
-                                sx={{ width: "200px" }}
-                                value={newBins}
-                                onChange={(e, val) => setNewBins(val)}
-                                aria-labelledby="bins-slider"
-                                valueLabelDisplay="auto"
-                                step={1}
-                                marks
-                                min={2}
-                                max={20}
-                            />
-                    </Stack> */}
-                    <div id='conceptual-model-div'></div>
-                </Box>
-            </Grid2>
-
             {/* Variable List */}
             <Grid2 size={3} className="module-div">
                 <h3>Variables</h3>
                 {Object.entries(variablesDict).map(([varName, variable]) => (
-                    <div key={varName}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }} key={varName}>
                         <p><strong>
                             {varName}
                         </strong></p>
-                    </div>
+                        <IconButton onClick={() => deleteVar(varName)}>
+                            <DeleteIcon fontSize='small' />
+                        </IconButton>
+                    </Box>
                 ))}
                 <Button sx={{ m: 2 }} variant="outlined" onClick={addNewVariable}>Add Variable</Button>
                 <Dialog open={isAddingVariable}>
@@ -193,6 +190,14 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
                             value={newVarName}
                             onChange={(e) => setNewVarName(e.target.value)}
                         />
+                        <Box>
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Unit Label"
+                                value={newUnitLabel}
+                                onChange={(e) => setNewUnitLabel(e.target.value)}
+                            />
+                        </Box>
                         <Box>
                             <TextField
                                 sx={{ m: '10px' }}
@@ -217,40 +222,44 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, setBi
                 </Dialog>
             </Grid2>
 
+            {/* Conceptual Model */}
+            <Grid2 size={5} className="module-div">
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <h3>Conceptual Model</h3>
+                    <div id='conceptual-model-div'></div>
+                </Box>
+            </Grid2>
+
             {/* Relation List */}
             <Grid2 size={4} className="module-div">
                 <h3>Relationships</h3>
-                {Object.entries(variablesDict).map(([varName, variable]) => (
-                    <div key={varName}>
-                        {Object.entries(variable["relations"]).map(([relationType, relations]) => (
-                            <div key={relationType}>
-                                {relations.map((relatedVarName, index) => (
-                                    <Box key={index} sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
-                                        <p><strong>
-                                            {varName}
-                                        </strong></p>
-                                        <Select
-                                            sx={{ mx: 4 }}
-                                            variant='standard'
-                                            size='small'
-                                            value={relationType}
-                                            onChange={(e) => modifyRelation(variable, relatedVarName, relationType, e.target.value)}
-                                        >
-                                            {RELATIONS.map((RELATION, i) => {
-                                                return (
-                                                    <MenuItem key={i} value={RELATION}>{RELATION}</MenuItem>
-                                                )
-                                            })}
-                                        </Select>
-                                        <p><strong>
-                                            {relatedVarName}
-                                        </strong></p>
-                                    </Box>
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-                ))}
+                {Object.entries(biVariableDict).map(([biVarName, biVariable]) => {
+                    let [varName, relatedVarName] = biVarName.split("-");
+                    return (
+                        <Box 
+                            sx={{ 
+                                display: 'flex', 
+                                flexDirection: 'row', 
+                                justifyContent: 'center', 
+                                color: biVariable.specified ? 'green' : 'grey' 
+                            }} 
+                            key={biVarName}
+                        >
+                            <p><strong>
+                                {varName}&nbsp;&nbsp;&nbsp;
+                            </strong></p>
+                            <p><u>
+                                {biVariable.relation}
+                            </u></p>
+                            <p><strong>
+                                &nbsp;&nbsp;&nbsp;{relatedVarName}
+                            </strong></p>
+                            <IconButton sx={{mx: 1}} onClick={() => selectBivariable(biVarName)}>
+                                <BrushIcon fontSize='small' />
+                            </IconButton>
+                        </Box>
+                    );
+                })}
                 <Button sx={{ m: 2 }} variant="outlined" onClick={addNewRelation}>Add Relation</Button>
                 <Dialog open={isAddingRelation}>
                     <DialogTitle>Add a New Relation</DialogTitle>

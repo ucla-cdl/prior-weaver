@@ -62,10 +62,28 @@ export default function Workspace(props) {
         setBivariateVarName2(event.target.value);
     }
 
+    const selectBivariable = (biVarName) => {
+        let [varName, relatedVarName] = biVarName.split("-");
+        setBivariateVarName1(varName);
+        setBivariateVarName2(relatedVarName);
+    }
 
 
     return (
         <div className='workspace-div'>
+            {/* <Grid2 sx={{ my: 2 }} container spacing={3}>
+                <Grid2 className="module-div" size={4}>
+                    <h3>Tasks</h3>
+
+                </Grid2>
+                <Grid2 className="module-div" size={8}>
+                    <h3>Analysis Context</h3>
+                    <Typography>
+                        {studyContext}
+                    </Typography>
+                </Grid2>
+            </Grid2> */}
+
             <Box className="module-div" sx={{ width: "100%", my: 2 }}>
                 <h3>Analysis Context</h3>
                 <Typography>
@@ -77,7 +95,16 @@ export default function Workspace(props) {
                 </Typography> */}
             </Box>
 
-            <ConceptualModel variablesDict={variablesDict} setVariablesDict={setVariablesDict} setBiVariableDict={setBiVariableDict} updateVariable={updateVariable} />
+
+            <ConceptualModel
+                variablesDict={variablesDict}
+                setVariablesDict={setVariablesDict}
+                biVariableDict={biVariableDict}
+                setBiVariableDict={setBiVariableDict}
+                updateVariable={updateVariable}
+                updateBivariable={updateBivariable}
+                selectBivariable={selectBivariable}
+            />
 
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Grid2 className="module-div" size={6}>
@@ -87,10 +114,10 @@ export default function Workspace(props) {
                             <Tooltip
                                 title={
                                     <React.Fragment>
-                                        <b>{'Predict Mode'}</b>: {'Draw a trending line.'}<br/>
-                                        <b>{'Populate Mode'}</b>: {'Adding data points.\n'}<br/>
-                                        <b>{'Chip Mode'}</b>: {'Combine marginal data points.\n'}<br/>
-                                        <br/>
+                                        <b>{'Predict Mode'}</b>: {'Draw a trending line.'}<br />
+                                        <b>{'Populate Mode'}</b>: {'Adding data points.\n'}<br />
+                                        <b>{'Chip Mode'}</b>: {'Combine marginal data points.\n'}<br />
+                                        <br />
                                         <b>{'Click'}</b> {'to add a point or '} <b>{'Double Click'}</b> {'to delete a point.'}
                                     </React.Fragment>
                                 }>
@@ -98,7 +125,7 @@ export default function Workspace(props) {
                             </Tooltip>
                         </h3>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: "center" }}>
+                        {/* <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: "center" }}>
                             <FormControl sx={{ m: 1, minWidth: 120 }}>
                                 <InputLabel id="var-1-label">Variable 1</InputLabel>
                                 <Select
@@ -129,7 +156,7 @@ export default function Workspace(props) {
                                     })}
                                 </Select>
                             </FormControl>
-                        </Box>
+                        </Box> */}
 
                         {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
                             <BiVariablePlot

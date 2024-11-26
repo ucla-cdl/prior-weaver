@@ -151,4 +151,5 @@ def fit_bi_var_relation(data: BiVariableData = Body(...)):
         'equation': f'y = {model.coef_[1]:.2f} * x^1 + {model.coef_[2]:.2f} * x^2 + {model.intercept_:.2f}'
     }
 
+    print("bivariate relation fitted", response_data['equation'])
     return response_data

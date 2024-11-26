@@ -10,7 +10,7 @@ import ShowChartIcon from '@mui/icons-material/ShowChart';
 
 // Define the Variable Component
 export default function VariablePlot({ variable, updateVariable }) {
-    const chartHeight = 400;
+    const chartHeight = 600;
     const offsetX = 60;
     const offsetY = 60;
     const toggleHeight = 8;
@@ -290,7 +290,7 @@ export default function VariablePlot({ variable, updateVariable }) {
 
     return (
         <Grid2 container spacing={2} >
-            <Grid2 size={8}>
+            <Grid2 size={12}>
                 <Paper elevation={3} sx={{ width: "100%", height: chartHeight }} id={"univariate-div-" + variable.name}></Paper>
                 {variable.distributions.length > 0 ? (
                     <Box>
@@ -347,7 +347,9 @@ export default function VariablePlot({ variable, updateVariable }) {
                     <></>
                 )}
             </Grid2>
-            <Grid2 size={4} >
+
+            {/* Continuous Distribution Panel */}
+            {/* <Grid2 size={4} >
                 <Paper elevation={5} sx={{ height: chartHeight, overflowY: 'scroll' }}>
                     {isFitting ?
                         <Box>
@@ -358,8 +360,7 @@ export default function VariablePlot({ variable, updateVariable }) {
                                         <h5>
                                             {fittedData.name}
                                         </h5>
-                                        {/* Parameters */}
-                                        <Accordion>
+                                        <Accordion aria-label='Parameters'>
                                             <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
                                                 <Typography>
                                                     Parameters
@@ -373,8 +374,7 @@ export default function VariablePlot({ variable, updateVariable }) {
                                                 ))}
                                             </AccordionDetails>
                                         </Accordion>
-                                        {/* Evaluation Metrics */}
-                                        <Accordion>
+                                        <Accordion aria-label='Evaluation Metrics'>
                                             <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
                                                 <Typography>
                                                     Metrics
@@ -396,9 +396,6 @@ export default function VariablePlot({ variable, updateVariable }) {
                                         <IconButton onClick={() => selectFittedPDF(fittedData)}>
                                             <CheckCircleIcon />
                                         </IconButton>
-                                        {/* <IconButton>
-                                            <DeleteIcon />
-                                        </IconButton> */}
                                     </CardActions>
                                 </Card>
                             ))}
@@ -407,13 +404,11 @@ export default function VariablePlot({ variable, updateVariable }) {
                         <Box>
                             <h4>Distributions</h4>
                             <Button variant="outlined" onClick={fitData}>Fit New Distributions</Button>
-                            {/* Selected Distributions */}
                             {variable.distributions.toReversed().map((distribution, index) => (
                                 <Card key={index} elevation={2} sx={{ m: 2, border: index == 0 ? '2px solid orange' : '1px solid black' }}>
                                     <CardContent>
                                         <h5>#{variable.distributions.length - index} {distribution.name}</h5>
-                                        {/* Parameters */}
-                                        <Accordion>
+                                        <Accordion aria-label='Parameters'>
                                             <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
                                                 <Typography>
                                                     Parameters
@@ -427,8 +422,7 @@ export default function VariablePlot({ variable, updateVariable }) {
                                                 ))}
                                             </AccordionDetails>
                                         </Accordion>
-                                        {/* Evaluation Metrics */}
-                                        <Accordion>
+                                        <Accordion aria-label='Evaluation Metrics'>
                                             <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
                                                 <Typography>
                                                     Metrics
@@ -448,7 +442,7 @@ export default function VariablePlot({ variable, updateVariable }) {
                         </Box>
                     }
                 </Paper>
-            </Grid2>
+            </Grid2> */}
         </Grid2 >
     );
 };
