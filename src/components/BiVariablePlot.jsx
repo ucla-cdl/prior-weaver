@@ -844,8 +844,55 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
         // updateBivariable(biVarName, "specified", false);
     }
 
-    const activeRegionalBrush = () => {
+    const addContextMenu = () => {
+        const mainPlot = d3.select("#bivariate-main-plot");
 
+        mainPlot.on("contextmenu", function (event) {
+            event.preventDefault();
+            const [mouseX, mouseY] = d3.pointer(event);
+
+            d3.select("#context-menu").remove();
+
+            const contextMenu = mainPlot.append("g")
+                .attr("id", "context-menu")
+                .attr("transform", `translate(${mouseX}, ${mouseY})`);
+
+            contextMenu.append("rect")
+                .attr("width", 100)
+                .attr("height", 50)
+                .attr("fill", "white")
+                .attr("stroke", "black");
+
+            contextMenu.append("text")
+                .attr("x", 10)
+                .attr("y", 20)
+                .text("Clear Region")
+                .style("cursor", "pointer")
+                .on("click", () => {
+                    clearRegional();
+                    contextMenu.remove();
+                });
+
+            contextMenu.append("text")
+                .attr("x", 10)
+                .attr("y", 40)
+                .text("Cancel")
+                .style("cursor", "pointer")
+                .on("click", () => {
+                    contextMenu.remove();
+                });
+        });
+
+        d3.select("body").on("click", () => {
+            d3.select("#context-menu").remove();
+        });
+    };
+
+    useEffect(() => {
+        addContextMenu();
+    }, []);
+
+    const activeRegionalBrush = () => {
         // Define the brush behavior
         const brush = d3.brush()
             .extent([[0, 0], [mainPlotWidth, mainPlotHeight]])
@@ -876,9 +923,51 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                     .style("stroke", "red")
                     .data();
                 setSelectedDots(selectedDots);
+
+                mainPlot.on("contextmenu", function(event) {
+                    event.preventDefault();
+                    const [mouseX, mouseY] = d3.pointer(event);
+    
+                    // Remove any existing context menu
+                    d3.select("#context-menu").remove();
+    
+                    // Create a new context menu
+                    const contextMenu = mainPlot.append("div")
+                        .attr("id", "context-menu")
+                        .style("position", "absolute")
+                        .style("left", `${mouseX}px`)
+                        .style("top", `${mouseY}px`)
+                        .style("background", "white")
+                        .style("border", "1px solid black")
+                        .style("padding", "10px")
+                        .style("z-index", 1000);
+    
+                    contextMenu.append("div")
+                        .text("Option 1")
+                        .on("click", () => {
+                            console.log("Option 1 clicked");
+                            // Handle Option 1 click
+                            contextMenu.remove();
+                        });
+    
+                    contextMenu.append("div")
+                        .text("Option 2")
+                        .on("click", () => {
+                            console.log("Option 2 clicked");
+                            // Handle Option 2 click
+                            contextMenu.remove();
+                        });
+    
+                    // Remove context menu on click outside
+                    d3.select("body").on("click.context-menu", () => {
+                        contextMenu.remove();
+                        d3.select("body").on("click.context-menu", null);
+                    });
+                });
             }
             else {
                 dots.style("stroke", "blue")
+                mainPlot.on("contextmenu", null); // Remove context menu event listener
             }
         }
 

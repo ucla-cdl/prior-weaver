@@ -5,6 +5,7 @@ import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
 import HelpIcon from '@mui/icons-material/Help';
+import ParallelSankeyPlot from '../components/ParallelSankeyPlot';
 
 const context = {
     "human_growth_model": "During the early stages of life the stature of female and male are about the same,\
@@ -105,6 +106,11 @@ export default function Workspace(props) {
                 updateBivariable={updateBivariable}
                 selectBivariable={selectBivariable}
             />
+
+            <Box className="module-div" sx={{ width: "100%", my: 2 }}>
+                <h3>Parallel Sankey Plot</h3>
+                <ParallelSankeyPlot variablesDict={variablesDict} />
+            </Box>
 
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Grid2 className="module-div" size={6}>
