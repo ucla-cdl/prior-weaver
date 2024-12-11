@@ -1,41 +1,74 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
-import { Button } from '@mui/material';
+import { Box, Button, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import DragHandleIcon from '@mui/icons-material/DragHandle';
+import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
+import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-export default function ParallelSankeyPlot({ variablesDict }) {
+export default function ParallelSankeyPlot({ variablesDict, updateVariable, entities, updateEntities, synchronizeSankeySelection }) {
 
     const marginTop = 20;
     const marginRight = 10;
     const marginBottom = 20;
     const marginLeft = 10;
 
-    const [entities, setEntities] = useState([]);
+    const [brushSelections, setBrushSelections] = useState(new Map());
+    const [sortableVariables, setSortableVariables] = useState([]);
+    const [draggedItem, setDraggedItem] = useState(null);
 
     useEffect(() => {
-        console.log("draw parallel sankey plot");
+        setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
         drawParallelSankeyPlot();
+        populateEntities();
     }, [variablesDict]);
 
-    // const drawPath = () => {
-    //     let svg = d3.select("#sankey-svg");
-    //     // Append the lines.
-    //     const line = d3.line()
-    //         .defined(([, value]) => value != null)
-    //         .x(([key, value]) => xAxes.get(key)(value))
-    //         .y(([key]) => yAxes(key));
+    useEffect(() => {
+        populateEntities();
+    }, [entities]);
 
-    //     const path = svg.append("g")
-    //         .attr("fill", "none")
-    //         .attr("stroke-width", 1.5)
-    //         .attr("stroke-opacity", 0.4)
-    //         .selectAll("path")
-    //         .data(entities.slice())
-    //         .join("path")
-    //         .attr("stroke", "steelblue")
-    //         .attr("d", d => line(Object.keys(variablesDict).map(key => [key, d[key]])))
-    //         .call(path => path.append("title").text(d => d.name));
-    // }
+    const populateEntities = () => {
+        const divId = "sankey-div";
+        const chartWidth = document.getElementById(divId).clientWidth;
+        const axisNum = Object.keys(variablesDict).length;
+        const chartHeight = axisNum * 120;
+
+        const svg = d3.select("#sankey-svg");
+        const xAxes = new Map(Object.entries(variablesDict).map(([varName, variable]) => [
+            varName,
+            d3.scaleLinear()
+                .domain([variable.min, variable.max])
+                .range([marginLeft, chartWidth - marginRight])
+        ]));
+
+        const yAxes = d3.scalePoint()
+            .domain(
+                Object.values(variablesDict)
+                    .sort((a, b) => a.sequenceNum - b.sequenceNum)
+                    .map(d => d.name))
+            .range([marginTop, chartHeight - marginBottom]);
+
+        // Draw path for the entity
+        const line = d3.line()
+            .defined(([, value]) => value != null)
+            .x(([key, value]) => xAxes.get(key)(value))
+            .y(([key]) => yAxes(key));
+
+        svg.selectAll(".entity-path").remove();
+        entities?.forEach(entity => {
+            svg.append("path")
+                .datum(entity) // Pass the entity directly
+                .attr("class", "entity-path")
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 1.5)
+                .attr("stroke-opacity", 0.4)
+                .attr("d", d => line(Object.entries(d))); // Convert entity to entries for line function
+        });
+    }
 
     const drawParallelSankeyPlot = () => {
         const divId = "sankey-div";
@@ -57,7 +90,10 @@ export default function ParallelSankeyPlot({ variablesDict }) {
         ]));
 
         const yAxes = d3.scalePoint()
-            .domain(Object.entries(variablesDict).map(([varName, variable]) => varName))
+            .domain(
+                Object.values(variablesDict)
+                    .sort((a, b) => a.sequenceNum - b.sequenceNum) // Sort by arranged sequence number
+                    .map(d => d.name))
             .range([marginTop, chartHeight - marginBottom]);
 
         // Append the axis for each key.
@@ -85,7 +121,9 @@ export default function ParallelSankeyPlot({ variablesDict }) {
         // create line behavior
         let selectedPoints = new Array(axisNum).fill(null);
         axes.on("click", function (event, d) {
-            svg.selectAll("circle").remove();
+            svg.selectAll(".temp-circle").remove();
+            svg.selectAll(".temp-line").remove();
+
             const [x, y] = d3.pointer(event);
             const yValue = d;
             const xValue = xAxes.get(yValue).invert(x);
@@ -123,38 +161,24 @@ export default function ParallelSankeyPlot({ variablesDict }) {
             if (submitEntity) {
                 let entity = {};
                 for (let i = 0; i < selectedPoints.length; i++) {
-                    // Draw path for the entity
-                    const line = d3.line()
-                        .defined(([, value]) => value != null)
-                        .x(([key, value]) => xAxes.get(key)(value))
-                        .y(([key]) => yAxes(key));
-
-                    svg.append("path")
-                        .datum(Object.keys(variablesDict).map(key => [key, entity[key]]))
-                        .attr("fill", "none")
-                        .attr("stroke", "steelblue")
-                        .attr("stroke-width", 1.5)
-                        .attr("stroke-opacity", 0.4)
-                        .attr("d", line);
-
                     entity[selectedPoints[i].y] = selectedPoints[i].x;
                 }
 
-                // Draw path for the entity
-                const line = d3.line()
-                    .defined(([, value]) => value != null)
-                    .x(([key, value]) => xAxes.get(key)(value))
-                    .y(([key]) => yAxes(key));
+                // // Draw path for the entity
+                // const line = d3.line()
+                //     .defined(([, value]) => value != null)
+                //     .x(([key, value]) => xAxes.get(key)(value))
+                //     .y(([key]) => yAxes(key));
 
-                svg.append("path")
-                    .datum(entity) // Pass the entity directly
-                    .attr("fill", "none")
-                    .attr("stroke", "steelblue")
-                    .attr("stroke-width", 1.5)
-                    .attr("stroke-opacity", 0.4)
-                    .attr("d", d => line(Object.entries(d))); // Convert entity to entries for line function
+                // svg.append("path")
+                //     .datum(entity) // Pass the entity directly
+                //     .attr("fill", "none")
+                //     .attr("stroke", "steelblue")
+                //     .attr("stroke-width", 1.5)
+                //     .attr("stroke-opacity", 0.4)
+                //     .attr("d", d => line(Object.entries(d))); // Convert entity to entries for line function
 
-                setEntities([...entities, entity]);
+                updateEntities(entity);
                 selectedPoints = new Array(axisNum).fill(null);
                 console.log("submit", entity);
 
@@ -187,12 +211,9 @@ export default function ParallelSankeyPlot({ variablesDict }) {
                 selections.set(key, selection.map(xAxes.get(key).invert));
             }
             const selected = [];
-            console.log("selections", selections);
             svg.selectAll("path").each(function (d) {
                 if (d) {
-                    console.log("d", d);
                     const active = Array.from(selections).every(([key, [min, max]]) => d[key] >= min && d[key] <= max);
-                    console.log("active", active);
                     d3.select(this).style("stroke", active ? selectedColor : deselectedColor);
                     if (active) {
                         d3.select(this).raise();
@@ -202,17 +223,109 @@ export default function ParallelSankeyPlot({ variablesDict }) {
             });
             svg.node().value = selected;
             svg.dispatch("input");
+            setBrushSelections(selections);
         }
 
         svg.node().value = entities;
+
+        svg.on("input", function () {
+            const selectedEntities = svg.node().value;
+            console.log("selectedEntities", selectedEntities);
+            synchronizeSankeySelection(selectedEntities);
+        });
     }
 
+    const autoPopulateEntities = () => {
+        const newEntitiesNum = 10;
+        const newEntities = [];
+        for (let i = 0; i < newEntitiesNum; i++) {
+            let entity = {};
+            Array.from(brushSelections).forEach(([varName, range]) => {
+                const [min, max] = range;
+                const randomValue = Math.random() * (max - min) + min;
+                entity[varName] = randomValue;
+            });
+            newEntities.push(entity);
+        }
+
+        updateEntities(newEntities);
+    }
+
+    function handleDragStart(event) {
+        setDraggedItem(event.active.id);
+    }
+
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+
+        if (active.id !== over.id) {
+            setSortableVariables((items) => {
+                const oldIndex = items.findIndex(item => item.name === active.id);
+                const newIndex = items.findIndex(item => item.name === over.id);
+
+                const newItems = arrayMove(items, oldIndex, newIndex);
+                newItems.forEach((item, index) => {
+                    updateVariable(item.name, "sequenceNum", index);
+                });
+
+                return newItems;
+            });
+        }
+
+        setDraggedItem(null);
+    };
 
     return (
         <div>
+            <Button onClick={autoPopulateEntities}>Auto Populate Entities</Button>
+
+            <DndContext collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                <SortableContext
+                    items={sortableVariables}
+                    strategy={verticalListSortingStrategy}
+                >
+                    {sortableVariables.map(item => {
+                        return (
+                            <SortableItem key={item.name} id={item.name} item={item} />
+                        )
+                    })}
+                </SortableContext>
+                <DragOverlay>
+                    {draggedItem ? <Item id={draggedItem} /> : null}
+                </DragOverlay>
+            </DndContext>
+
             <div id='sankey-div'>
 
             </div>
         </div>
     )
 }
+
+export function SortableItem({ id, item }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <Item ref={setNodeRef} id={id} style={style} {...attributes} {...listeners} />
+    );
+}
+
+export const Item = forwardRef(({ id, ...props }, ref) => {
+    return (
+        <Box {...props} ref={ref} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+            <DragHandleIcon />
+            <p>{id}</p>
+        </Box>
+    )
+});

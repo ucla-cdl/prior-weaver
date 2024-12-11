@@ -9,7 +9,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 
 // Define the Variable Component
-export default function VariablePlot({ variable, updateVariable }) {
+export default function VariablePlot({ variable, updateVariable, entities }) {
     const chartHeight = 600;
     const offsetX = 60;
     const offsetY = 60;
@@ -50,7 +50,7 @@ export default function VariablePlot({ variable, updateVariable }) {
         svg.append("g")
             .attr("id", "univariate-fitted-distribution-" + variable.name);
     }
-
+    
     const drawIVHistogram = () => {
         // Clear the existing SVG
         document.getElementById("univariate-histogram-" + variable.name).innerHTML = "";

@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import "./Workspace.css";
-import { Button, Box, Select, MenuItem, Grid2, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip } from '@mui/material';
+import { Button, Box, Select, MenuItem, Grid2, Backdrop, CircularProgress, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
 import HelpIcon from '@mui/icons-material/Help';
 import ParallelSankeyPlot from '../components/ParallelSankeyPlot';
+import axios from 'axios';
+import * as d3 from 'd3';
 
 const context = {
     "human_growth_model": "During the early stages of life the stature of female and male are about the same,\
@@ -22,14 +24,48 @@ const context = {
                 You aim to use this information to better understand socioeconomic patterns and inform policy recommendations.",
 }
 
+const predefinedVariables = [
+    {
+        name: "age",
+        min: 18,
+        max: 60,
+        unitLabel: 'years',
+        binEdges: d3.range(10 + 1).map(i => 18 + i * (60 - 18) / 10),
+        counts: Array(10).fill(0),
+        distributions: []
+    },
+    {
+        name: "education_years",
+        min: 0,
+        max: 20,
+        unitLabel: 'years',
+        binEdges: d3.range(10 + 1).map(i => 0 + i * (20 - 0) / 10),
+        counts: Array(10).fill(0),
+        distributions: []
+    },
+    {
+        name: "income",
+        min: 0,
+        max: 10000,
+        unitLabel: 'USD',
+        binEdges: d3.range(10 + 1).map(i => 0 + i * (10000 - 0) / 10),
+        counts: Array(10).fill(0),
+        distributions: []
+    },
+]
+
 // Main Component for Adding Variables and Histograms
 export default function Workspace(props) {
+    const bivarRef = useRef();
+
     const [variablesDict, setVariablesDict] = useState({});
     const [selectedVarName, setSelectedVarName] = useState('');
     const [selectedVariable, setSelectedVariable] = useState('');
     const [bivariateVarName1, setBivariateVarName1] = useState('');
     const [bivariateVarName2, setBivariateVarName2] = useState('');
     const [biVariableDict, setBiVariableDict] = useState({});
+    const [entities, setEntities] = useState([]);
+    const [isTranslating, setIsTranslating] = useState(false);
 
     const [studyContext, setStudyContext] = useState(context["human_growth_model"]);
 
@@ -49,19 +85,20 @@ export default function Workspace(props) {
         }));
     }
 
+    const updateEntities = (newEntities) => {
+        console.log("update entities", newEntities);
+        if (Array.isArray(newEntities)) {
+            setEntities(prev => ([...prev, ...newEntities]));
+        } else {
+            setEntities(prev => ([...prev, newEntities]));
+        }
+    }
+
     const handleSelectedVariableChange = (event, value) => {
         console.log("select", value)
         setSelectedVarName(value);
         setSelectedVariable(variablesDict[value]);
     };
-
-    const handleSelectBiVar1 = (event) => {
-        setBivariateVarName1(event.target.value);
-    }
-
-    const handleSelectBiVar2 = (event) => {
-        setBivariateVarName2(event.target.value);
-    }
 
     const selectBivariable = (biVarName) => {
         let [varName, relatedVarName] = biVarName.split("-");
@@ -69,22 +106,114 @@ export default function Workspace(props) {
         setBivariateVarName2(relatedVarName);
     }
 
+    const synchronizeSankeySelection = (selectedEntities) => {
+        console.log("synchronizeSankeySelection", selectedEntities);
+        bivarRef.current?.synchronizeSelection(selectedEntities);
+    }
+
+    const loadData = () => {
+        
+
+        fetch("/synthetic_dataset.json")
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch the dataset");
+                }
+                return response.json();
+            })
+            .then((data) => updateEntities(data))
+            .catch((error) => console.error("Error loading dataset:", error));
+    }
+
+
+    const translate = () => {
+        console.log("translate");
+        setIsTranslating(true);
+        console.log("entities", entities);
+        console.log("variables", Object.values(variablesDict));
+
+        axios
+            .post(window.BACKEND_ADDRESS + "/translate", {
+                entities: entities,
+                variables: Object.values(variablesDict),
+            })
+            .then((response) => {
+                console.log("translated", response.data);
+                plotParametersHistogram(response.data.parameter_distributions);
+            })
+            .finally(() => {
+                setIsTranslating(false);
+            });
+    };
+
+    const plotParametersHistogram = (parameterDistributions) => {
+        const width = 300;
+        const height = 500;
+        const margin = { top: 40, right: 30, bottom: 40, left: 40 };
+        const plotWidth = width - margin.left - margin.right;
+        const plotHeight = height - margin.top - margin.bottom;
+
+        const offset = 100;
+        document.getElementById('parameter-histogram-div').innerHTML = '';
+        const container = d3.select('#parameter-histogram-div')
+
+        Object.entries(parameterDistributions).forEach(([parameter, distribution], index) => {
+            // Create an SVG element
+            const svg = container.append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .attr('transform', `translate(${index * (width + offset)}, 0)`);
+
+            // Append a group element to the SVG to position the chart
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Set the range for x and y axes based on the data
+            const x = d3.scaleLinear()
+                .domain([d3.min(distribution), d3.max(distribution)])
+                .nice()
+                .range([0, plotWidth]);
+
+            const bins = d3.bin()
+                .domain(x.domain())
+                .thresholds(x.ticks(20))(distribution);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(bins, d => d.length)])
+                .nice()
+                .range([plotHeight, 0]);
+
+            // Create the x-axis
+            g.append('g')
+                .attr('transform', `translate(0,${plotHeight})`)
+                .call(d3.axisBottom(x));
+
+            // Create the y-axis
+            g.append('g')
+                .call(d3.axisLeft(y));
+
+            // Add bars for the histogram
+            g.selectAll('.bar')
+                .data(bins)
+                .enter().append('rect')
+                .attr('class', 'bar')
+                .attr('x', d => x(d.x0))
+                .attr('width', d => x(d.x1) - x(d.x0) - 1) // Adjust width for padding
+                .attr('y', d => y(d.length))
+                .attr('height', d => plotHeight - y(d.length))
+                .attr('fill', '#69b3a2');
+
+            // Add title to each histogram
+            g.append('text')
+                .attr('x', plotWidth / 2)
+                .attr('y', -10)
+                .attr('text-anchor', 'middle')
+                .text(parameter);
+        });
+    }
 
     return (
         <div className='workspace-div'>
-            {/* <Grid2 sx={{ my: 2 }} container spacing={3}>
-                <Grid2 className="module-div" size={4}>
-                    <h3>Tasks</h3>
-
-                </Grid2>
-                <Grid2 className="module-div" size={8}>
-                    <h3>Analysis Context</h3>
-                    <Typography>
-                        {studyContext}
-                    </Typography>
-                </Grid2>
-            </Grid2> */}
-
             <Box className="module-div" sx={{ width: "100%", my: 2 }}>
                 <h3>Analysis Context</h3>
                 <Typography>
@@ -95,7 +224,6 @@ export default function Workspace(props) {
                     Please provide the distributuion for monthly income.
                 </Typography> */}
             </Box>
-
 
             <ConceptualModel
                 variablesDict={variablesDict}
@@ -109,8 +237,23 @@ export default function Workspace(props) {
 
             <Box className="module-div" sx={{ width: "100%", my: 2 }}>
                 <h3>Parallel Sankey Plot</h3>
-                <ParallelSankeyPlot variablesDict={variablesDict} />
+                <Button onClick={loadData}>Load Data</Button>
+                <Button onClick={translate}>Translate</Button>
+                <ParallelSankeyPlot
+                    variablesDict={variablesDict}
+                    updateVariable={updateVariable}
+                    entities={entities}
+                    updateEntities={updateEntities}
+                    synchronizeSankeySelection={synchronizeSankeySelection}
+                />
             </Box>
+
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={isTranslating}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
 
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Grid2 className="module-div" size={6}>
@@ -131,46 +274,16 @@ export default function Workspace(props) {
                             </Tooltip>
                         </h3>
 
-                        {/* <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: "center" }}>
-                            <FormControl sx={{ m: 1, minWidth: 120 }}>
-                                <InputLabel id="var-1-label">Variable 1</InputLabel>
-                                <Select
-                                    labelId='var-1-label'
-                                    value={bivariateVarName1}
-                                    label="Variable 1"
-                                    onChange={handleSelectBiVar1}
-                                >
-                                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                                        return (
-                                            <MenuItem disabled={varName === bivariateVarName2} key={i} value={varName}>{varName}</MenuItem>
-                                        )
-                                    })}
-                                </Select>
-                            </FormControl>
-                            <FormControl sx={{ m: 1, minWidth: 120 }}>
-                                <InputLabel id="var-2-label">Variable 2</InputLabel>
-                                <Select
-                                    labelId='var-2-label'
-                                    value={bivariateVarName2}
-                                    label="Variable 2"
-                                    onChange={handleSelectBiVar2}
-                                >
-                                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                                        return (
-                                            <MenuItem disabled={varName === bivariateVarName1} key={i} value={varName}>{varName}</MenuItem>
-                                        )
-                                    })}
-                                </Select>
-                            </FormControl>
-                        </Box> */}
-
                         {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
                             <BiVariablePlot
+                                ref={bivarRef}
                                 biVariableDict={biVariableDict}
                                 biVariable1={variablesDict[bivariateVarName1]}
                                 biVariable2={variablesDict[bivariateVarName2]}
                                 updateVariable={updateVariable}
-                                updateBivariable={updateBivariable} />
+                                updateBivariable={updateBivariable}
+                                entities={entities}
+                            />
                             :
                             <></>}
                     </Box>
@@ -196,7 +309,7 @@ export default function Workspace(props) {
                             return (
                                 <Box key={varName} sx={{ width: '100%', height: '100%' }}>
                                     {selectedVarName === varName ?
-                                        <VariablePlot variable={curVar} updateVariable={updateVariable} />
+                                        <VariablePlot variable={curVar} updateVariable={updateVariable} entities={entities} />
                                         :
                                         <></>
                                     }
@@ -205,6 +318,13 @@ export default function Workspace(props) {
                         })}
                     </Box>
                 </Grid2>
+            </Grid2>
+
+            <Grid2 sx={{ my: 2 }} container spacing={3}>
+                <Box className="module-div" sx={{ width: "100%", my: 2 }}>
+                    <div id='parameter-histogram-div'>
+                    </div>
+                </Box>
             </Grid2>
         </div>
     );

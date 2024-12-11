@@ -7,8 +7,6 @@ from pydantic import BaseModel
 from typing import List, Dict
 
 import numpy as np
-import preliz as pz
-import fitter
 import scipy.stats as stats
 
 import pandas as pd
@@ -37,6 +35,7 @@ def shutdown_db_client():
 
 @app.get('/')
 def root():
+    print("checking root")
     return {"message": "Hello World!"}
 
 
@@ -126,7 +125,7 @@ class BiVariableData(BaseModel):
 
 @app.post('/fitBiVarRelation')
 def fit_bi_var_relation(data: BiVariableData = Body(...)):
-    dots = data.populateDots + data.chipDots 
+    dots = data.populateDots + data.chipDots
     df = pd.DataFrame(dots)
 
     X = df[['x']]
@@ -141,7 +140,8 @@ def fit_bi_var_relation(data: BiVariableData = Body(...)):
     model.fit(X_poly, y)
 
     # Predict values for the given range of x (for smooth plotting)
-    x_range = pd.DataFrame({'x': range(int(min(df['x'])), int(max(df['x'])) + 1)})
+    x_range = pd.DataFrame(
+        {'x': range(int(min(df['x'])), int(max(df['x'])) + 1)})
     X_poly_range = poly.fit_transform(x_range)
     predictions = model.predict(X_poly_range)
 
@@ -153,3 +153,57 @@ def fit_bi_var_relation(data: BiVariableData = Body(...)):
 
     print("bivariate relation fitted", response_data['equation'])
     return response_data
+
+
+class TranslationData(BaseModel):
+    entities: List[dict]
+    variables: List[dict]
+
+
+@app.post('/translate')
+def translate(data: TranslationData = Body(...)):
+    print("translation started")
+    entities = data.entities
+    variables = data.variables
+    
+    # Dynamically determine predictors and response variable
+    variable_names = [var["name"] for var in variables]
+    response_var = variable_names[-1]  # Treat the last variable as the response
+    predictors = variable_names[:-1]  # Remaining variables are predictors
+
+    # Convert dataset to NumPy arrays
+    dataset = np.array([
+        [entity[var_name] for var_name in variable_names]
+        for entity in entities
+    ])
+    X = dataset[:, :-1]  # Predictor variables
+    y = dataset[:, -1]   # Response variable
+
+    # Sampling and fitting
+    num_samples = 100
+    n_records = len(entities)
+    parameter_samples = {var: [] for var in predictors}  # Store coefficients
+    intercept_samples = []
+
+    for _ in range(num_samples):
+        # Bootstrap sampling
+        indices = np.random.choice(n_records, n_records, replace=True)
+        X_sample = X[indices]
+        y_sample = y[indices]
+
+        # Fit linear model
+        model = LinearRegression()
+        model.fit(X_sample, y_sample)
+
+        # Store parameter estimates
+        for i, var in enumerate(predictors):
+            parameter_samples[var].append(model.coef_[i])
+        intercept_samples.append(model.intercept_)
+
+    # Prepare the response
+    parameter_samples["intercept"] = intercept_samples
+    
+    print("translation done")
+    return {
+        "parameter_distributions": parameter_samples
+    }

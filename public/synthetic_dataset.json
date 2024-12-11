@@ -1,0 +1,502 @@
+[
+    {
+        "age": 45.0,
+        "education_years": 11.2,
+        "income": 47.7
+    },
+    {
+        "age": 38.6,
+        "education_years": 13.2,
+        "income": 46.0
+    },
+    {
+        "age": 46.5,
+        "education_years": 13.3,
+        "income": 58.5
+    },
+    {
+        "age": 55.2,
+        "education_years": 12.4,
+        "income": 66.5
+    },
+    {
+        "age": 37.7,
+        "education_years": 13.7,
+        "income": 36.5
+    },
+    {
+        "age": 37.7,
+        "education_years": 14.8,
+        "income": 41.5
+    },
+    {
+        "age": 55.8,
+        "education_years": 17.8,
+        "income": 78.0
+    },
+    {
+        "age": 47.7,
+        "education_years": 14.3,
+        "income": 59.7
+    },
+    {
+        "age": 35.3,
+        "education_years": 14.5,
+        "income": 45.2
+    },
+    {
+        "age": 45.4,
+        "education_years": 13.9,
+        "income": 72.4
+    },
+    {
+        "age": 35.4,
+        "education_years": 10.2,
+        "income": 34.7
+    },
+    {
+        "age": 35.3,
+        "education_years": 13.9,
+        "income": 47.0
+    },
+    {
+        "age": 42.4,
+        "education_years": 14.1,
+        "income": 55.0
+    },
+    {
+        "age": 20.9,
+        "education_years": 18.9,
+        "income": 39.6
+    },
+    {
+        "age": 22.8,
+        "education_years": 13.6,
+        "income": 23.8
+    },
+    {
+        "age": 34.4,
+        "education_years": 14.6,
+        "income": 45.6
+    },
+    {
+        "age": 29.9,
+        "education_years": 13.9,
+        "income": 30.8
+    },
+    {
+        "age": 43.1,
+        "education_years": 11.7,
+        "income": 43.7
+    },
+    {
+        "age": 30.9,
+        "education_years": 16.3,
+        "income": 39.4
+    },
+    {
+        "age": 25.9,
+        "education_years": 15.5,
+        "income": 34.2
+    },
+    {
+        "age": 54.7,
+        "education_years": 15.6,
+        "income": 80.1
+    },
+    {
+        "age": 37.7,
+        "education_years": 12.2,
+        "income": 30.4
+    },
+    {
+        "age": 40.7,
+        "education_years": 16.8,
+        "income": 58.3
+    },
+    {
+        "age": 25.8,
+        "education_years": 11.2,
+        "income": 15.0
+    },
+    {
+        "age": 34.6,
+        "education_years": 15.2,
+        "income": 41.0
+    },
+    {
+        "age": 41.1,
+        "education_years": 18.4,
+        "income": 64.7
+    },
+    {
+        "age": 28.5,
+        "education_years": 12.0,
+        "income": 28.6
+    },
+    {
+        "age": 43.8,
+        "education_years": 12.9,
+        "income": 43.3
+    },
+    {
+        "age": 34.0,
+        "education_years": 14.2,
+        "income": 36.7
+    },
+    {
+        "age": 37.1,
+        "education_years": 13.0,
+        "income": 44.4
+    },
+    {
+        "age": 34.0,
+        "education_years": 10.9,
+        "income": 28.4
+    },
+    {
+        "age": 58.5,
+        "education_years": 14.1,
+        "income": 70.7
+    },
+    {
+        "age": 39.9,
+        "education_years": 11.9,
+        "income": 41.8
+    },
+    {
+        "age": 29.4,
+        "education_years": 14.9,
+        "income": 33.4
+    },
+    {
+        "age": 48.2,
+        "education_years": 12.2,
+        "income": 63.0
+    },
+    {
+        "age": 27.8,
+        "education_years": 17.1,
+        "income": 43.3
+    },
+    {
+        "age": 42.1,
+        "education_years": 12.4,
+        "income": 35.5
+    },
+    {
+        "age": 20.4,
+        "education_years": 13.4,
+        "income": 22.8
+    },
+    {
+        "age": 26.7,
+        "education_years": 15.6,
+        "income": 31.8
+    },
+    {
+        "age": 42.0,
+        "education_years": 11.5,
+        "income": 47.5
+    },
+    {
+        "age": 47.4,
+        "education_years": 14.5,
+        "income": 53.0
+    },
+    {
+        "age": 41.7,
+        "education_years": 16.6,
+        "income": 55.0
+    },
+    {
+        "age": 38.8,
+        "education_years": 10.8,
+        "income": 40.1
+    },
+    {
+        "age": 37.0,
+        "education_years": 14.4,
+        "income": 48.6
+    },
+    {
+        "age": 25.2,
+        "education_years": 14.5,
+        "income": 24.6
+    },
+    {
+        "age": 32.8,
+        "education_years": 15.6,
+        "income": 40.6
+    },
+    {
+        "age": 35.4,
+        "education_years": 11.5,
+        "income": 32.9
+    },
+    {
+        "age": 50.6,
+        "education_years": 11.4,
+        "income": 49.8
+    },
+    {
+        "age": 43.4,
+        "education_years": 15.0,
+        "income": 62.6
+    },
+    {
+        "age": 22.4,
+        "education_years": 14.6,
+        "income": 29.4
+    },
+    {
+        "age": 43.2,
+        "education_years": 14.5,
+        "income": 45.8
+    },
+    {
+        "age": 36.1,
+        "education_years": 14.7,
+        "income": 48.7
+    },
+    {
+        "age": 33.2,
+        "education_years": 12.6,
+        "income": 46.1
+    },
+    {
+        "age": 46.1,
+        "education_years": 14.5,
+        "income": 60.7
+    },
+    {
+        "age": 50.3,
+        "education_years": 14.6,
+        "income": 53.2
+    },
+    {
+        "age": 49.3,
+        "education_years": 12.6,
+        "income": 52.2
+    },
+    {
+        "age": 31.6,
+        "education_years": 17.7,
+        "income": 52.6
+    },
+    {
+        "age": 36.9,
+        "education_years": 14.9,
+        "income": 42.1
+    },
+    {
+        "age": 43.3,
+        "education_years": 11.6,
+        "income": 47.2
+    },
+    {
+        "age": 49.8,
+        "education_years": 15.3,
+        "income": 65.9
+    },
+    {
+        "age": 35.2,
+        "education_years": 12.1,
+        "income": 31.7
+    },
+    {
+        "age": 38.1,
+        "education_years": 15.6,
+        "income": 48.4
+    },
+    {
+        "age": 28.9,
+        "education_years": 16.3,
+        "income": 23.3
+    },
+    {
+        "age": 28.0,
+        "education_years": 12.4,
+        "income": 23.4
+    },
+    {
+        "age": 48.1,
+        "education_years": 15.9,
+        "income": 60.3
+    },
+    {
+        "age": 53.6,
+        "education_years": 14.8,
+        "income": 59.1
+    },
+    {
+        "age": 39.3,
+        "education_years": 15.6,
+        "income": 58.4
+    },
+    {
+        "age": 50.0,
+        "education_years": 17.8,
+        "income": 61.4
+    },
+    {
+        "age": 43.6,
+        "education_years": 13.5,
+        "income": 47.9
+    },
+    {
+        "age": 33.5,
+        "education_years": 12.5,
+        "income": 36.1
+    },
+    {
+        "age": 43.6,
+        "education_years": 12.2,
+        "income": 54.1
+    },
+    {
+        "age": 55.4,
+        "education_years": 12.4,
+        "income": 54.2
+    },
+    {
+        "age": 39.6,
+        "education_years": 13.8,
+        "income": 52.0
+    },
+    {
+        "age": 55.6,
+        "education_years": 14.7,
+        "income": 67.5
+    },
+    {
+        "age": 18.0,
+        "education_years": 14.6,
+        "income": 17.1
+    },
+    {
+        "age": 48.2,
+        "education_years": 15.7,
+        "income": 63.3
+    },
+    {
+        "age": 40.9,
+        "education_years": 14.0,
+        "income": 49.1
+    },
+    {
+        "age": 37.0,
+        "education_years": 16.9,
+        "income": 47.7
+    },
+    {
+        "age": 40.9,
+        "education_years": 13.5,
+        "income": 47.1
+    },
+    {
+        "age": 20.1,
+        "education_years": 19.4,
+        "income": 34.8
+    },
+    {
+        "age": 37.8,
+        "education_years": 15.3,
+        "income": 48.1
+    },
+    {
+        "age": 43.6,
+        "education_years": 12.3,
+        "income": 50.3
+    },
+    {
+        "age": 54.8,
+        "education_years": 11.9,
+        "income": 67.3
+    },
+    {
+        "age": 34.8,
+        "education_years": 15.0,
+        "income": 37.0
+    },
+    {
+        "age": 31.9,
+        "education_years": 13.6,
+        "income": 46.8
+    },
+    {
+        "age": 35.0,
+        "education_years": 15.4,
+        "income": 34.8
+    },
+    {
+        "age": 49.2,
+        "education_years": 14.9,
+        "income": 59.6
+    },
+    {
+        "age": 43.3,
+        "education_years": 13.9,
+        "income": 53.5
+    },
+    {
+        "age": 34.7,
+        "education_years": 12.3,
+        "income": 37.8
+    },
+    {
+        "age": 45.1,
+        "education_years": 11.0,
+        "income": 42.5
+    },
+    {
+        "age": 41.0,
+        "education_years": 13.1,
+        "income": 44.9
+    },
+    {
+        "age": 49.7,
+        "education_years": 15.7,
+        "income": 60.4
+    },
+    {
+        "age": 33.0,
+        "education_years": 14.4,
+        "income": 36.7
+    },
+    {
+        "age": 36.7,
+        "education_years": 11.5,
+        "income": 41.1
+    },
+    {
+        "age": 36.1,
+        "education_years": 14.3,
+        "income": 44.9
+    },
+    {
+        "age": 25.4,
+        "education_years": 14.8,
+        "income": 27.9
+    },
+    {
+        "age": 43.0,
+        "education_years": 12.2,
+        "income": 50.6
+    },
+    {
+        "age": 42.6,
+        "education_years": 14.3,
+        "income": 52.4
+    },
+    {
+        "age": 40.1,
+        "education_years": 14.1,
+        "income": 51.4
+    },
+    {
+        "age": 37.7,
+        "education_years": 11.7,
+        "income": 41.6
+    }
+]

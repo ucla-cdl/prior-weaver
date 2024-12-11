@@ -97,7 +97,8 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
             unitLabel: newUnitLabel,
             binEdges: binEdges,
             counts: Array(newBins).fill(0),
-            distributions: []
+            distributions: [],
+            sequenceNum: Object.keys(variablesDict).length
         };
 
         // Add a bivariable relationship

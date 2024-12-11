@@ -4,7 +4,7 @@ import { Box, Button, Grid2 } from '@mui/material';
 import { logUserBehavior } from '../utils/BehaviorListener';
 import axios from "axios";
 
-export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable2, updateVariable, updateBivariable }) {
+const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariable2, updateVariable, updateBivariable, entities }, ref) => {
     const chartWidth = 800;
     const chartHeight = 800;
     const margin = { top: 30, right: 30, bottom: 80, left: 80 };
@@ -33,6 +33,47 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
         drawGridPlot();
         drawMarginPlot();
     }, [biVariable1.counts, biVariable2.counts, bivariateMode])
+
+    useEffect(() => {
+        populateEntities();
+    }, [entities])
+
+    const populateEntities = () => {
+        let mainPlot = d3.select("#bivariate-main-plot");
+        let xScale = d3.scaleLinear()
+            .domain([biVariable1.min, biVariable1.max])
+            .range([0, mainPlotWidth]);
+        let yScale = d3.scaleLinear()
+            .domain([biVariable2.min, biVariable2.max])
+            .range([mainPlotHeight, 0]);
+
+        console.log("populate entities", entities);
+
+        mainPlot.selectAll(".entity-dot").remove();
+        entities?.forEach(entity => {
+            mainPlot.append("circle")
+                .datum(entity)
+                .attr("class", "entity-dot")
+                .attr("cx", d => xScale(d[biVariable1.name]))
+                .attr("cy", d => yScale(d[biVariable2.name]))
+                .attr("r", dotRadius)
+                .attr("fill", "white")
+                .style("stroke-width", 1.5)
+                .attr("stroke", "steelblue")
+        });
+    }
+
+    React.useImperativeHandle(ref, () => ({
+        synchronizeSelection,
+    }));
+
+    const synchronizeSelection = (selectedEntities) => {
+        let mainPlot = d3.select("#bivariate-main-plot");
+
+        mainPlot.selectAll(".entity-dot")
+            .style("fill", d => selectedEntities.includes(d) ? "steelblue" : "white")
+            .style("opacity", d => selectedEntities.includes(d) ? 1 : 0.3);
+    }
 
     const drawPlot = () => {
         document.getElementById("bivariate-distribution-div").innerHTML = "";
@@ -128,6 +169,8 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                     })
             }
         }
+
+        populateEntities();
     }
 
     const drawMarginPlot = () => {
@@ -743,7 +786,7 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
         updateVariable(biVariable1.name, "counts", newBivar1Counts);
         updateVariable(biVariable2.name, "counts", newBivar2Counts);
     }
-    
+
     const updateChipDots = (xScale, yScale) => {
         let newChipDots = [];
         d3.selectAll(".chip-dot").nodes().forEach((chipDot) => {
@@ -924,13 +967,13 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                     .data();
                 setSelectedDots(selectedDots);
 
-                mainPlot.on("contextmenu", function(event) {
+                mainPlot.on("contextmenu", function (event) {
                     event.preventDefault();
                     const [mouseX, mouseY] = d3.pointer(event);
-    
+
                     // Remove any existing context menu
                     d3.select("#context-menu").remove();
-    
+
                     // Create a new context menu
                     const contextMenu = mainPlot.append("div")
                         .attr("id", "context-menu")
@@ -941,7 +984,7 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                         .style("border", "1px solid black")
                         .style("padding", "10px")
                         .style("z-index", 1000);
-    
+
                     contextMenu.append("div")
                         .text("Option 1")
                         .on("click", () => {
@@ -949,7 +992,7 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                             // Handle Option 1 click
                             contextMenu.remove();
                         });
-    
+
                     contextMenu.append("div")
                         .text("Option 2")
                         .on("click", () => {
@@ -957,7 +1000,7 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
                             // Handle Option 2 click
                             contextMenu.remove();
                         });
-    
+
                     // Remove context menu on click outside
                     d3.select("body").on("click.context-menu", () => {
                         contextMenu.remove();
@@ -1029,4 +1072,6 @@ export default function BiVariablePlot({ biVariableDict, biVariable1, biVariable
             <div id='bivariate-distribution-div'></div>
         </Box >
     )
-}
+})
+
+export default BiVariablePlot;
