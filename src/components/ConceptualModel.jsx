@@ -6,7 +6,7 @@ import { logUserBehavior } from '../utils/BehaviorListener';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BrushIcon from '@mui/icons-material/Brush';
 
-export default function ConceptualModel({ variablesDict, setVariablesDict, biVariableDict, setBiVariableDict, updateVariable, updateBivariable, selectBivariable }) {
+export default function ConceptualModel({ variablesDict, setVariablesDict, biVariableDict, setBiVariableDict, updateBivariable, selectBivariable, addAttributeToEntities }) {
 
     const [isAddingVariable, setIsAddingVariable] = useState(false);
     const [newVarName, setNewVarName] = useState('');
@@ -29,27 +29,13 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
         document.getElementById("conceptual-model-div").innerHTML = "";
 
         let conceptualModel = "digraph {\n";
+
+        // Add Univariate Variables
         Object.entries(variablesDict).forEach(([varName, variable]) => {
-            conceptualModel += `${varName};\n`
-            // Object.entries(variable.relations).forEach(([relation, relatedVars]) => {
-            //     for (let index = 0; index < relatedVars.length; index++) {
-            //         const relatedVar = relatedVars[index];
-            //         switch (relation) {
-            //             case "causes":
-            //                 conceptualModel += `${varName} -> ${relatedVar} [label="causes"];\n`;
-            //                 break;
-
-            //             case "associates_with":
-            //                 conceptualModel += `${varName} -> ${relatedVar} [dir="both" label="assoc."];\n`;
-            //                 break;
-
-            //             default:
-            //                 break;
-            //         }
-            //     }
-            // })
+            conceptualModel += `${varName};\n`;
         });
 
+        // Add Bivariate Relationships
         Object.entries(biVariableDict).forEach(([biVarName, biVariable]) => {
             const [var1, var2] = biVarName.split("-");
             switch (biVariable.relation) {
@@ -119,6 +105,9 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
             }))
         })
 
+        // Add an attribute to every existing entities
+        addAttributeToEntities(newVarName);
+
         setVariablesDict(prev => ({ ...prev, [newVariable.name]: newVariable }));
     };
 
@@ -156,14 +145,6 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
         delete newVariablesDict[name];
         setVariablesDict(newVariablesDict);
         logUserBehavior("conceptual-model", "click button", "delete a variable", `${name}`);
-    }
-
-    const modifyRelation = (variable, relatedVarName, formerRelation, targetRelation) => {
-        let newRelations = { ...variable.relations };
-        newRelations[formerRelation] = newRelations[formerRelation].filter(varName => varName !== relatedVarName)
-        newRelations[targetRelation].push(relatedVarName);
-        logUserBehavior("conceptual-model", "select", "modify a relation", `${variable.name}-${relatedVarName}: ${formerRelation} -> ${targetRelation}`);
-        updateVariable(variable.name, "relations", newRelations);
     }
 
     return (

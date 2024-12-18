@@ -5,8 +5,8 @@ import { logUserBehavior } from '../utils/BehaviorListener';
 import axios from "axios";
 
 const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariable2, updateVariable, updateBivariable, entities }, ref) => {
-    const chartWidth = 800;
-    const chartHeight = 800;
+    const chartWidth = 500;
+    const chartHeight = 500;
     const margin = { top: 30, right: 30, bottom: 80, left: 80 };
     const marginalPlotWidth = 80; // y-axis marginal hist
     const marginalPlotHeight = 80; // x-axis marginal hist
@@ -23,6 +23,10 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     const [bivariateMode, setBivariateMode] = useState('PREDICT');
     const [selectedDots, setSelectedDots] = useState([]);
     const [enableBrush, setEnableBrush] = useState(false);
+
+    React.useImperativeHandle(ref, () => ({
+        synchronizeSelection,
+    }));
 
     useEffect(() => {
         drawPlot();
@@ -50,7 +54,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         console.log("populate entities", entities);
 
         mainPlot.selectAll(".entity-dot").remove();
-        entities?.forEach(entity => {
+        Object.values(entities)?.forEach(entity => {
             mainPlot.append("circle")
                 .datum(entity)
                 .attr("class", "entity-dot")
@@ -61,30 +65,6 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
                 .style("stroke-width", 1.5)
                 .attr("stroke", "steelblue")
         });
-    }
-
-    React.useImperativeHandle(ref, () => ({
-        synchronizeSelection,
-    }));
-
-    const synchronizeSelection = (selectedEntities) => {
-        let mainPlot = d3.select("#bivariate-main-plot");
-
-        mainPlot.selectAll(".entity-dot")
-            .style("fill", d => selectedEntities.includes(d) ? "steelblue" : "white")
-            .style("opacity", d => selectedEntities.includes(d) ? 1 : 0.3);
-    }
-
-    const drawPlot = () => {
-        document.getElementById("bivariate-distribution-div").innerHTML = "";
-
-        let svg = d3.select("#bivariate-distribution-div").append("svg")
-            .attr("id", "bivariate-svg")
-            .attr("width", chartWidth)
-            .attr("height", chartHeight);
-        svg.append("g")
-            .attr("id", "bivariate-main-plot")
-            .attr("transform", `translate(${margin.left}, ${margin.top + marginalPlotHeight})`)
     }
 
     const drawGridPlot = () => {
@@ -828,7 +808,6 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         setBivariateMode(mode);
     }
 
-    // Use Populate Dot and Chip Dot to do Regression
     const fitRelation = () => {
         const biVarName = biVariable1.name + "-" + biVariable2.name;
         axios
@@ -886,54 +865,6 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         updateBivariable(biVarName, "fittedRelation", {});
         // updateBivariable(biVarName, "specified", false);
     }
-
-    const addContextMenu = () => {
-        const mainPlot = d3.select("#bivariate-main-plot");
-
-        mainPlot.on("contextmenu", function (event) {
-            event.preventDefault();
-            const [mouseX, mouseY] = d3.pointer(event);
-
-            d3.select("#context-menu").remove();
-
-            const contextMenu = mainPlot.append("g")
-                .attr("id", "context-menu")
-                .attr("transform", `translate(${mouseX}, ${mouseY})`);
-
-            contextMenu.append("rect")
-                .attr("width", 100)
-                .attr("height", 50)
-                .attr("fill", "white")
-                .attr("stroke", "black");
-
-            contextMenu.append("text")
-                .attr("x", 10)
-                .attr("y", 20)
-                .text("Clear Region")
-                .style("cursor", "pointer")
-                .on("click", () => {
-                    clearRegional();
-                    contextMenu.remove();
-                });
-
-            contextMenu.append("text")
-                .attr("x", 10)
-                .attr("y", 40)
-                .text("Cancel")
-                .style("cursor", "pointer")
-                .on("click", () => {
-                    contextMenu.remove();
-                });
-        });
-
-        d3.select("body").on("click", () => {
-            d3.select("#context-menu").remove();
-        });
-    };
-
-    useEffect(() => {
-        addContextMenu();
-    }, []);
 
     const activeRegionalBrush = () => {
         // Define the brush behavior
@@ -1054,13 +985,29 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         setSelectedDots([]);
     }
 
+    const synchronizeSelection = (selectedEntities) => {
+        let mainPlot = d3.select("#bivariate-main-plot");
+
+        mainPlot.selectAll(".entity-dot")
+            .style("fill", d => selectedEntities.includes(d) ? "steelblue" : "white")
+            .style("opacity", d => selectedEntities.includes(d) ? 1 : 0.3);
+    }
+
+    const drawPlot = () => {
+        document.getElementById("bivariate-distribution-div").innerHTML = "";
+
+        let svg = d3.select("#bivariate-distribution-div").append("svg")
+            .attr("id", "bivariate-svg")
+            .attr("width", chartWidth)
+            .attr("height", chartHeight);
+        svg.append("g")
+            .attr("id", "bivariate-main-plot")
+            .attr("transform", `translate(${margin.left}, ${margin.top + marginalPlotHeight})`)
+    }
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
-                {/* <Button sx={{ m: 1 }} variant={bivariateMode === MODES.PREDICT ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.PREDICT)}>Trend</Button>
-                <Button sx={{ m: 1 }} variant={bivariateMode === MODES.POPULATE ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.POPULATE)}>Populate</Button>
-                <Button sx={{ m: 1 }} variant={bivariateMode === MODES.CHIP ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.CHIP)}>Chip</Button> */}
                 <Button sx={{ m: 1 }} variant={bivariateMode === MODES.COMBINE ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.COMBINE)}>Combine</Button>
                 <Button sx={{ m: 1 }} variant="outlined" color='success' onClick={fitRelation}>Fit Trend</Button>
             </Box>

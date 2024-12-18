@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import "./Workspace.css";
-import { Button, Box, Select, MenuItem, Grid2, Backdrop, CircularProgress, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip } from '@mui/material';
+import { Button, Box, Select, MenuItem, Grid2, Backdrop, CircularProgress, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip, Grid } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
@@ -8,6 +8,7 @@ import HelpIcon from '@mui/icons-material/Help';
 import ParallelSankeyPlot from '../components/ParallelSankeyPlot';
 import axios from 'axios';
 import * as d3 from 'd3';
+import { v4 as uuidv4 } from 'uuid';
 
 const context = {
     "human_growth_model": "During the early stages of life the stature of female and male are about the same,\
@@ -24,36 +25,6 @@ const context = {
                 You aim to use this information to better understand socioeconomic patterns and inform policy recommendations.",
 }
 
-const predefinedVariables = [
-    {
-        name: "age",
-        min: 18,
-        max: 60,
-        unitLabel: 'years',
-        binEdges: d3.range(10 + 1).map(i => 18 + i * (60 - 18) / 10),
-        counts: Array(10).fill(0),
-        distributions: []
-    },
-    {
-        name: "education_years",
-        min: 0,
-        max: 20,
-        unitLabel: 'years',
-        binEdges: d3.range(10 + 1).map(i => 0 + i * (20 - 0) / 10),
-        counts: Array(10).fill(0),
-        distributions: []
-    },
-    {
-        name: "income",
-        min: 0,
-        max: 10000,
-        unitLabel: 'USD',
-        binEdges: d3.range(10 + 1).map(i => 0 + i * (10000 - 0) / 10),
-        counts: Array(10).fill(0),
-        distributions: []
-    },
-]
-
 // Main Component for Adding Variables and Histograms
 export default function Workspace(props) {
     const bivarRef = useRef();
@@ -64,7 +35,9 @@ export default function Workspace(props) {
     const [bivariateVarName1, setBivariateVarName1] = useState('');
     const [bivariateVarName2, setBivariateVarName2] = useState('');
     const [biVariableDict, setBiVariableDict] = useState({});
-    const [entities, setEntities] = useState([]);
+
+    const [entities, setEntities] = useState({});
+
     const [isTranslating, setIsTranslating] = useState(false);
 
     const [studyContext, setStudyContext] = useState(context["human_growth_model"]);
@@ -85,20 +58,53 @@ export default function Workspace(props) {
         }));
     }
 
-    const updateEntities = (newEntities) => {
-        console.log("update entities", newEntities);
-        if (Array.isArray(newEntities)) {
-            setEntities(prev => ([...prev, ...newEntities]));
-        } else {
-            setEntities(prev => ([...prev, newEntities]));
-        }
+    // Add an attribute to every entity when adding a variable
+    const addAttributeToEntities = (varName) => {
+        console.log("Add an Attribute To Entities", varName);
+        let newEntities = { ...entities };
+        Object.keys(newEntities).forEach((id) => {
+            newEntities[id][varName] = null;
+        });
+        setEntities(newEntities);
     }
 
-    const handleSelectedVariableChange = (event, value) => {
-        console.log("select", value)
-        setSelectedVarName(value);
-        setSelectedVariable(variablesDict[value]);
-    };
+    // Add New Entities
+    const addEntities = (entitiesData) => {
+        console.log("add entities", entitiesData);
+        let newEntities = { ...entities };
+        entitiesData.forEach((entityData) => {
+            // Create a new entity with a unique ID and key-value pairs for each variable
+            let newEntity = {
+                id: uuidv4()
+            };
+            Object.keys(variablesDict).forEach((key) => {
+                newEntity[key] = null;
+            });
+            Object.entries(entityData).forEach(([key, value]) => {
+                newEntity[key] = value;
+            });
+
+            newEntities[newEntity.id] = newEntity;
+        });
+
+        setEntities(newEntities);
+    }
+
+    // Update the entities with new data
+    const updateEntities = (entitiesIDs, entitiesData) => {
+        console.log("update entities", entitiesIDs, entitiesData);
+        let newEntities = { ...entities };
+        entitiesIDs.forEach((entityID, i) => {
+            let entityData = entitiesData[i];
+            let newEntity = { ...newEntities[entityID] };
+            Object.entries(entityData).forEach(([key, value]) => {
+                newEntity[key] = value;
+            });
+            newEntities[entityID] = newEntity;
+        });
+
+        setEntities(newEntities);
+    }
 
     const selectBivariable = (biVarName) => {
         let [varName, relatedVarName] = biVarName.split("-");
@@ -106,14 +112,13 @@ export default function Workspace(props) {
         setBivariateVarName2(relatedVarName);
     }
 
+    // Synchronize the selection of entities in multiple views
     const synchronizeSankeySelection = (selectedEntities) => {
         console.log("synchronizeSankeySelection", selectedEntities);
         bivarRef.current?.synchronizeSelection(selectedEntities);
     }
 
     const loadData = () => {
-        
-
         fetch("/synthetic_dataset.json")
             .then((response) => {
                 if (!response.ok) {
@@ -121,7 +126,7 @@ export default function Workspace(props) {
                 }
                 return response.json();
             })
-            .then((data) => updateEntities(data))
+            .then((data) => addEntities(data))
             .catch((error) => console.error("Error loading dataset:", error));
     }
 
@@ -129,12 +134,10 @@ export default function Workspace(props) {
     const translate = () => {
         console.log("translate");
         setIsTranslating(true);
-        console.log("entities", entities);
-        console.log("variables", Object.values(variablesDict));
 
         axios
             .post(window.BACKEND_ADDRESS + "/translate", {
-                entities: entities,
+                entities: Object.values(entities),
                 variables: Object.values(variablesDict),
             })
             .then((response) => {
@@ -233,30 +236,23 @@ export default function Workspace(props) {
                 updateVariable={updateVariable}
                 updateBivariable={updateBivariable}
                 selectBivariable={selectBivariable}
+                addAttributeToEntities={addAttributeToEntities}
             />
 
-            <Box className="module-div" sx={{ width: "100%", my: 2 }}>
-                <h3>Parallel Sankey Plot</h3>
-                <Button onClick={loadData}>Load Data</Button>
-                <Button onClick={translate}>Translate</Button>
-                <ParallelSankeyPlot
-                    variablesDict={variablesDict}
-                    updateVariable={updateVariable}
-                    entities={entities}
-                    updateEntities={updateEntities}
-                    synchronizeSankeySelection={synchronizeSankeySelection}
-                />
-            </Box>
-
-            <Backdrop
-                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                open={isTranslating}
-            >
-                <CircularProgress color="inherit" />
-            </Backdrop>
-
             <Grid2 sx={{ my: 2 }} container spacing={3}>
-                <Grid2 className="module-div" size={6}>
+                <Grid2 className="module-div" size={8}>
+                    <h3>Parallel Sankey Plot</h3>
+                    <Button onClick={loadData}>Load Data</Button>
+                    <Button onClick={translate}>Translate</Button>
+                    <ParallelSankeyPlot
+                        variablesDict={variablesDict}
+                        updateVariable={updateVariable}
+                        entities={entities}
+                        addEntities={addEntities}
+                        synchronizeSankeySelection={synchronizeSankeySelection}
+                    />
+                </Grid2>
+                <Grid2 className="module-div" size={4}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <h3>
                             Bivariate Relationship
@@ -288,37 +284,31 @@ export default function Workspace(props) {
                             <></>}
                     </Box>
                 </Grid2>
-
-                <Grid2 size={6}>
-                    <Box className="module-div" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <h3>Univariate Distributions</h3>
-                        <Tabs
-                            value={selectedVarName}
-                            onChange={handleSelectedVariableChange}
-                            variant="scrollable"
-                            scrollButtons="auto"
-                            sx={{ my: 2 }}
-                        >
-                            {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                                return (
-                                    <Tab key={i} label={varName} value={varName} />
-                                )
-                            })}
-                        </Tabs>
-                        {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                            return (
-                                <Box key={varName} sx={{ width: '100%', height: '100%' }}>
-                                    {selectedVarName === varName ?
-                                        <VariablePlot variable={curVar} updateVariable={updateVariable} entities={entities} />
-                                        :
-                                        <></>
-                                    }
-                                </Box>
-                            )
-                        })}
-                    </Box>
-                </Grid2>
             </Grid2>
+
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={isTranslating}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+
+            <Box className="module-div" sx={{ width: "100%", my: 2 }}>
+                <h3>Univariate Distributions</h3>
+                <Box sx={{ display: 'flex', flexDirection: 'row', overflowX: 'auto' }}>
+                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
+                        return (
+                            <VariablePlot
+                                variable={curVar}
+                                updateVariable={updateVariable}
+                                entities={entities}
+                                addEntities={addEntities}
+                                updateEntities={updateEntities}
+                            />
+                        )
+                    })}
+                </Box>
+            </Box>
 
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Box className="module-div" sx={{ width: "100%", my: 2 }}>
