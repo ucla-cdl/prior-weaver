@@ -20,6 +20,7 @@ const context = {
                 For man, this phase shows fast growth rate varying in between 13-17 years old and female varying from 11-15.\
                 Also, male tend to keep growing with roughly constant rate until the age of 17-18, while female with until the age of 15-16.\
                 After this period of life they tend to stablish their statures mostly around 162 - 190cm and 155 - 178cm respectively.",
+
     "income_education_age": "Imagine you are a social scientist interested in understanding the factors that influence people's income.\
                 Specifically, you want to assess how the number of years of education and a person's age (or employment years) impact their monthly income in the U.S.\
                 You aim to use this information to better understand socioeconomic patterns and inform policy recommendations.",
@@ -40,7 +41,7 @@ export default function Workspace(props) {
 
     const [isTranslating, setIsTranslating] = useState(false);
 
-    const [studyContext, setStudyContext] = useState(context["human_growth_model"]);
+    const [studyContext, setStudyContext] = useState(context["income_education_age"]);
 
     const updateVariable = (name, key, value) => {
         console.log("update variable", name, key, value);
@@ -71,23 +72,25 @@ export default function Workspace(props) {
     // Add New Entities
     const addEntities = (entitiesData) => {
         console.log("add entities", entitiesData);
-        let newEntities = { ...entities };
-        entitiesData.forEach((entityData) => {
-            // Create a new entity with a unique ID and key-value pairs for each variable
-            let newEntity = {
-                id: uuidv4()
-            };
-            Object.keys(variablesDict).forEach((key) => {
-                newEntity[key] = null;
-            });
-            Object.entries(entityData).forEach(([key, value]) => {
-                newEntity[key] = value;
+        setEntities((prev) => {
+            let newEntities = { ...prev };
+            entitiesData.forEach((entityData) => {
+                // Create a new entity with a unique ID and key-value pairs for each variable
+                let newEntity = {
+                    id: uuidv4()
+                };
+                Object.keys(variablesDict).forEach((key) => {
+                    newEntity[key] = null;
+                });
+                Object.entries(entityData).forEach(([key, value]) => {
+                    newEntity[key] = value;
+                });
+
+                newEntities[newEntity.id] = newEntity;
             });
 
-            newEntities[newEntity.id] = newEntity;
+            return newEntities;
         });
-
-        setEntities(newEntities);
     }
 
     // Update the entities with new data
@@ -103,6 +106,7 @@ export default function Workspace(props) {
             newEntities[entityID] = newEntity;
         });
 
+        console.log("new", newEntities)
         setEntities(newEntities);
     }
 
@@ -242,13 +246,14 @@ export default function Workspace(props) {
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Grid2 className="module-div" size={8}>
                     <h3>Parallel Sankey Plot</h3>
-                    <Button onClick={loadData}>Load Data</Button>
-                    <Button onClick={translate}>Translate</Button>
+                    <Button sx={{ mx: 1 }} variant="outlined" onClick={loadData}>Load Data</Button>
+                    <Button variant="outlined" onClick={translate}>Translate</Button>
                     <ParallelSankeyPlot
                         variablesDict={variablesDict}
                         updateVariable={updateVariable}
                         entities={entities}
                         addEntities={addEntities}
+                        updateEntities={updateEntities}
                         synchronizeSankeySelection={synchronizeSankeySelection}
                     />
                 </Grid2>
@@ -256,18 +261,6 @@ export default function Workspace(props) {
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <h3>
                             Bivariate Relationship
-                            <Tooltip
-                                title={
-                                    <React.Fragment>
-                                        <b>{'Predict Mode'}</b>: {'Draw a trending line.'}<br />
-                                        <b>{'Populate Mode'}</b>: {'Adding data points.\n'}<br />
-                                        <b>{'Chip Mode'}</b>: {'Combine marginal data points.\n'}<br />
-                                        <br />
-                                        <b>{'Click'}</b> {'to add a point or '} <b>{'Double Click'}</b> {'to delete a point.'}
-                                    </React.Fragment>
-                                }>
-                                <HelpIcon fontSize="small" style={{ marginLeft: '8px', verticalAlign: 'middle' }} />
-                            </Tooltip>
                         </h3>
 
                         {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
@@ -295,10 +288,11 @@ export default function Workspace(props) {
 
             <Box className="module-div" sx={{ width: "100%", my: 2 }}>
                 <h3>Univariate Distributions</h3>
-                <Box sx={{ display: 'flex', flexDirection: 'row', overflowX: 'auto' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', overflowX: 'auto', justifyContent: 'space-around' }}>
                     {Object.entries(variablesDict).map(([varName, curVar], i) => {
                         return (
                             <VariablePlot
+                                key={i}
                                 variable={curVar}
                                 updateVariable={updateVariable}
                                 entities={entities}

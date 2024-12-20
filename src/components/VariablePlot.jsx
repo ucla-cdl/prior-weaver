@@ -21,7 +21,6 @@ export default function VariablePlot({ variable, updateVariable, entities, addEn
 
     useEffect(() => {
         populateEntities();
-        console.log("populate entities");
     }, [entities]);
 
     const drawPlot = () => {

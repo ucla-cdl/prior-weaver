@@ -20,7 +20,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
 
     const MODES = { "PREDICT": 0, "POPULATE": 1, "CHIP": 2, "COMBINE": 3 };
     const COLORS = { "PREDICT_DOT": "orange", "POPULATE_DOT": "blue", "CHIP_DOT": "blue" }
-    const [bivariateMode, setBivariateMode] = useState('PREDICT');
+    const [bivariateMode, setBivariateMode] = useState('COMBINE');
     const [selectedDots, setSelectedDots] = useState([]);
     const [enableBrush, setEnableBrush] = useState(false);
 
@@ -32,11 +32,6 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         drawPlot();
         drawGridPlot();
     }, [biVariable1.name, biVariable2.name])
-
-    useEffect(() => {
-        drawGridPlot();
-        drawMarginPlot();
-    }, [biVariable1.counts, biVariable2.counts, bivariateMode])
 
     useEffect(() => {
         populateEntities();
@@ -53,8 +48,11 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
 
         console.log("populate entities", entities);
 
+        const specifiedEntities = Object.values(entities).filter(d => d[biVariable1.name] !== null && d[biVariable2.name] !== null);
+
         mainPlot.selectAll(".entity-dot").remove();
-        Object.values(entities)?.forEach(entity => {
+
+        specifiedEntities.forEach(entity => {
             mainPlot.append("circle")
                 .datum(entity)
                 .attr("class", "entity-dot")
@@ -430,24 +428,6 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
             .style("stroke", "black")
             .style("stroke-width", "1px")
 
-        // plot the prediction dots
-        mainPlot.selectAll(".predict-dot")
-            .data(predictionDots)
-            .enter()
-            .append("circle")
-            .attr("class", "predict-dot")
-            .attr("cx", d => xScale(d.x))
-            .attr("cy", d => yScale(d.y))
-            .attr("r", dotRadius)
-            .attr("fill", "white")
-            .style("stroke-width", 1.5)
-            .attr("stroke", COLORS.PREDICT_DOT)
-            .on('dblclick', function (event, d) {
-                const { binIndexX, binIndexY } = findGird(d.x, d.y);
-                d3.select(this).remove();
-                logUserBehavior(`bi-plot(${biVarName})`, "double click", "remove a predict dot", `(${xScale.invert(d.x)}, ${yScale.invert(d.y)})`);
-                updatePredictionDots("minus", mainPlot, xScale, yScale, binIndexX, binIndexY);
-            })
         // plot the populate dots
         mainPlot.selectAll(".populate-dot")
             .data(populateDots)
@@ -464,31 +444,9 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
                 const { binIndexX, binIndexY } = findGird(d.x, d.y);
                 d3.select(this).remove();
                 logUserBehavior(`bi-plot(${biVarName})`, "double click", "remove a populate dot", `(${xScale.invert(d.x)}, ${yScale.invert(d.y)})`);
-                updatePopulateDots("minus", xScale, yScale, binIndexX, binIndexY);
-            })
-        // plot the chip dots
-        mainPlot.selectAll(".chip-dot")
-            .data(chipDots)
-            .enter()
-            .append("circle")
-            .attr("class", "chip-dot")
-            .attr("cx", d => xScale(d.x))
-            .attr("cy", d => yScale(d.y))
-            .attr("r", dotRadius)
-            .attr("fill", "white")
-            .style("stroke-width", 1.5)
-            .attr("stroke", COLORS.CHIP_DOT)
-            .on('dblclick', function (event, d) {
-                const { binIndexX, binIndexY } = findGird(d.x, d.y);
-                d3.select(this).remove();
-                logUserBehavior(`bi-plot(${biVarName})`, "double click", "remove a chip dot", `(${xScale.invert(d.x)}, ${yScale.invert(d.y)})`);
-                updateChipDots(xScale, yScale);
-                revokeChipDot(xDotData, yDotData, binIndexX, binIndexY);
+                updateCombineDots("minus", xScale, yScale, binIndexX, binIndexY);
             })
 
-        // plot the prediction lines
-        const predictDotElements = d3.selectAll(".predict-dot").nodes();
-        drawPredictionLines(predictDotElements, mainPlot);
 
         // add interaction to grids
         d3.selectAll(".grids")
@@ -502,131 +460,44 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
 
                 // Find the available Grid
                 if (binIndexX !== -1 && binIndexY !== -1) {
-                    // PREDICT mode
-                    if (bivariateMode === MODES.PREDICT) {
-                        mainPlot.append("circle")
-                            .attr("class", "predict-dot")
-                            .attr("cx", clickX)
-                            .attr("cy", clickY)
-                            .attr("r", dotRadius)
-                            .attr("fill", "white")
-                            .style("stroke-width", 1.5)
-                            .style("stroke", COLORS.PREDICT_DOT)
+                    // check if there are available dots in the margin
+                    let xAvailableDot = xDotData
+                        .filter(d => d.position === (biVariable1.binEdges[binIndexX] + biVariable1.binEdges[binIndexX + 1]) / 2 && !d.used)
+                        .sort((a, b) => a.row - b.row)[0]
+                    let yAvailableDot = yDotData
+                        .filter(d => d.position === (biVariable2.binEdges[binIndexY] + biVariable2.binEdges[binIndexY + 1]) / 2 && !d.used)
+                        .sort((a, b) => a.row - b.row)[0]
 
-                        logUserBehavior(`bi-plot(${biVarName})`, "click", "add a predict dot", `(${clickValueX}, ${clickValueY})`);
-                        updatePredictionDots("add", mainPlot, xScale, yScale, binIndexX, binIndexY);
+                    // occupy the available dots
+                    let operationX = "add", operationY = "add";
+                    if (xAvailableDot) {
+                        d3.selectAll(".x-margin-dot")
+                            .filter(d => d.position === xAvailableDot.position && d.row === xAvailableDot.row)
+                            .style("fill", "gray");
+                        xAvailableDot.used = true;
+                        operationX = "none";
                     }
-                    // POPULATE mode
-                    else if (bivariateMode === MODES.POPULATE) {
-                        mainPlot.append("circle")
-                            .attr("class", "populate-dot")
-                            .attr("cx", clickX)
-                            .attr("cy", clickY)
-                            .attr("r", dotRadius)
-                            .attr("fill", "white")
-                            .style("stroke-width", 1.5)
-                            .style("stroke", COLORS.POPULATE_DOT)
-
-                        logUserBehavior(`bi-plot(${biVarName})`, "click", "add a populate dot", `(${clickValueX}, ${clickValueY})`);
-                        updatePopulateDots("add", xScale, yScale, binIndexX, binIndexY);
+                    if (yAvailableDot) {
+                        d3.selectAll(".y-margin-dot")
+                            .filter(d => d.position === yAvailableDot.position && d.row === yAvailableDot.row)
+                            .style("fill", "gray");
+                        yAvailableDot.used = true;
+                        operationY = "none";
                     }
-                    // Combine CHIP and POPULATE mode
-                    else if (bivariateMode === MODES.COMBINE) {
-                        // check if there are available dots in the margin
-                        let xAvailableDot = xDotData
-                            .filter(d => d.position === (biVariable1.binEdges[binIndexX] + biVariable1.binEdges[binIndexX + 1]) / 2 && !d.used)
-                            .sort((a, b) => a.row - b.row)[0]
-                        let yAvailableDot = yDotData
-                            .filter(d => d.position === (biVariable2.binEdges[binIndexY] + biVariable2.binEdges[binIndexY + 1]) / 2 && !d.used)
-                            .sort((a, b) => a.row - b.row)[0]
 
-                        // occupy the available dots
-                        let operationX = "add", operationY = "add";
-                        if (xAvailableDot) {
-                            d3.selectAll(".x-margin-dot")
-                                .filter(d => d.position === xAvailableDot.position && d.row === xAvailableDot.row)
-                                .style("fill", "gray");
-                            xAvailableDot.used = true;
-                            operationX = "none";
-                        }
-                        if (yAvailableDot) {
-                            d3.selectAll(".y-margin-dot")
-                                .filter(d => d.position === yAvailableDot.position && d.row === yAvailableDot.row)
-                                .style("fill", "gray");
-                            yAvailableDot.used = true;
-                            operationY = "none";
-                        }
+                    // add the data point
+                    mainPlot.append("circle")
+                        .attr("class", "populate-dot")
+                        .attr("cx", clickX)
+                        .attr("cy", clickY)
+                        .attr("r", dotRadius)
+                        .attr("fill", "white")
+                        .style("stroke-width", 1.5)
+                        .style("stroke", COLORS.POPULATE_DOT)
 
-                        // add the data point
-                        mainPlot.append("circle")
-                            .attr("class", "populate-dot")
-                            .attr("cx", clickX)
-                            .attr("cy", clickY)
-                            .attr("r", dotRadius)
-                            .attr("fill", "white")
-                            .style("stroke-width", 1.5)
-                            .style("stroke", COLORS.POPULATE_DOT)
-
-                        logUserBehavior(`bi-plot(${biVarName})`, "click", "add a combine dot", `${operationX}(${clickValueX}), ${operationY}(${clickValueY})`);
-                        console.log("x: ", operationX, "y: ", operationY)
-                        updateCombineDots(operationX, operationY, xScale, yScale, binIndexX, binIndexY);
-                    }
-                    // CHIP mode
-                    else if (bivariateMode === MODES.CHIP) {
-                        let xAvailableChip = xDotData
-                            .filter(d => d.position === (biVariable1.binEdges[binIndexX] + biVariable1.binEdges[binIndexX + 1]) / 2 && !d.used)
-                            .sort((a, b) => a.row - b.row)[0]
-
-                        let yAvailableChip = yDotData
-                            .filter(d => d.position === (biVariable2.binEdges[binIndexY] + biVariable2.binEdges[binIndexY + 1]) / 2 && !d.used)
-                            .sort((a, b) => a.row - b.row)[0]
-
-                        // Find a Available CHIP
-                        if (xAvailableChip && yAvailableChip) {
-                            d3.select(`#grid-${binIndexX}-${binIndexY}`)
-                                .attr('fill', 'lightgreen')  // Change the color to red
-                                .transition()  // Transition back after 1 second
-                                .delay(500)
-                                .attr('fill', 'transparent');
-
-                            // set the two available chips as used
-                            d3.selectAll(".x-margin-dot")
-                                .filter(d => d.position === xAvailableChip.position && d.row === xAvailableChip.row)
-                                .style("fill", "gray");
-                            d3.selectAll(".y-margin-dot")
-                                .filter(d => d.position === yAvailableChip.position && d.row === yAvailableChip.row)
-                                .style("fill", "gray");
-                            xAvailableChip.used = true;
-                            yAvailableChip.used = true;
-
-                            // add the chip on plot
-                            mainPlot.append("circle")
-                                .attr("class", "chip-dot")
-                                .attr("cx", clickX)
-                                .attr("cy", clickY)
-                                .attr("r", dotRadius)
-                                .attr("fill", "white")
-                                .attr("stroke-width", 1.5)
-                                .style("stroke", COLORS.CHIP_DOT)
-                                .on("dblclick", function (event) {
-                                    d3.select(this).remove();
-                                    updateChipDots(xScale, yScale);
-                                    revokeChipDot(xDotData, yDotData, binIndexX, binIndexY);
-                                })
-
-                            logUserBehavior(`bi-plot(${biVarName})`, "click", "add a chip dot", `(${clickValueX}, ${clickValueY})`);
-                            updateChipDots(xScale, yScale)
-                        }
-                        else {
-                            d3.select(`#grid-${binIndexX}-${binIndexY}`)
-                                .attr('fill', 'lightcoral')  // Change the color to red
-                                .transition()  // Transition back after 1 second
-                                .delay(500)
-                                .attr('fill', 'transparent');
-
-                            logUserBehavior(`bi-plot(${biVarName})`, "click", "fail to add a chip dot", `(${clickValueX}, ${clickValueY})`);
-                        }
-                    }
+                    logUserBehavior(`bi-plot(${biVarName})`, "click", "add a combine dot", `${operationX}(${clickValueX}), ${operationY}(${clickValueY})`);
+                    console.log("x: ", operationX, "y: ", operationY)
+                    updateCombineDots(operationX, operationY, xScale, yScale, binIndexX, binIndexY);
                 }
             })
 
@@ -660,81 +531,6 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         return { binIndexX, binIndexY };
     }
 
-    const updatePredictionDots = (type, mainPlot, xScale, yScale, binIndexX, binIndexY) => {
-        let newBivar1Counts = [...biVariable1.counts];
-        let newBivar2Counts = [...biVariable2.counts];
-
-        if (type === "add") {
-            newBivar1Counts[binIndexX] += 1;
-            newBivar2Counts[binIndexY] += 1;
-        }
-        else if (type === "minus") {
-            newBivar1Counts[binIndexX] -= 1;
-            newBivar2Counts[binIndexY] -= 1;
-        }
-
-        // Select and sort dots by their 'cx' (x value)
-        const predictDotElements = d3.selectAll(".predict-dot").nodes();
-        let newPredictionDots = predictDotElements.map((dotElement, idx) => ({
-            x: xScale.invert(d3.select(dotElement).attr("cx")),
-            y: yScale.invert(d3.select(dotElement).attr("cy"))
-        })
-        )
-
-        drawPredictionLines(predictDotElements, mainPlot);
-        const biVarName = biVariable1.name + "-" + biVariable2.name;
-        updateBivariable(biVarName, "predictionDots", newPredictionDots);
-        updateVariable(biVariable1.name, "counts", newBivar1Counts);
-        updateVariable(biVariable2.name, "counts", newBivar2Counts);
-    }
-
-    const drawPredictionLines = (predictDotElements, mainPlot) => {
-        // Sort the dots by their x value
-        const sortedPredictDotElements = predictDotElements.sort((a, b) => d3.select(a).attr("cx") - d3.select(b).attr("cx"));
-        // Draw lines connecting the dots after sorting
-        d3.selectAll(".predict-line").remove();
-        for (let i = 0; i < sortedPredictDotElements.length - 1; i++) {
-            const dot1 = d3.select(sortedPredictDotElements[i]);
-            const dot2 = d3.select(sortedPredictDotElements[i + 1]);
-
-            mainPlot.append("line")
-                .attr("class", "predict-line")
-                .attr("x1", dot1.attr("cx"))
-                .attr("y1", dot1.attr("cy"))
-                .attr("x2", dot2.attr("cx"))
-                .attr("y2", dot2.attr("cy"))
-                .attr("stroke", "gray")
-                .attr("stroke-dasharray", "5,5")
-                .attr("stroke-width", 2);
-        }
-    }
-
-    const updatePopulateDots = (type, xScale, yScale, binIndexX, binIndexY) => {
-        let newBivar1Counts = [...biVariable1.counts];
-        let newBivar2Counts = [...biVariable2.counts];
-
-        if (type === "add") {
-            newBivar1Counts[binIndexX] += 1;
-            newBivar2Counts[binIndexY] += 1;
-        }
-        else if (type === "minus") {
-            newBivar1Counts[binIndexX] -= 1;
-            newBivar2Counts[binIndexY] -= 1;
-        }
-
-        // Select and sort dots by their 'cx' (x value)
-        const populateDotElements = d3.selectAll(".populate-dot").nodes();
-        let newPopulateDots = populateDotElements.map((dotElement, idx) => ({
-            x: xScale.invert(d3.select(dotElement).attr("cx")),
-            y: yScale.invert(d3.select(dotElement).attr("cy"))
-        })
-        )
-        const biVarName = biVariable1.name + "-" + biVariable2.name;
-        updateBivariable(biVarName, "populateDots", newPopulateDots);
-        updateVariable(biVariable1.name, "counts", newBivar1Counts);
-        updateVariable(biVariable2.name, "counts", newBivar2Counts);
-    }
-
     const updateCombineDots = (operationX, operationY, xScale, yScale, binIndexX, binIndexY) => {
         let newBivar1Counts = [...biVariable1.counts];
         let newBivar2Counts = [...biVariable2.counts];
@@ -765,47 +561,6 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         updateBivariable(biVarName, "populateDots", newPopulateDots);
         updateVariable(biVariable1.name, "counts", newBivar1Counts);
         updateVariable(biVariable2.name, "counts", newBivar2Counts);
-    }
-
-    const updateChipDots = (xScale, yScale) => {
-        let newChipDots = [];
-        d3.selectAll(".chip-dot").nodes().forEach((chipDot) => {
-            let chip = d3.select(chipDot);
-            newChipDots.push({
-                x: xScale.invert(chip.attr("cx")),
-                y: yScale.invert(chip.attr("cy"))
-            })
-        });
-
-        const biVarName = biVariable1.name + "-" + biVariable2.name;
-        updateBivariable(biVarName, "chipDots", newChipDots);
-    }
-
-    const revokeChipDot = (xDotData, yDotData, binIndexX, binIndexY) => {
-        let revokeXDot = xDotData
-            .filter(d => d.position === (biVariable1.binEdges[binIndexX] + biVariable1.binEdges[binIndexX + 1]) / 2 && d.used)
-            .sort((a, b) => b.row - a.row)[0];
-
-        let revokeYDot = yDotData
-            .filter(d => d.position === (biVariable2.binEdges[binIndexY] + biVariable2.binEdges[binIndexY + 1]) / 2 && d.used)
-            .sort((a, b) => b.row - a.row)[0];
-
-        d3.selectAll(".x-margin-dot")
-            .filter(d => d.position === revokeXDot.position && d.row === revokeXDot.row)
-            .style("fill", "white");
-
-        d3.selectAll(".y-margin-dot")
-            .filter(d => d.position === revokeYDot.position && d.row === revokeYDot.row)
-            .style("fill", "white");
-
-        revokeXDot.used = false;
-        revokeYDot.used = false;
-    }
-
-    const changeBivariateMode = (mode) => {
-        const biVarName = biVariable1.name + "-" + biVariable2.name;
-        logUserBehavior(`bi-plot(${biVarName})`, "click button", "change mode", `${bivariateMode} -> ${mode}`);
-        setBivariateMode(mode);
     }
 
     const fitRelation = () => {
@@ -1008,14 +763,11 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
-                <Button sx={{ m: 1 }} variant={bivariateMode === MODES.COMBINE ? "contained" : "outlined"} onClick={() => changeBivariateMode(MODES.COMBINE)}>Combine</Button>
                 <Button sx={{ m: 1 }} variant="outlined" color='success' onClick={fitRelation}>Fit Trend</Button>
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
                 <Button sx={{ m: 1 }} variant={enableBrush ? 'contained' : 'outlined'} onClick={activeRegionalBrush}>Brush</Button>
                 <Button sx={{ m: 1 }} onClick={clearRegional}>Clear regional</Button>
+                <Button sx={{ m: 1 }} onClick={clearAll}>Clear all</Button>
             </Box>
-            <Button sx={{ m: 1 }} onClick={clearAll}>Clear all</Button>
             <div id='bivariate-distribution-div'></div>
         </Box >
     )
