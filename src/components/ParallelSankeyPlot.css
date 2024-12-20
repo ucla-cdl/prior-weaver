@@ -1,0 +1,32 @@
+.hovered-entity-dot {
+    fill: orange;
+}
+
+.selected-entity-dot {
+    fill: red;
+}
+
+.entity-dot {
+    fill: white;
+}
+
+.brush-selection {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 2;
+    stroke-opacity: 0.6;
+}
+
+.brush-non-selection {
+    fill: none;
+    stroke: #ddd;
+    stroke-width: 2;
+    stroke-opacity: 0.6;
+}
+
+.entity-path {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 2;
+    stroke-opacity: 0.6;
+}

@@ -8,10 +8,9 @@ import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
+import "./ParallelSankeyPlot.css";
 
 export default function ParallelSankeyPlot({ variablesDict, updateVariable, entities, addEntities, updateEntities, synchronizeSankeySelection }) {
-
     const marginTop = 20;
     const marginRight = 40;
     const marginBottom = 30;
@@ -22,8 +21,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const [brushSelections, setBrushSelections] = useState(new Map());
     const [sortableVariables, setSortableVariables] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
-
-    const [selectedEntity, setSelectedEntity] = useState(null);
     const [selectedCircle, setSelectedCircle] = useState(null);
 
     const [activeInteraction, setActiveInteraction] = useState(null);
@@ -53,7 +50,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
     useEffect(() => {
         populateEntities();
-    }, [sortableVariables, entities]);
+    }, [entities]);
 
     const updatePlotLayout = () => {
         const divId = "sankey-div";
@@ -131,12 +128,26 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
     const clearInteractions = () => {
         const svg = d3.select("#sankey-svg");
+        // Remove Add feature interactions
         svg.selectAll(".axis-region").remove();
         svg.selectAll(".temp-circle").remove();
         svg.selectAll(".temp-line").remove();
+
+        // Remove Connect feature interactions
         svg.selectAll(".entity-dot").attr("fill", "white");
         svg.selectAll(".entity-dot").on("mouseover", null).on("mouseout", null).on("click", null);
-        svg.selectAll(".axis").on(".brush", null);
+        setSelectedCircle(null);
+
+        // Remove brush feature interactions
+        svg.selectAll(".axis")
+            .on("mousedown.brush mousemove.brush mouseup.brush", null);
+        svg.selectAll(".selection").remove();
+        svg.selectAll(".handle").remove();
+        svg.selectAll(".overlay").remove();
+        svg.on("start brush end", null);
+        svg.selectAll(".brush-selection").attr("class", "entity-path");
+        svg.selectAll(".brush-non-selection").attr("class", "entity-path");
+        setBrushSelections(new Map());
     }
 
     const addAxisRegion = () => {
@@ -164,6 +175,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             .y(([key, value]) => valueAxesRef.current.get(key)(value));
 
         svg.selectAll(".entity-path").remove();
+        svg.selectAll(".entity-dot").remove();
 
         /**
          * Draw entities
@@ -188,19 +200,15 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             svg.append("path")
                 .datum(entity) // Pass the entity directly
                 .attr("class", "entity-path")
-                .attr("fill", "none")
-                .attr("stroke", "steelblue")
-                .attr("stroke-width", 2)
-                .attr("stroke-opacity", 0.6)
                 .attr("d", d => line(
                     sortableVariables
                         .filter(variable => d[variable.name] !== null)
                         .map(variable => [variable.name, d[variable.name]])
                 ))
-
-            svg.selectAll(".entity-dot")
-                .raise();
         });
+
+        svg.selectAll(".entity-dot")
+            .raise();
     }
 
     const activateAddFeature = () => {
@@ -218,9 +226,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
                 const varValue = valueAxesRef.current.get(axisValue).invert(y);
                 const axisIndex = variableAxesRef.current.domain().indexOf(axisValue);
-
-                // const varValue = valueAxes.get(axisValue).invert(y);
-                // const axisIndex = variableAxes.domain().indexOf(axisValue);
 
                 selectedPoints[axisIndex] = { val: varValue, axis: axisValue };
                 let submitEntity = true;
@@ -270,18 +275,19 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
         svg.selectAll(".entity-dot")
             .on("mouseover", function () {
-                d3.select(this).attr("fill", "lightblue").attr("stroke-width", 2);
+                d3.select(this).classed("hovered-entity-dot", true);
             })
             .on("mouseout", function () {
-                d3.select(this).attr("fill", "white").attr("stroke-width", 1);
+                d3.select(this).classed("hovered-entity-dot", false);
             })
             .on("click", function (event) {
-                d3.selectAll(".entity-dot").attr("fill", "none");
-                d3.select(this).attr("fill", "red");
+                d3.selectAll(".entity-dot").classed("selected-entity-dot", false);
+                d3.select(this).classed("selected-entity-dot", true);
 
                 const cx = d3.select(this).attr("cx");
                 const cy = d3.select(this).attr("cy");
-                const key = variableAxesRef.current.domain().find(k => variableAxesRef.current(k) === cx);
+
+                const key = Object.keys(variablesDict).find(key => variableAxesRef.current(key) === +cx);
                 const value = valueAxesRef.current.get(key).invert(cy);
 
                 setSelectedCircle({ key, value });
@@ -290,8 +296,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
     const activateBrushFeature = () => {
         const svg = d3.select("#sankey-svg");
-        const deselectedColor = "#ddd";
-        const selectedColor = "steelblue";
         const brushWidth = 50;
         const selections = new Map();
 
@@ -314,13 +318,17 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             svg.selectAll("path").each(function (d) {
                 if (d) {
                     const active = Array.from(selections).every(([key, [max, min]]) => d[key] >= min && d[key] <= max);
-                    d3.select(this).style("stroke", active ? selectedColor : deselectedColor);
+                    d3.select(this).attr("class", active ? "brush-selection" : "brush-non-selection");
                     if (active) {
                         d3.select(this).raise();
                         selected.push(d);
                     }
                 }
             });
+
+            svg.selectAll(".entity-dot")
+                .raise();
+
             svg.node().value = selected;
             svg.dispatch("input");
             setBrushSelections(selections);
@@ -334,7 +342,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         });
 
         svg.selectAll(".axis")
-            .call(brush);
+            .call(brush)
+            .call(brush.move, null) // Clear the brush selection
     }
 
     // Randomly populate data points in the selected region
