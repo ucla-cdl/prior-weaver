@@ -1,13 +1,13 @@
+.entity-dot {
+    fill: white;
+}
+
 .hovered-entity-dot {
     fill: orange;
 }
 
 .selected-entity-dot {
     fill: red;
-}
-
-.entity-dot {
-    fill: white;
 }
 
 .brush-selection {

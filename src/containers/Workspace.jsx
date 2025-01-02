@@ -69,7 +69,9 @@ export default function Workspace(props) {
         setEntities(newEntities);
     }
 
-    // Add New Entities
+    /**
+     * Create a new entities using a dictonary contains data as key-value pairs for each variable
+     */
     const addEntities = (entitiesData) => {
         console.log("add entities", entitiesData);
         setEntities((prev) => {
@@ -93,6 +95,22 @@ export default function Workspace(props) {
         });
     }
 
+    const deleteEntities = (entitiesIDs) => {
+        console.log("delete entities", entitiesIDs);
+
+        setEntities((prev) => {
+            let newEntities = { ...prev };
+            entitiesIDs.forEach((entityID) => {
+                delete newEntities[entityID];
+            });
+
+            return newEntities;
+        });
+    }
+
+    const combinedEntityData = (entitiesIDs) => {
+    }
+    
     // Update the entities with new data
     const updateEntities = (entitiesIDs, entitiesData) => {
         console.log("update entities", entitiesIDs, entitiesData);
@@ -253,6 +271,7 @@ export default function Workspace(props) {
                         updateVariable={updateVariable}
                         entities={entities}
                         addEntities={addEntities}
+                        deleteEntities={deleteEntities}
                         updateEntities={updateEntities}
                         synchronizeSankeySelection={synchronizeSankeySelection}
                     />

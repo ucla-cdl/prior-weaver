@@ -10,7 +10,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import "./ParallelSankeyPlot.css";
 
-export default function ParallelSankeyPlot({ variablesDict, updateVariable, entities, addEntities, updateEntities, synchronizeSankeySelection }) {
+export default function ParallelSankeyPlot({ variablesDict, updateVariable, entities, addEntities, deleteEntities, updateEntities, synchronizeSankeySelection }) {
     const marginTop = 20;
     const marginRight = 40;
     const marginBottom = 30;
@@ -21,7 +21,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const [brushSelections, setBrushSelections] = useState(new Map());
     const [sortableVariables, setSortableVariables] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
-    const [selectedCircle, setSelectedCircle] = useState(null);
+    const [connectedPoint, setConnectedPoint] = useState(null);
 
     const [activeInteraction, setActiveInteraction] = useState(null);
 
@@ -104,7 +104,11 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         variableAxesRef.current = newVariableAxes;
     }
 
-    const changeInteractionType = (interactionType) => {
+    const changeInteractionType = (interactionType, isInit = false) => {
+        if (isInit) {
+            interactionType = activeInteraction;
+        }
+
         console.log("Change interaction type to: ", interactionType);
         clearInteractions();
 
@@ -136,7 +140,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         // Remove Connect feature interactions
         svg.selectAll(".entity-dot").attr("fill", "white");
         svg.selectAll(".entity-dot").on("mouseover", null).on("mouseout", null).on("click", null);
-        setSelectedCircle(null);
+        setConnectedPoint(null);
 
         // Remove brush feature interactions
         svg.selectAll(".axis")
@@ -188,6 +192,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 if (value !== null) {
                     svg.append("circle")
                         .attr("class", "entity-dot")
+                        .attr("id", `dot_${entity["id"]}_${key}`)
                         .attr("cx", variableAxesRef.current(key))
                         .attr("cy", valueAxesRef.current.get(key)(value))
                         .attr("r", 4)
@@ -209,6 +214,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
         svg.selectAll(".entity-dot")
             .raise();
+
+        changeInteractionType(null, true);
     }
 
     const activateAddFeature = () => {
@@ -270,8 +277,17 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             });
     }
 
+    /**
+     * Connect feature:
+     * 1. Select individual data points
+     * 2. 
+     * 
+     * PROBLEM:
+     * - what if user select non-neighboring data points?
+     */
     const activateConnectFeature = () => {
         const svg = d3.select("#sankey-svg");
+        let connectedPoint = null;
 
         svg.selectAll(".entity-dot")
             .on("mouseover", function () {
@@ -281,16 +297,63 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 d3.select(this).classed("hovered-entity-dot", false);
             })
             .on("click", function (event) {
-                d3.selectAll(".entity-dot").classed("selected-entity-dot", false);
                 d3.select(this).classed("selected-entity-dot", true);
+                const [_, clickEntityId, clickAxis] = d3.select(this).attr("id").split("_");
 
-                const cx = d3.select(this).attr("cx");
-                const cy = d3.select(this).attr("cy");
+                /**
+                 * If there is already a connnected point,
+                 * - If these two points are on neighboring axes, draw a line between them
+                 * - If these two points are not on neighboring axes, notify the user
+                 * - If these two points are on the same axis, notify the user
+                 */
+                if (connectedPoint) {
+                    const connectedEntity1 = { ...entities[connectedPoint.entityId] };
+                    const connectedEntity2 = { ...entities[clickEntityId] };
 
-                const key = Object.keys(variablesDict).find(key => variableAxesRef.current(key) === +cx);
-                const value = valueAxesRef.current.get(key).invert(cy);
+                    console.log("entity", connectedEntity1, connectedEntity2);
 
-                setSelectedCircle({ key, value });
+                    let isDuplicate = false;
+                    let combinedEntityData = {};
+
+                    Object.keys(variablesDict).forEach((varName) => {
+                        const value1 = connectedEntity1[varName];
+                        const value2 = connectedEntity2[varName];
+
+                        if (value1 !== null && value2 !== null) {
+                            isDuplicate = true;
+                        } else if (value1) {
+                            combinedEntityData[varName] = value1;
+                        } else if (value2) {
+                            combinedEntityData[varName] = value2;
+                        } else {
+                            combinedEntityData[varName] = null;
+                        }
+                    });
+
+                    if (isDuplicate) {
+                        console.warn("Duplicate values detected on the same axis!");
+                    }
+                    else {
+                        deleteEntities([
+                            connectedEntity1["id"],
+                            connectedEntity2["id"],
+                        ]);
+                        addEntities([combinedEntityData]);
+                        console.log("Combined entity: ", combinedEntityData);
+                    }
+
+                    // Reset connectedPoint after combining
+                    d3.selectAll(".entity-dot").classed("selected-entity-dot", false);
+
+                    connectedPoint = null;
+                }
+                else {
+                    connectedPoint = {
+                        entityId: clickEntityId,
+                        axis: clickAxis,
+                    };
+                    console.log("Set connected point: ", connectedPoint);
+                }
             })
     }
 
