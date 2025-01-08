@@ -22,7 +22,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     const COLORS = { "PREDICT_DOT": "orange", "POPULATE_DOT": "blue", "CHIP_DOT": "blue" }
     const [bivariateMode, setBivariateMode] = useState('COMBINE');
     const [selectedDots, setSelectedDots] = useState([]);
-    const [enableBrush, setEnableBrush] = useState(false);
+    const [enableFilter, setEnableFilter] = useState(false);
 
     React.useImperativeHandle(ref, () => ({
         synchronizeSelection,
@@ -621,7 +621,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         // updateBivariable(biVarName, "specified", false);
     }
 
-    const activeRegionalBrush = () => {
+    const activeRegionalFilter = () => {
         // Define the brush behavior
         const brush = d3.brush()
             .extent([[0, 0], [mainPlotWidth, mainPlotHeight]])
@@ -700,15 +700,15 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
             }
         }
 
-        if (enableBrush) {
+        if (enableFilter) {
             mainPlot.selectAll(".brush").remove();
-            setEnableBrush(false);
+            setEnableFilter(false);
         }
         else {
             mainPlot.append("g")
                 .attr("class", "brush")
                 .call(brush);
-            setEnableBrush(true);
+            setEnableFilter(true);
         }
     }
 
@@ -764,9 +764,9 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
                 <Button sx={{ m: 1 }} variant="outlined" color='success' onClick={fitRelation}>Fit Trend</Button>
-                <Button sx={{ m: 1 }} variant={enableBrush ? 'contained' : 'outlined'} onClick={activeRegionalBrush}>Brush</Button>
-                <Button sx={{ m: 1 }} onClick={clearRegional}>Clear regional</Button>
-                <Button sx={{ m: 1 }} onClick={clearAll}>Clear all</Button>
+                <Button sx={{ m: 1 }} variant={enableFilter ? 'contained' : 'outlined'} onClick={activeRegionalFilter}>Filter</Button>
+                {/* <Button sx={{ m: 1 }} onClick={clearRegional}>Clear regional</Button> */}
+                {/* <Button sx={{ m: 1 }} onClick={clearAll}>Clear all</Button> */}
             </Box>
             <div id='bivariate-distribution-div'></div>
         </Box >

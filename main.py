@@ -8,6 +8,7 @@ from typing import List, Dict
 
 import numpy as np
 import scipy.stats as stats
+from fitter import Fitter
 
 import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures
@@ -37,85 +38,6 @@ def shutdown_db_client():
 def root():
     print("checking root")
     return {"message": "Hello World!"}
-
-
-class VariableData(BaseModel):
-    bin_edges: List[float]
-    counts: List[int]
-
-
-@app.post('/fitVarDist')
-def fit_var_dist(data: VariableData = Body(...)):
-    # Calculate the bin centers
-    bin_edges = np.array(data.bin_edges)
-    bin_counts = np.array(data.counts)
-    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-
-    # Reconstruct the data from bin centers and counts
-    data = np.repeat(bin_centers, bin_counts)
-
-    # Fit distributions to the reconstructed data
-    f = fitter.Fitter(data, distributions=[
-                      'norm', 'expon', 'lognorm', 'gamma', 'beta', 'uniform'])
-    f.fit()
-
-    # Generate x values for plotting the PDF of the fitted distributions
-    x = np.linspace(min(bin_edges), max(bin_edges), 1000)
-
-    fit_dists = []
-    sum = f.summary(plot=False)
-
-    dist_cnt = 0
-    idx = 0
-    while dist_cnt < 3:
-        fit_name = sum.iloc[idx].name
-        fit_params = f.fitted_param[fit_name]
-        fit_distribution = getattr(stats, fit_name)
-        param_names = (fit_distribution.shapes + ", loc, scale").split(
-            ", ") if fit_distribution.shapes else ["loc", "scale"]
-
-        fit_params_dict = {}
-        for d_key, d_val in zip(param_names, fit_params):
-            if not np.isnan(d_val) and not np.isinf(d_val):
-                fit_params_dict[d_key] = float(f"{d_val:.4f}")
-            else:
-                print("invalid param: ", d_key, " = ", d_val)
-
-        p = get_fit_var_pdf(x, fit_name, fit_params_dict)
-
-        metrics = {}
-        sum_row = sum.loc[fit_name]
-        for col_label in sum.columns:
-            if not np.isnan(sum_row[col_label]) and not np.isinf(sum_row[col_label]):
-                metrics[col_label] = float(f"{sum_row[col_label]:.4f}")
-
-        if np.isnan(p).any() or np.isinf(p).any() or np.isnan(x).any() or np.isinf(x).any():
-            print("invalid distribution: ", fit_name)
-            idx += 1
-            continue
-
-        fit_dists.append({
-            'name': fit_name,
-            'params': fit_params_dict,
-            'x': x.tolist(),
-            'p': p.tolist(),
-            'metrics': metrics
-        })
-
-        dist_cnt += 1
-        idx += 1
-
-    return fit_dists
-
-
-def get_fit_var_pdf(x, fit_name, fit_params):
-    # Get the distribution function from scipy.stats based on fit_name
-    dist = getattr(stats, fit_name)
-
-    # Pass the keyword arguments dynamically based on the provided fit_params
-    p = dist.pdf(x, **fit_params)
-
-    return p
 
 
 class BiVariableData(BaseModel):
@@ -165,10 +87,11 @@ def translate(data: TranslationData = Body(...)):
     print("translation started")
     entities = data.entities
     variables = data.variables
-    
+
     # Dynamically determine predictors and response variable
     variable_names = [var["name"] for var in variables]
-    response_var = variable_names[-1]  # Treat the last variable as the response
+    # Treat the last variable as the response
+    response_var = variable_names[-1]
     predictors = variable_names[:-1]  # Remaining variables are predictors
 
     # Convert dataset to NumPy arrays
@@ -202,8 +125,79 @@ def translate(data: TranslationData = Body(...)):
 
     # Prepare the response
     parameter_samples["intercept"] = intercept_samples
-    
     print("translation done")
+
+    # Convert samples to distributions
+    fitted_distributions = convert_samples_to_distribution(parameter_samples)
+    print("distribution converted")
+
     return {
-        "parameter_distributions": parameter_samples
+        "parameter_distributions": parameter_samples,
+        "fitted_distributions": fitted_distributions
     }
+
+
+def convert_samples_to_distribution(parameter_samples):
+    fit_dists = {}
+    for param, samples in parameter_samples.items():
+        f = Fitter(samples, distributions=[
+            'norm', 'expon', 'lognorm', 'gamma', 'beta', 'uniform'])
+        f.fit()
+
+        # Generate x values for plotting the PDF of the fitted distributions
+        x = np.linspace(min(samples), max(samples), 1000)
+
+        sum = f.summary(plot=False)
+
+        dist_cnt = 0
+        idx = 0
+        while dist_cnt < 3:
+            fit_name = sum.iloc[idx].name
+            fit_params = f.fitted_param[fit_name]
+            fit_distribution = getattr(stats, fit_name)
+            param_names = (fit_distribution.shapes + ", loc, scale").split(
+                ", ") if fit_distribution.shapes else ["loc", "scale"]
+
+            fit_params_dict = {}
+            for d_key, d_val in zip(param_names, fit_params):
+                if not np.isnan(d_val) and not np.isinf(d_val):
+                    fit_params_dict[d_key] = float(f"{d_val:.4f}")
+                else:
+                    print("invalid param: ", d_key, " = ", d_val)
+
+            p = get_fit_var_pdf(x, fit_name, fit_params_dict)
+
+            metrics = {}
+            sum_row = sum.loc[fit_name]
+            for col_label in sum.columns:
+                if not np.isnan(sum_row[col_label]) and not np.isinf(sum_row[col_label]):
+                    metrics[col_label] = float(f"{sum_row[col_label]:.4f}")
+
+            if np.isnan(p).any() or np.isinf(p).any() or np.isnan(x).any() or np.isinf(x).any():
+                print("invalid distribution: ", fit_name)
+                idx += 1
+                continue
+
+            fit_dists[param] = {
+                'name': fit_name,
+                'params': fit_params_dict,
+                'x': x.tolist(),
+                'p': p.tolist(),
+                'metrics': metrics
+            }
+
+            dist_cnt += 1
+            idx += 1
+            print("distribution fitted: ", fit_name)
+
+    return fit_dists
+
+
+def get_fit_var_pdf(x, fit_name, fit_params):
+    # Get the distribution function from scipy.stats based on fit_name
+    dist = getattr(stats, fit_name)
+
+    # Pass the keyword arguments dynamically based on the provided fit_params
+    p = dist.pdf(x, **fit_params)
+
+    return p

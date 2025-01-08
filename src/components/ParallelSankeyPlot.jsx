@@ -39,7 +39,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const INTERACTION_TYPES = {
         ADD: "add",
         CONNECT: "connect",
-        BRUSH: "brush",
+        FILTER: "filter",
     }
 
     useEffect(() => {
@@ -120,7 +120,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 addAxisRegion();
                 activateAddFeature();
                 break;
-            case INTERACTION_TYPES.BRUSH:
+            case INTERACTION_TYPES.FILTER:
                 activateBrushFeature();
                 break;
             default:
@@ -378,7 +378,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 selections.set(key, selection.map(valueAxesRef.current.get(key).invert));
             }
             const selected = [];
-            svg.selectAll("path").each(function (d) {
+            svg.selectAll(".entity-path").each(function (d) {
                 if (d) {
                     const active = Array.from(selections).every(([key, [max, min]]) => d[key] >= min && d[key] <= max);
                     d3.select(this).attr("class", active ? "brush-selection" : "brush-non-selection");
@@ -420,6 +420,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 const randomValue = Math.random() * (max - min) + min;
                 entityData[varName] = randomValue;
             });
+            console.log("New entity data: ", entityData);
             newEntitiesData.push(entityData);
         }
 

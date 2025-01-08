@@ -111,35 +111,6 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
         setVariablesDict(prev => ({ ...prev, [newVariable.name]: newVariable }));
     };
 
-    const addNewRelation = () => {
-        setIsAddingRelation(true);
-    }
-
-    const handleSelectRelatedVar1 = (event) => {
-        setRelatedVar1(event.target.value);
-    }
-
-    const handleSelectRelatedVar2 = (event) => {
-        setRelatedVar2(event.target.value);
-    }
-
-    const handleSelectRelation = (event) => {
-        setRelation(event.target.value);
-    }
-
-    const confirmAddRelation = () => {
-        updateBivariable(relatedVar1.name + "-" + relatedVar2.name, "relation", relation);
-        logUserBehavior("conceptual-model", "click button", "add a relation", `${relatedVar1.name}-${relation}-${relatedVar2.name}`);
-        handleCloseAddRelationDialog();
-    }
-
-    const handleCloseAddRelationDialog = () => {
-        setRelatedVar1('');
-        setRelatedVar2('');
-        setRelation('');
-        setIsAddingRelation(false);
-    }
-
     const deleteVar = (name) => {
         let newVariablesDict = { ...variablesDict };
         delete newVariablesDict[name];
@@ -223,6 +194,7 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
                                 display: 'flex', 
                                 flexDirection: 'row', 
                                 justifyContent: 'center', 
+                                alignItems: 'center', 
                                 color: biVariable.specified ? 'green' : 'grey' 
                             }} 
                             key={biVarName}
@@ -230,9 +202,31 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
                             <p><strong>
                                 {varName}&nbsp;&nbsp;&nbsp;
                             </strong></p>
-                            <p><u>
-                                {biVariable.relation}
-                            </u></p>
+                            <FormControl sx={{ minWidth: 120 }}>
+                                <Select
+                                    value={biVariable.relation}
+                                    onChange={(e) => updateBivariable(biVarName, "relation", e.target.value)}
+                                    displayEmpty
+                                    inputProps={{ 'aria-label': 'Without label' }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            border: 'none',
+                                        },
+                                        '& .MuiSelect-select': {
+                                            padding: '4px 8px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        },
+                                    }}
+                                >
+                                    {RELATIONS.map((relation) => (
+                                        <MenuItem key={relation} value={relation}>
+                                            {relation}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
                             <p><strong>
                                 &nbsp;&nbsp;&nbsp;{relatedVarName}
                             </strong></p>
@@ -242,63 +236,6 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
                         </Box>
                     );
                 })}
-                <Button sx={{ m: 2 }} variant="outlined" onClick={addNewRelation}>Add Relation</Button>
-                <Dialog open={isAddingRelation}>
-                    <DialogTitle>Add a New Relation</DialogTitle>
-                    <DialogContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <FormControl sx={{ minWidth: 120 }}>
-                                <InputLabel id="var-1-label">Variable 1</InputLabel>
-                                <Select
-                                    labelId='var-1-label'
-                                    value={relatedVar1}
-                                    label="Variable 1"
-                                    onChange={handleSelectRelatedVar1}
-                                >
-                                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                                        return (
-                                            <MenuItem disabled={varName === relatedVar2?.name} key={varName} value={curVar}>{varName}</MenuItem>
-                                        )
-                                    })}
-                                </Select>
-                            </FormControl>
-                            <FormControl sx={{ m: 1, minWidth: 120 }}>
-                                <InputLabel id="relation-label">Relation</InputLabel>
-                                <Select
-                                    labelId='relation-label'
-                                    value={relation}
-                                    label="Relation"
-                                    onChange={handleSelectRelation}
-                                >
-                                    {RELATIONS.map((RELATION, i) => {
-                                        return (
-                                            <MenuItem key={i} value={RELATION}>{RELATION}</MenuItem>
-                                        )
-                                    })}
-                                </Select>
-                            </FormControl>
-                            <FormControl sx={{ m: 1, minWidth: 120 }}>
-                                <InputLabel id="var-2-label">Variable 2</InputLabel>
-                                <Select
-                                    labelId='var-2-label'
-                                    value={relatedVar2}
-                                    label="Variable 2"
-                                    onChange={handleSelectRelatedVar2}
-                                >
-                                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                                        return (
-                                            <MenuItem disabled={varName === relatedVar1?.name} key={varName} value={curVar}>{varName}</MenuItem>
-                                        )
-                                    })}
-                                </Select>
-                            </FormControl>
-                        </Box>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button color='danger' onClick={handleCloseAddRelationDialog}>Cancel</Button>
-                        <Button variant="contained" onClick={confirmAddRelation}>Confirm</Button>
-                    </DialogActions>
-                </Dialog>
             </Grid2>
         </Grid2>
     )

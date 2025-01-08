@@ -40,6 +40,7 @@ export default function Workspace(props) {
     const [entities, setEntities] = useState({});
 
     const [isTranslating, setIsTranslating] = useState(false);
+    const [translated, setTranslated] = useState(false);
 
     const [studyContext, setStudyContext] = useState(context["income_education_age"]);
 
@@ -108,9 +109,6 @@ export default function Workspace(props) {
         });
     }
 
-    const combinedEntityData = (entitiesIDs) => {
-    }
-    
     // Update the entities with new data
     const updateEntities = (entitiesIDs, entitiesData) => {
         console.log("update entities", entitiesIDs, entitiesData);
@@ -154,7 +152,7 @@ export default function Workspace(props) {
 
 
     const translate = () => {
-        console.log("translate");
+        console.log("translate", entities, variablesDict);
         setIsTranslating(true);
 
         axios
@@ -168,6 +166,7 @@ export default function Workspace(props) {
             })
             .finally(() => {
                 setIsTranslating(false);
+                setTranslated(true);
             });
     };
 
@@ -201,7 +200,7 @@ export default function Workspace(props) {
 
             const bins = d3.bin()
                 .domain(x.domain())
-                .thresholds(x.ticks(20))(distribution);
+                .thresholds(x.ticks(15))(distribution);
 
             const y = d3.scaleLinear()
                 .domain([0, d3.max(bins, d => d.length)])
@@ -264,8 +263,8 @@ export default function Workspace(props) {
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Grid2 className="module-div" size={8}>
                     <h3>Parallel Sankey Plot</h3>
-                    <Button sx={{ mx: 1 }} variant="outlined" onClick={loadData}>Load Data</Button>
-                    <Button variant="outlined" onClick={translate}>Translate</Button>
+                    {/* <Button sx={{ mx: 1 }} variant="outlined" onClick={loadData}>Load Data</Button> */}
+                    {/* <Button variant="outlined" onClick={translate}>Translate</Button> */}
                     <ParallelSankeyPlot
                         variablesDict={variablesDict}
                         updateVariable={updateVariable}
@@ -325,6 +324,8 @@ export default function Workspace(props) {
 
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Box className="module-div" sx={{ width: "100%", my: 2 }}>
+                    {/* {translated ? <></> : <Button variant="contained" onClick={translate}>Translate</Button> } */}
+                    <Button variant="contained" onClick={translate}>Translate</Button>
                     <div id='parameter-histogram-div'>
                     </div>
                 </Box>
