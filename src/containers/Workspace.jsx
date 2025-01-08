@@ -6,9 +6,8 @@ import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
 import HelpIcon from '@mui/icons-material/Help';
 import ParallelSankeyPlot from '../components/ParallelSankeyPlot';
-import axios from 'axios';
-import * as d3 from 'd3';
 import { v4 as uuidv4 } from 'uuid';
+import ResultsPanel from '../components/ResultsPanel';
 
 const context = {
     "human_growth_model": "During the early stages of life the stature of female and male are about the same,\
@@ -38,9 +37,6 @@ export default function Workspace(props) {
     const [biVariableDict, setBiVariableDict] = useState({});
 
     const [entities, setEntities] = useState({});
-
-    const [isTranslating, setIsTranslating] = useState(false);
-    const [translated, setTranslated] = useState(false);
 
     const [studyContext, setStudyContext] = useState(context["income_education_age"]);
 
@@ -150,92 +146,6 @@ export default function Workspace(props) {
             .catch((error) => console.error("Error loading dataset:", error));
     }
 
-
-    const translate = () => {
-        console.log("translate", entities, variablesDict);
-        setIsTranslating(true);
-
-        axios
-            .post(window.BACKEND_ADDRESS + "/translate", {
-                entities: Object.values(entities),
-                variables: Object.values(variablesDict),
-            })
-            .then((response) => {
-                console.log("translated", response.data);
-                plotParametersHistogram(response.data.parameter_distributions);
-            })
-            .finally(() => {
-                setIsTranslating(false);
-                setTranslated(true);
-            });
-    };
-
-    const plotParametersHistogram = (parameterDistributions) => {
-        const width = 300;
-        const height = 500;
-        const margin = { top: 40, right: 30, bottom: 40, left: 40 };
-        const plotWidth = width - margin.left - margin.right;
-        const plotHeight = height - margin.top - margin.bottom;
-
-        const offset = 100;
-        document.getElementById('parameter-histogram-div').innerHTML = '';
-        const container = d3.select('#parameter-histogram-div')
-
-        Object.entries(parameterDistributions).forEach(([parameter, distribution], index) => {
-            // Create an SVG element
-            const svg = container.append('svg')
-                .attr('width', width)
-                .attr('height', height)
-                .attr('transform', `translate(${index * (width + offset)}, 0)`);
-
-            // Append a group element to the SVG to position the chart
-            const g = svg.append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
-
-            // Set the range for x and y axes based on the data
-            const x = d3.scaleLinear()
-                .domain([d3.min(distribution), d3.max(distribution)])
-                .nice()
-                .range([0, plotWidth]);
-
-            const bins = d3.bin()
-                .domain(x.domain())
-                .thresholds(x.ticks(15))(distribution);
-
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(bins, d => d.length)])
-                .nice()
-                .range([plotHeight, 0]);
-
-            // Create the x-axis
-            g.append('g')
-                .attr('transform', `translate(0,${plotHeight})`)
-                .call(d3.axisBottom(x));
-
-            // Create the y-axis
-            g.append('g')
-                .call(d3.axisLeft(y));
-
-            // Add bars for the histogram
-            g.selectAll('.bar')
-                .data(bins)
-                .enter().append('rect')
-                .attr('class', 'bar')
-                .attr('x', d => x(d.x0))
-                .attr('width', d => x(d.x1) - x(d.x0) - 1) // Adjust width for padding
-                .attr('y', d => y(d.length))
-                .attr('height', d => plotHeight - y(d.length))
-                .attr('fill', '#69b3a2');
-
-            // Add title to each histogram
-            g.append('text')
-                .attr('x', plotWidth / 2)
-                .attr('y', -10)
-                .attr('text-anchor', 'middle')
-                .text(parameter);
-        });
-    }
-
     return (
         <div className='workspace-div'>
             <Box className="module-div" sx={{ width: "100%", my: 2 }}>
@@ -263,8 +173,6 @@ export default function Workspace(props) {
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Grid2 className="module-div" size={8}>
                     <h3>Parallel Sankey Plot</h3>
-                    {/* <Button sx={{ mx: 1 }} variant="outlined" onClick={loadData}>Load Data</Button> */}
-                    {/* <Button variant="outlined" onClick={translate}>Translate</Button> */}
                     <ParallelSankeyPlot
                         variablesDict={variablesDict}
                         updateVariable={updateVariable}
@@ -297,13 +205,6 @@ export default function Workspace(props) {
                 </Grid2>
             </Grid2>
 
-            <Backdrop
-                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                open={isTranslating}
-            >
-                <CircularProgress color="inherit" />
-            </Backdrop>
-
             <Box className="module-div" sx={{ width: "100%", my: 2 }}>
                 <h3>Univariate Distributions</h3>
                 <Box sx={{ display: 'flex', flexDirection: 'row', overflowX: 'auto', justifyContent: 'space-around' }}>
@@ -324,10 +225,8 @@ export default function Workspace(props) {
 
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Box className="module-div" sx={{ width: "100%", my: 2 }}>
-                    {/* {translated ? <></> : <Button variant="contained" onClick={translate}>Translate</Button> } */}
-                    <Button variant="contained" onClick={translate}>Translate</Button>
-                    <div id='parameter-histogram-div'>
-                    </div>
+                    <h3>Results Panel</h3>
+                    <ResultsPanel entities={entities} variablesDict={variablesDict}/>
                 </Box>
             </Grid2>
         </div>

@@ -140,6 +140,8 @@ def translate(data: TranslationData = Body(...)):
 def convert_samples_to_distribution(parameter_samples):
     fit_dists = {}
     for param, samples in parameter_samples.items():
+        fit_dists[param] = {}
+        
         f = Fitter(samples, distributions=[
             'norm', 'expon', 'lognorm', 'gamma', 'beta', 'uniform'])
         f.fit()
@@ -178,7 +180,7 @@ def convert_samples_to_distribution(parameter_samples):
                 idx += 1
                 continue
 
-            fit_dists[param] = {
+            fit_dists[param][fit_name] = {
                 'name': fit_name,
                 'params': fit_params_dict,
                 'x': x.tolist(),
