@@ -149,8 +149,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         svg.selectAll(".handle").remove();
         svg.selectAll(".overlay").remove();
         svg.on("start brush end", null);
-        svg.selectAll(".brush-selection").attr("class", "entity-path");
-        svg.selectAll(".brush-non-selection").attr("class", "entity-path");
         setBrushSelections(new Map());
     }
 
@@ -204,7 +202,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
             svg.append("path")
                 .datum(entity) // Pass the entity directly
-                .attr("class", "entity-path")
+                .attr("class", "entity-path brush-selection")
                 .attr("d", d => line(
                     sortableVariables
                         .filter(variable => d[variable.name] !== null)
@@ -381,10 +379,15 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             svg.selectAll(".entity-path").each(function (d) {
                 if (d) {
                     const active = Array.from(selections).every(([key, [max, min]]) => d[key] >= min && d[key] <= max);
-                    d3.select(this).attr("class", active ? "brush-selection" : "brush-non-selection");
                     if (active) {
+                        d3.select(this).classed("brush-selection", true);
+                        d3.select(this).classed("brush-non-selection", false);
                         d3.select(this).raise();
                         selected.push(d);
+                    }
+                    else {
+                        d3.select(this).classed("brush-selection", false);
+                        d3.select(this).classed("brush-non-selection", true);
                     }
                 }
             });

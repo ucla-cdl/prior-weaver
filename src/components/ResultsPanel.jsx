@@ -9,10 +9,10 @@ export default function ResultsPanel({ entities, variablesDict }) {
 
     const width = 300;
     const height = 500;
-    const margin = { top: 40, right: 30, bottom: 40, left: 40 };
+    const margin = { top: 40, right: 40, bottom: 60, left: 40 };
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
-    const offset = 100;
+    const offset = 150;
 
     const translate = () => {
         setIsTranslating(true);
@@ -86,7 +86,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
             // Add title to each histogram
             g.append('text')
                 .attr('x', plotWidth / 2)
-                .attr('y', plotHeight + margin.bottom)
+                .attr('y', plotHeight + margin.bottom - 15)
                 .attr('text-anchor', 'middle')
                 .text(parameter);
         });
