@@ -22,7 +22,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     const COLORS = { "PREDICT_DOT": "orange", "POPULATE_DOT": "blue", "CHIP_DOT": "blue" }
     const [bivariateMode, setBivariateMode] = useState('COMBINE');
     const [selectedDots, setSelectedDots] = useState([]);
-    const [enableFilter, setEnableFilter] = useState(false);
+    const [enableSelection, setEnableSelection] = useState(false);
 
     React.useImperativeHandle(ref, () => ({
         synchronizeSelection,
@@ -621,7 +621,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         // updateBivariable(biVarName, "specified", false);
     }
 
-    const activeRegionalFilter = () => {
+    const activeRegionalSelection = () => {
         // Define the brush behavior
         const brush = d3.brush()
             .extent([[0, 0], [mainPlotWidth, mainPlotHeight]])
@@ -700,15 +700,15 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
             }
         }
 
-        if (enableFilter) {
+        if (enableSelection) {
             mainPlot.selectAll(".brush").remove();
-            setEnableFilter(false);
+            setEnableSelection(false);
         }
         else {
             mainPlot.append("g")
                 .attr("class", "brush")
                 .call(brush);
-            setEnableFilter(true);
+            setEnableSelection(true);
         }
     }
 
@@ -764,7 +764,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
                 <Button sx={{ m: 1 }} variant="outlined" color='success' onClick={fitRelation}>Fit Trend</Button>
-                <Button sx={{ m: 1 }} variant={enableFilter ? 'contained' : 'outlined'} onClick={activeRegionalFilter}>Filter</Button>
+                <Button sx={{ m: 1 }} variant={enableSelection ? 'contained' : 'outlined'} onClick={activeRegionalSelection}>Selection</Button>
                 {/* <Button sx={{ m: 1 }} onClick={clearRegional}>Clear regional</Button> */}
                 {/* <Button sx={{ m: 1 }} onClick={clearAll}>Clear all</Button> */}
             </Box>

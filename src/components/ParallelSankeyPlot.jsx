@@ -39,7 +39,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const INTERACTION_TYPES = {
         ADD: "add",
         CONNECT: "connect",
-        FILTER: "filter",
+        SELECTION: "selection",
     }
 
     useEffect(() => {
@@ -120,7 +120,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 addAxisRegion();
                 activateAddFeature();
                 break;
-            case INTERACTION_TYPES.FILTER:
+            case INTERACTION_TYPES.SELECTION:
                 activateBrushFeature();
                 break;
             default:
