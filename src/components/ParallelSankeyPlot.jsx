@@ -18,7 +18,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const labelOffset = 25;
     const chartHeight = 400;
 
-    const [brushSelections, setBrushSelections] = useState(new Map());
+    const [brushSelectedRegions, setBrushSelectedRegions] = useState(new Map());
+    const [selectedEntities, setSelectedEntities] = useState([]);
     const [sortableVariables, setSortableVariables] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
     const [connectedPoint, setConnectedPoint] = useState(null);
@@ -149,7 +150,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         svg.selectAll(".handle").remove();
         svg.selectAll(".overlay").remove();
         svg.on("start brush end", null);
-        setBrushSelections(new Map());
+        setBrushSelectedRegions(new Map());
     }
 
     const addAxisRegion = () => {
@@ -397,13 +398,14 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
             svg.node().value = selected;
             svg.dispatch("input");
-            setBrushSelections(selections);
+            setBrushSelectedRegions(selections);
         }
 
         svg.node().value = Object.values(entities);
 
         svg.on("input", function () {
             const selectedEntities = svg.node().value;
+            setSelectedEntities(selectedEntities);
             synchronizeSankeySelection(selectedEntities);
         });
 
@@ -413,12 +415,12 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     }
 
     // Randomly populate data points in the selected region
-    const autoPopulateEntities = () => {
+    const generateRandomEntities = () => {
         const newEntitiesNum = 10;
         const newEntitiesData = [];
         for (let i = 0; i < newEntitiesNum; i++) {
             let entityData = {};
-            Array.from(brushSelections).forEach(([varName, range]) => {
+            Array.from(brushSelectedRegions).forEach(([varName, range]) => {
                 const [min, max] = range;
                 const randomValue = Math.random() * (max - min) + min;
                 entityData[varName] = randomValue;
@@ -428,6 +430,18 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         }
 
         addEntities(newEntitiesData);
+    }
+
+    const deleteSelectedEntities = () => {
+        deleteEntities(selectedEntities.map(entity => entity.id));
+    }
+
+    const filterEntities = (filter) => {
+        const svg = d3.select("#sankey-svg");
+
+        svg.selectAll(".entity-path").each(d => {
+            
+        })
     }
 
     function handleDragStart(event) {
@@ -458,7 +472,21 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         <Box>
             <Box sx={{ my: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <Box sx={{ my: 1 }}>
-                    <Button variant='outlined' onClick={autoPopulateEntities}>Auto Populate Entities</Button>
+                    <Button
+                    onClick={filterEntities}
+                    >
+                        Filter
+                    </Button>
+                    <Button
+                        variant={selectedEntities.length > 0 ? 'contained' : 'outlined'}
+                        onClick={generateRandomEntities}>
+                        Generate
+                    </Button>
+                    <Button
+                        variant={selectedEntities.length > 0 ? 'contained' : 'outlined'}
+                        onClick={deleteSelectedEntities}>
+                        Delete
+                    </Button>
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', ml: 2 }}>
                     <FormControl component="fieldset">
