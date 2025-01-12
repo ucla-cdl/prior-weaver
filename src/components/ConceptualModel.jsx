@@ -6,6 +6,8 @@ import { logUserBehavior } from '../utils/BehaviorListener';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BrushIcon from '@mui/icons-material/Brush';
 
+const RELATIONS = ["causes", "associates with", "not related to"];
+
 export default function ConceptualModel({ variablesDict, setVariablesDict, biVariableDict, setBiVariableDict, updateBivariable, selectBivariable, addAttributeToEntities }) {
 
     const [isAddingVariable, setIsAddingVariable] = useState(false);
@@ -14,12 +16,6 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
     const [newMax, setNewMax] = useState(100);
     const [newUnitLabel, setNewUnitLabel] = useState('');
     const [newBins, setNewBins] = useState(10);
-
-    const [isAddingRelation, setIsAddingRelation] = useState(false);
-    const [relatedVar1, setRelatedVar1] = useState('');
-    const [relatedVar2, setRelatedVar2] = useState('');
-    const RELATIONS = ["causes", "associates with", "not related to"];
-    const [relation, setRelation] = useState('');
 
     useEffect(() => {
         drawConceptualModel();
@@ -121,7 +117,7 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
     return (
         <Grid2 container spacing={3}>
             {/* Variable List */}
-            <Grid2 size={3} className="module-div">
+            <Grid2 size={5} className="module-div">
                 <h3>Variables</h3>
                 {Object.entries(variablesDict).map(([varName, variable]) => (
                     <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }} key={varName}>
@@ -176,66 +172,11 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
             </Grid2>
 
             {/* Conceptual Model */}
-            <Grid2 size={5} className="module-div">
+            <Grid2 size={7} className="module-div">
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <h3>Conceptual Model</h3>
                     <div id='conceptual-model-div'></div>
                 </Box>
-            </Grid2>
-
-            {/* Relation List */}
-            <Grid2 size={4} className="module-div">
-                <h3>Relationships</h3>
-                {Object.entries(biVariableDict).map(([biVarName, biVariable]) => {
-                    let [varName, relatedVarName] = biVarName.split("-");
-                    return (
-                        <Box 
-                            sx={{ 
-                                display: 'flex', 
-                                flexDirection: 'row', 
-                                justifyContent: 'center', 
-                                alignItems: 'center', 
-                                color: biVariable.specified ? 'green' : 'grey' 
-                            }} 
-                            key={biVarName}
-                        >
-                            <p><strong>
-                                {varName}&nbsp;&nbsp;&nbsp;
-                            </strong></p>
-                            <FormControl sx={{ minWidth: 120 }}>
-                                <Select
-                                    value={biVariable.relation}
-                                    onChange={(e) => updateBivariable(biVarName, "relation", e.target.value)}
-                                    displayEmpty
-                                    inputProps={{ 'aria-label': 'Without label' }}
-                                    sx={{
-                                        '& .MuiOutlinedInput-notchedOutline': {
-                                            border: 'none',
-                                        },
-                                        '& .MuiSelect-select': {
-                                            padding: '4px 8px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        },
-                                    }}
-                                >
-                                    {RELATIONS.map((relation) => (
-                                        <MenuItem key={relation} value={relation}>
-                                            {relation}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                            <p><strong>
-                                &nbsp;&nbsp;&nbsp;{relatedVarName}
-                            </strong></p>
-                            <IconButton sx={{mx: 1}} onClick={() => selectBivariable(biVarName)}>
-                                <BrushIcon fontSize='small' />
-                            </IconButton>
-                        </Box>
-                    );
-                })}
             </Grid2>
         </Grid2>
     )

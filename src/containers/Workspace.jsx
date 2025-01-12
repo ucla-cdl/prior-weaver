@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import "./Workspace.css";
-import { Button, Box, Select, MenuItem, Grid2, Backdrop, CircularProgress, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip, Grid } from '@mui/material';
+import { Button, Box, Select, MenuItem, Grid2, Backdrop, CircularProgress, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip, Grid, IconButton } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
-import HelpIcon from '@mui/icons-material/Help';
+import BrushIcon from '@mui/icons-material/Brush';
 import ParallelSankeyPlot from '../components/ParallelSankeyPlot';
 import { v4 as uuidv4 } from 'uuid';
 import ResultsPanel from '../components/ResultsPanel';
@@ -24,6 +24,8 @@ const context = {
                 Specifically, you want to assess how the number of years of education and a person's age (or employment years) impact their monthly income in the U.S.\
                 You aim to use this information to better understand socioeconomic patterns and inform policy recommendations.",
 }
+
+const RELATIONS = ["causes", "associates with", "not related to"];
 
 // Main Component for Adding Variables and Histograms
 export default function Workspace(props) {
@@ -148,27 +150,38 @@ export default function Workspace(props) {
 
     return (
         <div className='workspace-div'>
-            <Box className="module-div" sx={{ width: "100%", my: 2 }}>
-                <h3>Analysis Context</h3>
-                <Typography>
-                    {studyContext}
-                </Typography>
-                {/* <Typography sx={{my: 1, fontWeight: 'bold'}}>
-                    Please provide the distribution for statures of males.
-                    Please provide the distributuion for monthly income.
-                </Typography> */}
-            </Box>
+            {/* 
+                    UI LAYOUT:
+                    
+                    Analysis Context | Variables | Conceptual Model
 
-            <ConceptualModel
-                variablesDict={variablesDict}
-                setVariablesDict={setVariablesDict}
-                biVariableDict={biVariableDict}
-                setBiVariableDict={setBiVariableDict}
-                updateVariable={updateVariable}
-                updateBivariable={updateBivariable}
-                selectBivariable={selectBivariable}
-                addAttributeToEntities={addAttributeToEntities}
-            />
+                    Parallel Sankey Plot | Bivariate Relationship
+
+                    Univariate Distributions
+                    
+                    Results Panel
+                */}
+            <Grid2 sx={{ my: 2 }} container spacing={3}>
+                <Grid2 className="module-div" size={4}>
+                    <h3>Analysis Context</h3>
+                    <Typography>
+                        {studyContext}
+                    </Typography>
+                </Grid2>
+
+                <Grid2 size={8}>
+                    <ConceptualModel
+                        variablesDict={variablesDict}
+                        setVariablesDict={setVariablesDict}
+                        biVariableDict={biVariableDict}
+                        setBiVariableDict={setBiVariableDict}
+                        updateVariable={updateVariable}
+                        updateBivariable={updateBivariable}
+                        selectBivariable={selectBivariable}
+                        addAttributeToEntities={addAttributeToEntities}
+                    />
+                </Grid2>
+            </Grid2>
 
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Grid2 className="module-div" size={8}>
@@ -188,6 +201,58 @@ export default function Workspace(props) {
                         <h3>
                             Bivariate Relationship
                         </h3>
+
+                        {/* Relation List */}
+                        {Object.entries(biVariableDict).map(([biVarName, biVariable]) => {
+                            let [varName, relatedVarName] = biVarName.split("-");
+                            return (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        color: biVariable.specified ? 'green' : 'grey'
+                                    }}
+                                    key={biVarName}
+                                >
+                                    <p><strong>
+                                        {varName}&nbsp;&nbsp;&nbsp;
+                                    </strong></p>
+                                    <FormControl sx={{ minWidth: 120 }}>
+                                        <Select
+                                            value={biVariable.relation}
+                                            onChange={(e) => updateBivariable(biVarName, "relation", e.target.value)}
+                                            displayEmpty
+                                            inputProps={{ 'aria-label': 'Without label' }}
+                                            sx={{
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    border: 'none',
+                                                },
+                                                '& .MuiSelect-select': {
+                                                    padding: '4px 8px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                },
+                                            }}
+                                        >
+                                            {RELATIONS.map((relation) => (
+                                                <MenuItem key={relation} value={relation}>
+                                                    {relation}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    <p><strong>
+                                        &nbsp;&nbsp;&nbsp;{relatedVarName}
+                                    </strong></p>
+                                    <IconButton sx={{ mx: 1 }} onClick={() => selectBivariable(biVarName)}>
+                                        <BrushIcon fontSize='small' />
+                                    </IconButton>
+                                </Box>
+                            );
+                        })}
 
                         {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
                             <BiVariablePlot
@@ -226,7 +291,7 @@ export default function Workspace(props) {
             <Grid2 sx={{ my: 2 }} container spacing={3}>
                 <Box className="module-div" sx={{ width: "100%", my: 2 }}>
                     <h3>Results Panel</h3>
-                    <ResultsPanel entities={entities} variablesDict={variablesDict}/>
+                    <ResultsPanel entities={entities} variablesDict={variablesDict} />
                 </Box>
             </Grid2>
         </div>

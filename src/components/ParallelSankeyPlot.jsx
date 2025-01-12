@@ -10,6 +10,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import "./ParallelSankeyPlot.css";
 
+const FILTER_TYPES = {
+    'FULLY': 0,
+    'PARTIALLY': 1,
+    'NONE': 2,
+}
+
 export default function ParallelSankeyPlot({ variablesDict, updateVariable, entities, addEntities, deleteEntities, updateEntities, synchronizeSankeySelection }) {
     const marginTop = 20;
     const marginRight = 40;
@@ -440,7 +446,38 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         const svg = d3.select("#sankey-svg");
 
         svg.selectAll(".entity-path").each(d => {
-            
+            if (d) {
+                switch (filter) {
+                    case FILTER_TYPES.FULLY:
+                        const isFullyConnected = sortableVariables.every(variable => d[variable.name] !== null);
+                        if (isFullyConnected) {
+                            d3.select(this).classed("brush-selection", true);
+                            d3.select(this).classed("brush-non-selection", false);
+                        }
+                        else {
+                            d3.select(this).classed("brush-selection", false);
+                            d3.select(this).classed("brush-non-selection", true);
+                        }
+                        break;
+                    case FILTER_TYPES.PARTIALLY:
+                        // TODO: add checkbox to each axis to determine whether it is required
+                        break;
+                    case FILTER_TYPES.NONE:
+                        const isNoneConnected = sortableVariables.every(variable => d[variable.name] === null);
+                        if (isNoneConnected) {
+                            d3.select(this).classed("brush-selection", true);
+                            d3.select(this).classed("brush-non-selection", false);
+                        }
+                        else {
+                            d3.select(this).classed("brush-selection", false);
+                            d3.select(this).classed("brush-non-selection", true);
+                        } 
+                        break;
+
+                    default:
+                        break;
+                }
+            }
         })
     }
 
@@ -473,7 +510,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             <Box sx={{ my: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <Box sx={{ my: 1 }}>
                     <Button
-                    onClick={filterEntities}
+                        onClick={filterEntities}
                     >
                         Filter
                     </Button>
