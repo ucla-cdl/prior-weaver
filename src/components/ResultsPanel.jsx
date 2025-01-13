@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress } from '@mui/material';
+import { Box, Button, CircularProgress, Grid2 } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
@@ -151,20 +151,29 @@ export default function ResultsPanel({ entities, variablesDict }) {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Button variant="contained" onClick={translate}>Translate</Button>
-            {isTranslating && <CircularProgress sx={{ my: 2 }} />}
+            <Button sx={{ my: 2 }} variant="contained" onClick={translate}>Translate</Button>
+            {isTranslating && <CircularProgress size={'large'} sx={{ my: 3 }} />}
+            <Grid2 container spacing={3}
+                sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}
+            >
+                {/* Histogram Column */}
+                <Grid2 size={3} sx={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid #ccc', pr: 2 }}>
+                    <h4>Parameter Histogram</h4>
+                    {Object.values(variablesDict).map((variable, idx) => (
+                        <div key={idx} id={'parameter-histogram-div-' + variable.name}></div>
+                    ))}
+                    <div id={'parameter-histogram-div-' + 'intercept'}></div>
+                </Grid2>
 
-            {Object.values(variablesDict).map((variable, idx) => (
-                <Box key={idx} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                    <div id={'parameter-histogram-div-' + variable.name}></div>
-                    <div id={'parameter-distributions-div-' + variable.name}></div>
-                </Box>
-            ))}
-
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                <div id={'parameter-histogram-div-' + 'intercept'}></div>
-                <div id={'parameter-distributions-div-' + 'intercept'}></div>
-            </Box>
+                {/* Fitted Distributions Column */}
+                <Grid2 size={9} sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <h4>Fitted Continuous Distributions</h4>
+                    {Object.values(variablesDict).map((variable, idx) => (
+                        <div key={idx} id={'parameter-distributions-div-' + variable.name}></div>
+                    ))}
+                    <div id={'parameter-distributions-div-' + 'intercept'}></div>
+                </Grid2>
+            </Grid2>
         </Box>
     )
 };
