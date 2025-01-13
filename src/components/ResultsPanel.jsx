@@ -8,7 +8,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
     const [translated, setTranslated] = useState(false);
 
     const width = 300;
-    const height = 500;
+    const height = 300;
     const margin = { top: 40, right: 40, bottom: 60, left: 40 };
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
@@ -34,15 +34,15 @@ export default function ResultsPanel({ entities, variablesDict }) {
     };
 
     const plotParametersHistogram = (parameterDistributions) => {
-        document.getElementById('parameter-histogram-div').innerHTML = '';
-        const container = d3.select('#parameter-histogram-div')
-
+        // Plot the histogram of simulated parametric data for each parameter 
         Object.entries(parameterDistributions).forEach(([parameter, distribution], index) => {
+            document.getElementById('parameter-histogram-div-' + parameter).innerHTML = '';
+
             // Create an SVG element
-            const svg = container.append('svg')
+            const svg = d3.select('#parameter-histogram-div-' + parameter)
+                .append('svg')
                 .attr('width', width)
-                .attr('height', height)
-                .attr('transform', `translate(${index * (width + offset)}, 0)`);
+                .attr('height', height);
 
             // Append a group element to the SVG to position the chart
             const g = svg.append('g')
@@ -95,25 +95,42 @@ export default function ResultsPanel({ entities, variablesDict }) {
     const plotFittedDistributions = (fittedDistributions) => {
         const colors = d3.scaleOrdinal(d3.schemeCategory10);
 
+        // Plot the fitted distributions for each parameter
         Object.entries(fittedDistributions).forEach(([parameter, fittedDists], index) => {
-            const svg = d3.select(`#parameter-histogram-div svg:nth-child(${index + 1})`);
-            const yRightMax = d3.max(Object.values(fittedDists).map(distParams => d3.max(distParams.p)));
+            const container = d3.select(`#parameter-distributions-div-${parameter}`);
+            container.html('');
+            const yMax = d3.max(Object.values(fittedDists).map(distParams => d3.max(distParams.p)));
 
             Object.entries(fittedDists).forEach(([distName, distParams], distIndex) => {
+                const svg = container.append('svg')
+                    .attr('id', `fitted-distribution-${parameter}-${distName}`)
+                    .attr('transform', `translate(${index * (width + offset)}, 0)`)
+                    .attr('width', width)
+                    .attr('height', height);
+
                 const x = d3.scaleLinear()
                     .domain([d3.min(distParams.x), d3.max(distParams.x)])
                     .range([0, plotWidth]);
 
-                const yRight = d3.scaleLinear()
-                    .domain([0, yRightMax])
+                const y = d3.scaleLinear()
+                    .domain([0, yMax])
                     .range([plotHeight, 0]);
 
                 const line = d3.line()
                     .x(d => x(d[0]))
-                    .y(d => yRight(d[1]));
+                    .y(d => y(d[1]));
 
                 const g = svg.append('g')
                     .attr('transform', `translate(${margin.left},${margin.top})`);
+
+                // Create the x-axis
+                g.append('g')
+                    .attr('transform', `translate(0,${plotHeight})`)
+                    .call(d3.axisBottom(x));
+
+                // Create the y-axis
+                g.append('g')
+                    .call(d3.axisLeft(y));
 
                 g.append('path')
                     .datum(distParams.x.map((d, i) => [d, distParams.p[i]]))
@@ -122,40 +139,32 @@ export default function ResultsPanel({ entities, variablesDict }) {
                     .attr('stroke-width', 1.5)
                     .attr('d', line);
 
-                g.append('g')
-                    .attr('transform', `translate(${plotWidth},0)`)
-                    .call(d3.axisRight(yRight));
-            });
-
-            // Add legend
-            const legend = svg.append('g')
-                .attr('transform', `translate(${plotWidth - margin.right},${margin.top})`);
-
-            Object.keys(fittedDists).forEach((distName, distIndex) => {
-                const legendRow = legend.append('g')
-                    .attr('transform', `translate(0, ${distIndex * 20})`);
-
-                legendRow.append('rect')
-                    .attr('width', 10)
-                    .attr('height', 10)
-                    .attr('fill', colors(distIndex));
-
-                legendRow.append('text')
-                    .attr('x', 15)
-                    .attr('y', 10)
-                    .attr('text-anchor', 'start')
-                    .attr('font-size', 10)
+                // Add title to each histogram
+                g.append('text')
+                    .attr('x', plotWidth / 2)
+                    .attr('y', plotHeight + margin.bottom - 15)
+                    .attr('text-anchor', 'middle')
                     .text(distName);
             });
         });
     };
 
     return (
-        <Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Button variant="contained" onClick={translate}>Translate</Button>
-            {isTranslating && <CircularProgress />}
-            <div id='parameter-histogram-div'>
-            </div>
+            {isTranslating && <CircularProgress sx={{ my: 2 }} />}
+
+            {Object.values(variablesDict).map((variable, idx) => (
+                <Box key={idx} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <div id={'parameter-histogram-div-' + variable.name}></div>
+                    <div id={'parameter-distributions-div-' + variable.name}></div>
+                </Box>
+            ))}
+
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                <div id={'parameter-histogram-div-' + 'intercept'}></div>
+                <div id={'parameter-distributions-div-' + 'intercept'}></div>
+            </Box>
         </Box>
     )
 };
