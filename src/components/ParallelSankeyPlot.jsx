@@ -74,7 +74,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         const divId = "sankey-div";
         document.getElementById(divId).innerHTML = "";
         const axisNum = Object.keys(variablesDict).length;
-        const chartWidth = axisNum * 140;
+        // const chartWidth = axisNum * 140;
+        const chartWidth = d3.select("#" + divId).node().getBoundingClientRect().width;
 
         let svg = d3.select("#" + divId).append("svg")
             .attr("id", "sankey-svg")
@@ -566,8 +567,16 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     return (
         <Box>
             <Box sx={{ my: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Box sx={{ my: 1 }}>
-                    <FormControl component="fieldset">
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+                    <FormControl
+                        component="fieldset"
+                        sx={{
+                            border: '1px solid',
+                            borderColor: 'grey.500',
+                            borderRadius: 1,
+                            p: 2
+                        }}
+                    >
                         <FormLabel component="legend">Filter Type</FormLabel>
                         <RadioGroup
                             row
@@ -581,20 +590,16 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                             ))}
                         </RadioGroup>
                     </FormControl>
-
-                    <Button
-                        variant={selectedEntities.length > 0 ? 'contained' : 'outlined'}
-                        onClick={generateRandomEntities}>
-                        Generate
-                    </Button>
-                    <Button
-                        variant={selectedEntities.length > 0 ? 'contained' : 'outlined'}
-                        onClick={deleteSelectedEntities}>
-                        Delete
-                    </Button>
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', ml: 2 }}>
-                    <FormControl component="fieldset">
+                    <FormControl
+                        component="fieldset"
+                        sx={{
+                            border: '1px solid',
+                            borderColor: 'grey.500',
+                            borderRadius: 1,
+                            p: 2,
+                            ml: 2
+                        }}
+                    >
                         <FormLabel component="legend">Interaction Type</FormLabel>
                         <RadioGroup
                             row
@@ -609,41 +614,56 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                         </RadioGroup>
                     </FormControl>
                 </Box>
+
+                <Box sx={{ my: 2 }}>
+                    <Button
+                        sx={{ mx: 2 }}
+                        variant={selectedEntities.length > 0 ? 'contained' : 'outlined'}
+                        onClick={generateRandomEntities}>
+                        Generate
+                    </Button>
+                    <Button
+                        variant={selectedEntities.length > 0 ? 'contained' : 'outlined'}
+                        onClick={deleteSelectedEntities}>
+                        Delete
+                    </Button>
+                </Box>
             </Box>
 
-
-            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+            <Box sx={{ width: "100%", display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                     <SortableContext
                         items={sortableVariables}
                         strategy={verticalListSortingStrategy}
-                        style={{ display: 'flex', flexDirection: 'row' }}
                     >
-                        {sortableVariables.map(item => {
-                            return (
-                                <SortableItem
-                                    key={item.name}
-                                    id={item.name}
-                                    checkSelectedAxes={checkSelectedAxes}
-                                    toggleAxesFilter={toggleAxesFilter}
-                                />
-                            )
-                        })}
+                        <Box sx={{ width: '100%', minHeight: '60px', display: 'flex', flexDirection: 'row', position: 'relative' }}>
+                            {sortableVariables.map(item => {
+                                const axisPosition = variableAxesRef.current(item.name) - labelOffset;
+
+                                return (
+                                    <SortableItem
+                                        key={item.name}
+                                        id={item.name}
+                                        checkSelectedAxes={checkSelectedAxes}
+                                        toggleAxesFilter={toggleAxesFilter}
+                                        axisPosition={axisPosition}
+                                    />
+                                )
+                            })}
+                        </Box>
                     </SortableContext>
                     <DragOverlay>
                         {draggedItem ? <Item id={draggedItem} /> : null}
                     </DragOverlay>
                 </DndContext>
-            </Box>
 
-            <Box sx={{ mx: 'auto' }} id='sankey-div'>
-
+                <Box sx={{ width: "100%", mx: 'auto', my: 2 }} id='sankey-div'></Box>
             </Box>
         </Box >
     )
 }
 
-export const SortableItem = forwardRef(({ id, checkSelectedAxes, toggleAxesFilter }, ref) => {
+export const SortableItem = forwardRef(({ id, checkSelectedAxes, toggleAxesFilter, axisPosition }, ref) => {
     const {
         attributes,
         listeners,
@@ -663,6 +683,7 @@ export const SortableItem = forwardRef(({ id, checkSelectedAxes, toggleAxesFilte
             id={id}
             checkSelectedAxes={checkSelectedAxes}
             toggleAxesFilter={toggleAxesFilter}
+            axisPosition={axisPosition}
             style={style}
             {...attributes}
             {...listeners}
@@ -670,10 +691,16 @@ export const SortableItem = forwardRef(({ id, checkSelectedAxes, toggleAxesFilte
     );
 });
 
-export const Item = forwardRef(({ id, checkSelectedAxes, toggleAxesFilter, ...props }, ref) => {
+export const Item = forwardRef(({ id, checkSelectedAxes, toggleAxesFilter, axisPosition, ...props }, ref) => {
 
     return (
-        <Box {...props} ref={ref} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mx: 2 }}>
+        <Box {...props}
+            ref={ref}
+            sx={{
+                display: 'block flex', flexDirection: 'column', alignItems: 'center',
+                left: axisPosition, position: 'absolute'
+            }}
+        >
             <DragHandleIcon />
             <Typography>{id}</Typography>
             {checkSelectedAxes && toggleAxesFilter && (
