@@ -456,108 +456,65 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const filterEntities = (filter) => {
         const svg = d3.select("#sankey-svg");
 
-        const selected = [];
+        const highlightedItems = [];
         svg.selectAll(".entity-path").each(function (d) {
             if (d) {
                 switch (filter) {
                     case FILTER_TYPES.FULLY:
+                        // Filter out the fully connected entities
                         const isFullyConnected = sortableVariables.every(variable => d[variable.name] !== null);
-                        if (isFullyConnected) {
-                            d3.select(this).classed("brush-selection", false);
-                            d3.select(this).classed("brush-non-selection", true);
-
-                            // De-Highlight the dots that are filtered
-                            Object.entries(d).forEach(([key, value]) => {
-                                if (key !== "id" && value !== null) {
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("unselected-entity-dot", true);
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("selected-entity-dot", false);
-                                }
-                            });
-                        }
-                        else {
-                            d3.select(this).classed("brush-selection", true);
-                            d3.select(this).classed("brush-non-selection", false);
-                            d3.select(this).raise();
-                            selected.push(d);
-
-                            // Highlight the dots that are not filtered
-                            Object.entries(d).forEach(([key, value]) => {
-                                if (key !== "id" && value !== null) {
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("selected-entity-dot", true);
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("unselected-entity-dot", false);
-                                }
-                            });
-                        }
+                        changeFilterDotStyle(this, d, isFullyConnected, highlightedItems);
                         break;
                     case FILTER_TYPES.PARTIALLY:
-                        // add checkbox to each axis to determine whether it is required
+                        // Filter out the partially connected entities
                         const isPartiallyConnected = selectedFilterAxes.every(axisName => d[axisName] !== null);
-                        if (isPartiallyConnected) {
-                            d3.select(this).classed("brush-selection", false);
-                            d3.select(this).classed("brush-non-selection", true);
-                            // De-Highlight the dots that are filtered
-                            Object.entries(d).forEach(([key, value]) => {
-                                if (key !== "id" && value !== null) {
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("unselected-entity-dot", true);
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("selected-entity-dot", false);
-                                }
-                            });
-                        }
-                        else {
-                            d3.select(this).classed("brush-selection", true);
-                            d3.select(this).classed("brush-non-selection", false);
-                            d3.select(this).raise();
-                            selected.push(d);
-                            // Highlight the dots that are not filtered
-                            Object.entries(d).forEach(([key, value]) => {
-                                if (key !== "id" && value !== null) {
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("selected-entity-dot", true);
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("unselected-entity-dot", false);
-                                }
-                            });
-                        }
+                        changeFilterDotStyle(this, d, isPartiallyConnected, highlightedItems);
                         break;
                     case FILTER_TYPES.NONE:
+                        // Filter out the entities that are completely not connected
                         const isNoneConnected = sortableVariables.every(variable => d[variable.name] === null);
-                        if (isNoneConnected) {
-                            d3.select(this).classed("brush-selection", false);
-                            d3.select(this).classed("brush-non-selection", true);
-                            // De-Highlight the dots that are filtered
-                            Object.entries(d).forEach(([key, value]) => {
-                                if (key !== "id" && value !== null) {
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("unselected-entity-dot", true);
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("selected-entity-dot", false);
-                                }
-                            });
-                        }
-                        else {
-                            d3.select(this).classed("brush-selection", true);
-                            d3.select(this).classed("brush-non-selection", false);
-                            d3.select(this).raise();
-                            selected.push(d);
-                            // Highlight the dots that are not filtered
-                            Object.entries(d).forEach(([key, value]) => {
-                                if (key !== "id" && value !== null) {
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("selected-entity-dot", true);
-                                    d3.select(`#dot_${d["id"]}_${key}`).classed("unselected-entity-dot", false);
-                                }
-                            });
-                        }
+                        changeFilterDotStyle(this, d, isNoneConnected, highlightedItems);
                         break;
-
                     default:
                         break;
                 }
             }
         })
 
-        svg.node().value = selected;
+        svg.node().value = highlightedItems;
         svg.dispatch("input");
 
         setActiveFilter(filter);
     }
 
-    function handleDragStart(event) {
+    const changeFilterDotStyle = (htmlItem, entity, isFiltered, highlightedItems) => {
+        if (isFiltered) {
+            d3.select(htmlItem).classed("brush-selection", false);
+            d3.select(htmlItem).classed("brush-non-selection", true);
+            // De-Highlight the dots that are filtered
+            Object.entries(entity).forEach(([key, value]) => {
+                if (key !== "id" && value !== null) {
+                    d3.select(`#dot_${entity["id"]}_${key}`).classed("unselected-entity-dot", true);
+                    d3.select(`#dot_${entity["id"]}_${key}`).classed("selected-entity-dot", false);
+                }
+            });
+        }
+        else {
+            d3.select(htmlItem).classed("brush-selection", true);
+            d3.select(htmlItem).classed("brush-non-selection", false);
+            d3.select(htmlItem).raise();
+            highlightedItems.push(entity);
+            // Highlight the dots that are not filtered
+            Object.entries(entity).forEach(([key, value]) => {
+                if (key !== "id" && value !== null) {
+                    d3.select(`#dot_${entity["id"]}_${key}`).classed("selected-entity-dot", true);
+                    d3.select(`#dot_${entity["id"]}_${key}`).classed("unselected-entity-dot", false);
+                }
+            });
+        }
+    }
+
+    const handleDragStart = (event) => {
         setDraggedItem(event.active.id);
     }
 
