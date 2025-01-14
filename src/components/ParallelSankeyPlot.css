@@ -10,6 +10,10 @@
     fill: red;
 }
 
+.unselected-entity-dot {
+    fill: #ddd;
+}
+
 .brush-non-selection {
     stroke: #ddd;
 }
