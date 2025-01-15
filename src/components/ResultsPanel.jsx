@@ -7,12 +7,35 @@ export default function ResultsPanel({ entities, variablesDict }) {
     const [isTranslating, setIsTranslating] = useState(false);
     const [translated, setTranslated] = useState(false);
 
+    const [fittedDistributions, setFittedDistributions] = useState({});
+    const [selectedFittedDistributions, setSelectedFittedDistributions] = useState({});
+
     const width = 300;
     const height = 300;
     const margin = { top: 40, right: 40, bottom: 60, left: 40 };
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
     const offset = 150;
+
+    const colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+    /**
+     * Update the apperance when the selected distribution changes
+     */
+    useEffect(() => {
+        // Highlight the border of the selected distribution  
+        Object.entries(fittedDistributions).forEach(([parameter, fittedDists]) => {
+            const selectedDistName = selectedFittedDistributions[parameter].name;
+            Object.entries(fittedDists).forEach(([distName, distParams], distIndex) => {
+                const svg = d3.select(`#fitted-distribution-${parameter}-${distName}`);
+
+                svg.attr('stroke', distName === selectedDistName ? 'black' : 'none')
+                    // .attr('stroke', distName === selectedDistName ? 'red' : colors(distIndex))
+                    // .attr('filter', distName === selectedDistName ? 'url(#floating-effect)' : null);
+            });
+        }
+        );
+    }, [selectedFittedDistributions]);
 
     const translate = () => {
         setIsTranslating(true);
@@ -93,10 +116,19 @@ export default function ResultsPanel({ entities, variablesDict }) {
     };
 
     const plotFittedDistributions = (fittedDistributions) => {
-        const colors = d3.scaleOrdinal(d3.schemeCategory10);
+        setFittedDistributions(fittedDistributions);
 
-        // Plot the fitted distributions for each parameter
         Object.entries(fittedDistributions).forEach(([parameter, fittedDists], index) => {
+            // Set the first distribution as the selected distribution for this parameter
+            if (!selectedFittedDistributions[parameter]) {
+                console.log("set default selected distribution for", parameter);
+                setSelectedFittedDistributions(prev => ({
+                    ...prev,
+                    [parameter]: Object.values(fittedDists)[0],
+                }));
+            }
+
+            // Plot the fitted distributions for each parameter
             const container = d3.select(`#parameter-distributions-div-${parameter}`);
             container.html('');
             const yMax = d3.max(Object.values(fittedDists).map(distParams => d3.max(distParams.p)));
@@ -152,7 +184,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Button sx={{ my: 2 }} variant="contained" onClick={translate}>Translate</Button>
-            {isTranslating && <CircularProgress size={'large'} sx={{ my: 3 }} />}
+            {isTranslating && <CircularProgress sx={{ my: 3 }} />}
             <Grid2 container spacing={3}
                 sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}
             >

@@ -6,12 +6,17 @@
     fill: orange;
 }
 
+.connect-entity-dot {
+    fill: steelblue;
+}
+
 .selected-entity-dot {
-    fill: red;
+    fill: white;
 }
 
 .unselected-entity-dot {
     fill: #ddd;
+    stroke: #ddd;
 }
 
 .brush-non-selection {
@@ -27,3 +32,11 @@
     stroke-width: 2;
     stroke-opacity: 0.6;
 }
+
+.solid{
+    stroke:solid;
+ }
+ 
+ .dashed{
+    stroke-dasharray: 5,5; 
+ }

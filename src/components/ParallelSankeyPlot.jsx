@@ -54,7 +54,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const [connectedPoint, setConnectedPoint] = useState(null);
 
     const [activeInteraction, setActiveInteraction] = useState(INTERACTION_TYPES.SELECTION);
-    const [activeFilter, setActiveFilter] = useState(FILTER_TYPES.FULLY);
+    const [activeFilter, setActiveFilter] = useState(null);
     const [selectedFilterAxes, setSelectedFilterAxes] = useState([]);
 
     const valueAxesRef = useRef(new Map());
@@ -69,6 +69,10 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     useEffect(() => {
         populateEntities();
     }, [entities]);
+
+    useEffect(() => {
+        filterEntities(activeFilter);
+    }, [selectedFilterAxes]);
 
     const updatePlotLayout = () => {
         const divId = "sankey-div";
@@ -190,8 +194,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
         // Draw path for the entity
         const line = d3.line()
-            .curve(d3.curveMonotoneX) // Apply a curve to the line
-            .defined(([, value]) => value != null)
+            // .defined(([, value]) => value != null)
             .x(([key]) => variableAxesRef.current(key))
             .y(([key, value]) => valueAxesRef.current.get(key)(value));
 
@@ -218,6 +221,17 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                         .attr("stroke-width", 1)
                 }
             });
+
+            if (sortableVariables.some(variable => entity[variable.name] === null)) {
+                svg.append("path")
+                    .datum(entity)
+                    .attr("class", "entity-path highlighted-path")
+                    .attr("d", d => line(
+                        sortableVariables
+                            .filter(variable => d[variable.name] !== null)
+                            .map(variable => [variable.name, d[variable.name]])
+                    ));
+            }
 
             svg.append("path")
                 .datum(entity) // Pass the entity directly
@@ -314,7 +328,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 d3.select(this).classed("hovered-entity-dot", false);
             })
             .on("click", function (event) {
-                d3.select(this).classed("selected-entity-dot", true);
+                d3.select(this).classed("connect-entity-dot", true);
                 const [_, clickEntityId, clickAxis] = d3.select(this).attr("id").split("_");
 
                 /**
@@ -360,7 +374,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     }
 
                     // Reset connectedPoint after combining
-                    d3.selectAll(".entity-dot").classed("selected-entity-dot", false);
+                    d3.selectAll(".entity-dot").classed("connect-entity-dot", false);
 
                     connectedPoint = null;
                 }
@@ -454,6 +468,29 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         deleteEntities(selectedEntities.map(entity => entity.id));
     }
 
+    const changeFilterType = (filter) => {
+        console.log("change filter type to ", filter);
+
+        // Double click to clear the filter
+        if (filter === activeFilter) {
+            const svg = d3.select("#sankey-svg");
+            svg.selectAll(".entity-path").classed("brush-selection", true);
+            svg.selectAll(".entity-path").classed("brush-non-selection", false);
+            svg.selectAll(".entity-dot").classed("unselected-entity-dot", false);
+
+            setSelectedFilterAxes([]);
+            setActiveFilter(null);
+            svg.node().value = Object.values(entities);
+            svg.dispatch("input");
+        }
+        else {
+            if (filter !== FILTER_TYPES.PARTIALLY) {
+                setSelectedFilterAxes([]);
+            }
+            filterEntities(filter);
+        }
+    }
+
     const filterEntities = (filter) => {
         const svg = d3.select("#sankey-svg");
 
@@ -464,17 +501,17 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     case FILTER_TYPES.FULLY:
                         // Filter out the fully connected entities
                         const isFullyConnected = sortableVariables.every(variable => d[variable.name] !== null);
-                        changeFilterDotStyle(this, d, isFullyConnected, highlightedItems);
+                        changeFilteredEntitiesStyle(this, d, isFullyConnected, highlightedItems);
                         break;
                     case FILTER_TYPES.PARTIALLY:
                         // Filter out the partially connected entities
-                        const isPartiallyConnected = selectedFilterAxes.every(axisName => d[axisName] !== null);
-                        changeFilterDotStyle(this, d, isPartiallyConnected, highlightedItems);
+                        const isPartiallyConnected = selectedFilterAxes.length > 0 && selectedFilterAxes.every(axisName => d[axisName] !== null);
+                        changeFilteredEntitiesStyle(this, d, isPartiallyConnected, highlightedItems);
                         break;
                     case FILTER_TYPES.NONE:
                         // Filter out the entities that are completely not connected
                         const isNoneConnected = sortableVariables.every(variable => d[variable.name] === null);
-                        changeFilterDotStyle(this, d, isNoneConnected, highlightedItems);
+                        changeFilteredEntitiesStyle(this, d, isNoneConnected, highlightedItems);
                         break;
                     default:
                         break;
@@ -488,28 +525,28 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         setActiveFilter(filter);
     }
 
-    const changeFilterDotStyle = (htmlItem, entity, isFiltered, highlightedItems) => {
-        if (isFiltered) {
-            d3.select(htmlItem).classed("brush-selection", false);
-            d3.select(htmlItem).classed("brush-non-selection", true);
-            // De-Highlight the dots that are filtered
-            Object.entries(entity).forEach(([key, value]) => {
-                if (key !== "id" && value !== null) {
-                    d3.select(`#dot_${entity["id"]}_${key}`).classed("unselected-entity-dot", true);
-                    d3.select(`#dot_${entity["id"]}_${key}`).classed("selected-entity-dot", false);
-                }
-            });
-        }
-        else {
+    const changeFilteredEntitiesStyle = (htmlItem, entity, isFilteredIn, highlightedItems) => {
+        if (isFilteredIn) {
             d3.select(htmlItem).classed("brush-selection", true);
             d3.select(htmlItem).classed("brush-non-selection", false);
             d3.select(htmlItem).raise();
             highlightedItems.push(entity);
-            // Highlight the dots that are not filtered
+            // Highlight the dots that are filtered in
             Object.entries(entity).forEach(([key, value]) => {
                 if (key !== "id" && value !== null) {
                     d3.select(`#dot_${entity["id"]}_${key}`).classed("selected-entity-dot", true);
                     d3.select(`#dot_${entity["id"]}_${key}`).classed("unselected-entity-dot", false);
+                }
+            });
+        }
+        else {
+            d3.select(htmlItem).classed("brush-selection", false);
+            d3.select(htmlItem).classed("brush-non-selection", true);
+            // De-Highlight the dots that are not filtered in
+            Object.entries(entity).forEach(([key, value]) => {
+                if (key !== "id" && value !== null) {
+                    d3.select(`#dot_${entity["id"]}_${key}`).classed("unselected-entity-dot", true);
+                    d3.select(`#dot_${entity["id"]}_${key}`).classed("selected-entity-dot", false);
                 }
             });
         }
@@ -553,7 +590,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         }
 
         setSelectedFilterAxes(newSelectedAxes);
-        console.log("Selected axes: ", newSelectedAxes);
     }
 
     const sensors = useSensors(
@@ -577,19 +613,23 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                             p: 2
                         }}
                     >
-                        <FormLabel component="legend">Filter Type</FormLabel>
+                        <FormLabel component="legend">Show Entities that are </FormLabel>
                         <RadioGroup
                             row
                             aria-label="filterType"
                             name="filterType"
-                            value={activeFilter}
-                            onChange={(event) => filterEntities(event.target.value)}
+                            value={activeFilter || ""}
+                            onClick={(event) => changeFilterType(event.target.value)}
                         >
                             {Object.values(FILTER_TYPES).map(type => (
                                 <FormControlLabel key={type} value={type} control={<Radio />} label={type} />
                             ))}
                         </RadioGroup>
+                        <Typography sx={{ mt: 1, color: 'rgba(0, 0, 0, 0.6)' }}>
+                            connected
+                        </Typography>
                     </FormControl>
+
                     <FormControl
                         component="fieldset"
                         sx={{
@@ -636,7 +676,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                         items={sortableVariables}
                         strategy={verticalListSortingStrategy}
                     >
-                        <Box sx={{ width: '100%', minHeight: '60px', display: 'flex', flexDirection: 'row', position: 'relative' }}>
+                        <Box sx={{ width: '100%', minHeight: '40px', display: 'flex', flexDirection: 'row', position: 'relative' }}>
                             {sortableVariables.map(item => {
                                 const axisPosition = variableAxesRef.current(item.name) - labelOffset;
 
@@ -647,6 +687,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                                         checkSelectedAxes={checkSelectedAxes}
                                         toggleAxesFilter={toggleAxesFilter}
                                         axisPosition={axisPosition}
+                                        activeFilter={activeFilter}
                                     />
                                 )
                             })}
@@ -663,7 +704,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     )
 }
 
-export const SortableItem = forwardRef(({ id, checkSelectedAxes, toggleAxesFilter, axisPosition }, ref) => {
+export const SortableItem = forwardRef(({ id, checkSelectedAxes, toggleAxesFilter, axisPosition, activeFilter }, ref) => {
     const {
         attributes,
         listeners,
@@ -684,6 +725,7 @@ export const SortableItem = forwardRef(({ id, checkSelectedAxes, toggleAxesFilte
             checkSelectedAxes={checkSelectedAxes}
             toggleAxesFilter={toggleAxesFilter}
             axisPosition={axisPosition}
+            activeFilter={activeFilter}
             style={style}
             {...attributes}
             {...listeners}
@@ -691,7 +733,7 @@ export const SortableItem = forwardRef(({ id, checkSelectedAxes, toggleAxesFilte
     );
 });
 
-export const Item = forwardRef(({ id, checkSelectedAxes, toggleAxesFilter, axisPosition, ...props }, ref) => {
+export const Item = forwardRef(({ id, checkSelectedAxes, toggleAxesFilter, axisPosition, activeFilter, ...props }, ref) => {
 
     return (
         <Box {...props}
@@ -703,14 +745,14 @@ export const Item = forwardRef(({ id, checkSelectedAxes, toggleAxesFilter, axisP
         >
             <DragHandleIcon />
             <Typography>{id}</Typography>
-            {checkSelectedAxes && toggleAxesFilter && (
-                <Radio
-                    checked={checkSelectedAxes(id)}
-                    value={id}
-                    onClick={(event) => toggleAxesFilter(event)}
-                />
-            )
-            }
+            <Radio
+                size='small'
+                sx={{ padding: "2px" }}
+                disabled={activeFilter !== FILTER_TYPES.PARTIALLY}
+                checked={checkSelectedAxes(id)}
+                value={id}
+                onClick={(event) => toggleAxesFilter(event)}
+            />
         </Box>
     )
 });
