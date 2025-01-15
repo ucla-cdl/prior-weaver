@@ -2,6 +2,16 @@ import { Box, Button, CircularProgress, Grid2 } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
+import "./ResultsPanel.css";
+
+const DISTRIBUTION_TYPES = {
+    'Normal': 'norm',
+    'Exponential': 'expon',
+    'LogNormal': 'lognorm',
+    'Gamma': 'gamma',
+    'Beta': 'beta',
+    'Uniform': 'uniform',
+};
 
 export default function ResultsPanel({ entities, variablesDict }) {
     const [isTranslating, setIsTranslating] = useState(false);
@@ -15,27 +25,24 @@ export default function ResultsPanel({ entities, variablesDict }) {
     const margin = { top: 40, right: 40, bottom: 60, left: 40 };
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
-    const offset = 150;
+    const offset = 180;
 
     const colors = d3.scaleOrdinal(d3.schemeCategory10);
 
     /**
      * Update the apperance when the selected distribution changes
      */
-    useEffect(() => {
-        // Highlight the border of the selected distribution  
-        Object.entries(fittedDistributions).forEach(([parameter, fittedDists]) => {
-            const selectedDistName = selectedFittedDistributions[parameter].name;
-            Object.entries(fittedDists).forEach(([distName, distParams], distIndex) => {
-                const svg = d3.select(`#fitted-distribution-${parameter}-${distName}`);
+    // useEffect(() => {
+    //     // Highlight the border of the selected distribution  
+    //     Object.entries(fittedDistributions).forEach(([parameter, fittedDists]) => {
+    //         const selectedDistName = selectedFittedDistributions[parameter].name;
+    //         Object.entries(fittedDists).forEach(([distName, distParams], distIndex) => {
+    //             const svg = d3.select(`#fitted-distribution-${parameter}-${distName}`);
 
-                svg.attr('stroke', distName === selectedDistName ? 'black' : 'none')
-                    // .attr('stroke', distName === selectedDistName ? 'red' : colors(distIndex))
-                    // .attr('filter', distName === selectedDistName ? 'url(#floating-effect)' : null);
-            });
-        }
-        );
-    }, [selectedFittedDistributions]);
+    //         });
+    //     }
+    //     );
+    // }, [selectedFittedDistributions]);
 
     const translate = () => {
         setIsTranslating(true);
@@ -104,7 +111,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
                 .attr('width', d => x(d.x1) - x(d.x0) - 1) // Adjust width for padding
                 .attr('y', d => y(d.length))
                 .attr('height', d => plotHeight - y(d.length))
-                .attr('fill', '#69b3a2');
+                .attr('fill', colors(index));
 
             // Add title to each histogram
             g.append('text')
@@ -115,19 +122,50 @@ export default function ResultsPanel({ entities, variablesDict }) {
         });
     };
 
+    const updateSelectedFittedDistribution = (parameter, selectedDist) => {
+        console.log("set selected distribution for", parameter);
+
+        // Remove the highlight from the previously selected distribution
+        const prevSelectedDist = selectedFittedDistributions[parameter];
+        if (prevSelectedDist) {
+            const prevSvgRect = d3.select(`#fitted-distribution-rect-${parameter}-${prevSelectedDist.name}`);
+            prevSvgRect.classed('selected-fitted-distribution-rect', false);
+        }
+
+        // highlight the current selected distribution
+        const svgRect = d3.select(`#fitted-distribution-rect-${parameter}-${selectedDist.name}`);
+        svgRect.classed('selected-fitted-distribution-rect', true);
+
+        setSelectedFittedDistributions(prev => ({
+            ...prev,
+            [parameter]: selectedDist,
+        }));
+    }
+
+    // Dynamically render the distribution notation based on the distribution type
+    const getDistributionNotation = (distParams) => {
+        switch (distParams.name) {
+            case DISTRIBUTION_TYPES.Normal:
+                return `X ~ Normal(μ = ${distParams.loc}, σ² = ${Math.pow(distParams.scale, 2)})`;
+            case DISTRIBUTION_TYPES.Exponential:
+                return `X ~ Exponential(λ = ${1 / distParams.scale})`;
+            case DISTRIBUTION_TYPES.LogNormal:
+                return `X ~ Log-Normal(μ = ${Math.log(distParams.scale)}, σ = ${distParams.s})`;
+            case DISTRIBUTION_TYPES.Gamma:
+                return `X ~ Gamma(α = ${distParams.a}, β = ${1 / distParams.scale})`;
+            case DISTRIBUTION_TYPES.Beta:
+                return `X ~ Beta(${distParams.a}, ${distParams.b}, loc = ${distParams.loc}, scale = ${distParams.scale})`;
+            case DISTRIBUTION_TYPES.Uniform:
+                return `X ~ Uniform(a = ${distParams.loc}, b = ${distParams.loc + distParams.scale})`;
+            default:
+                return `Unknown distribution: ${distParams.name}`;
+        }
+    }
+
     const plotFittedDistributions = (fittedDistributions) => {
         setFittedDistributions(fittedDistributions);
 
         Object.entries(fittedDistributions).forEach(([parameter, fittedDists], index) => {
-            // Set the first distribution as the selected distribution for this parameter
-            if (!selectedFittedDistributions[parameter]) {
-                console.log("set default selected distribution for", parameter);
-                setSelectedFittedDistributions(prev => ({
-                    ...prev,
-                    [parameter]: Object.values(fittedDists)[0],
-                }));
-            }
-
             // Plot the fitted distributions for each parameter
             const container = d3.select(`#parameter-distributions-div-${parameter}`);
             container.html('');
@@ -137,6 +175,19 @@ export default function ResultsPanel({ entities, variablesDict }) {
                 const svg = container.append('svg')
                     .attr('id', `fitted-distribution-${parameter}-${distName}`)
                     .attr('transform', `translate(${index * (width + offset)}, 0)`)
+                    .attr('width', width)
+                    .attr('height', height);
+
+                const svgGroup = svg.append('g');
+
+                // Add a surrounding rectangle to indicate selection
+                svgGroup.append('rect')
+                    .attr('id', `fitted-distribution-rect-${parameter}-${distName}`)
+                    .attr('class', 'fitted-distribution-rect')
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('rx', 15)
+                    .attr('ry', 15)
                     .attr('width', width)
                     .attr('height', height);
 
@@ -152,7 +203,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
                     .x(d => x(d[0]))
                     .y(d => y(d[1]));
 
-                const g = svg.append('g')
+                const g = svgGroup.append('g')
                     .attr('transform', `translate(${margin.left},${margin.top})`);
 
                 // Create the x-axis
@@ -167,7 +218,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
                 g.append('path')
                     .datum(distParams.x.map((d, i) => [d, distParams.p[i]]))
                     .attr('fill', 'none')
-                    .attr('stroke', colors(distIndex))
+                    .attr('stroke', colors(index))
                     .attr('stroke-width', 1.5)
                     .attr('d', line);
 
@@ -178,6 +229,11 @@ export default function ResultsPanel({ entities, variablesDict }) {
                     .attr('text-anchor', 'middle')
                     .text(distName);
             });
+
+            // If there is no selection yet, Set the first distribution as the selected distribution for this parameter
+            if (!selectedFittedDistributions[parameter]) {
+                updateSelectedFittedDistribution(parameter, Object.values(fittedDists)[0]);
+            }
         });
     };
 
@@ -192,73 +248,20 @@ export default function ResultsPanel({ entities, variablesDict }) {
                 <Grid2 size={3} sx={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid #ccc', pr: 2 }}>
                     <h4>Parameter Histogram</h4>
                     {Object.values(variablesDict).map((variable, idx) => (
-                        <div key={idx} id={'parameter-histogram-div-' + variable.name}></div>
+                        <Box sx={{ my: 1 }} key={idx} id={'parameter-histogram-div-' + variable.name}></Box>
                     ))}
-                    <div id={'parameter-histogram-div-' + 'intercept'}></div>
+                    <Box sx={{ my: 1 }} id={'parameter-histogram-div-' + 'intercept'}></Box>
                 </Grid2>
 
                 {/* Fitted Distributions Column */}
                 <Grid2 size={9} sx={{ display: 'flex', flexDirection: 'column' }}>
                     <h4>Fitted Continuous Distributions</h4>
                     {Object.values(variablesDict).map((variable, idx) => (
-                        <div key={idx} id={'parameter-distributions-div-' + variable.name}></div>
+                        <Box sx={{ my: 1 }} key={idx} id={'parameter-distributions-div-' + variable.name}></Box>
                     ))}
-                    <div id={'parameter-distributions-div-' + 'intercept'}></div>
+                    <Box sx={{ my: 1 }} id={'parameter-distributions-div-' + 'intercept'}></Box>
                 </Grid2>
             </Grid2>
         </Box>
     )
 };
-
-/**
- * <Box>
-                        {(() => {
-                            const lastDistribution = variable.distributions[variable.distributions.length - 1];
-                            const { name, params } = lastDistribution;
-
-                            // Dynamically render the distribution notation based on the distribution type
-                            switch (name) {
-                                case 'norm':
-                                    return (
-                                        <h6>
-                                            X &sim; Normal(&mu; = {params.loc}, &sigma;<sup>2</sup> = {Math.pow(params.scale, 2)})
-                                        </h6>
-                                    );
-                                case 'expon':
-                                    return (
-                                        <h6>
-                                            X &sim; Exponential(&lambda; = {1 / params.scale})
-                                        </h6>
-                                    );
-                                case 'lognorm':
-                                    return (
-                                        <h6>
-                                            X &sim; Log-Normal(&mu; = {Math.log(params.scale)}, &sigma; = {params.s})
-                                        </h6>
-                                    );
-                                case 'gamma':
-                                    return (
-                                        <h6>
-                                            X &sim; Gamma(&alpha; = {params.a}, &beta; = {1 / params.scale})
-                                        </h6>
-                                    );
-                                case 'beta':
-                                    return (
-                                        <h6>
-                                            X &sim; Beta({params.a}, {params.b}, loc = {params.loc}, scale = {params.scale})
-                                        </h6>
-                                    );
-                                case 'uniform':
-                                    return (
-                                        <h6>
-                                            X &sim; Uniform(a = {params.loc}, b = {params.loc + params.scale})
-                                        </h6>
-                                    );
-                                default:
-                                    return (
-                                        <h6>Unknown distribution: {name}</h6>
-                                    );
-                            }
-                        })()}
-                    </Box>
- */

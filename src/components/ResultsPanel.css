@@ -1,0 +1,10 @@
+.fitted-distribution-rect {
+    fill: none;
+    stroke: none;
+}
+
+.selected-fitted-distribution-rect {
+    stroke: black;
+    stroke-width: 2;
+    stroke-dasharray: 4;
+}

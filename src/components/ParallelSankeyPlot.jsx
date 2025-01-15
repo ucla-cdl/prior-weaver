@@ -640,7 +640,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                             ml: 2
                         }}
                     >
-                        <FormLabel component="legend">Interaction Type</FormLabel>
+                        <FormLabel component="legend">Manipulate Data by</FormLabel>
                         <RadioGroup
                             row
                             aria-label="interactionType"
