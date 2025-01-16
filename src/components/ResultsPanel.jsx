@@ -142,21 +142,22 @@ export default function ResultsPanel({ entities, variablesDict }) {
 
     // Dynamically render the distribution notation based on the distribution type
     const getDistributionNotation = (distParams) => {
+        const params = distParams.params;
         switch (distParams.name) {
             case DISTRIBUTION_TYPES.Normal:
-                return `X ~ Normal(μ = ${distParams.loc}, σ² = ${Math.pow(distParams.scale, 2)})`;
+                return `X ~ Normal(μ = ${params.loc}, σ² = ${Math.pow(params.scale, 2)})`;
             case DISTRIBUTION_TYPES.Exponential:
-                return `X ~ Exponential(λ = ${1 / distParams.scale})`;
+                return `X ~ Exponential(λ = ${1 / params.scale})`;
             case DISTRIBUTION_TYPES.LogNormal:
-                return `X ~ Log-Normal(μ = ${Math.log(distParams.scale)}, σ = ${distParams.s})`;
+                return `X ~ Log-Normal(μ = ${Math.log(params.scale)}, σ = ${params.s})`;
             case DISTRIBUTION_TYPES.Gamma:
-                return `X ~ Gamma(α = ${distParams.a}, β = ${1 / distParams.scale})`;
+                return `X ~ Gamma(α = ${params.a}, β = ${1 / params.scale})`;
             case DISTRIBUTION_TYPES.Beta:
-                return `X ~ Beta(${distParams.a}, ${distParams.b}, loc = ${distParams.loc}, scale = ${distParams.scale})`;
+                return `X ~ Beta(${params.a}, ${params.b}, loc = ${params.loc}, scale = ${params.scale})`;
             case DISTRIBUTION_TYPES.Uniform:
-                return `X ~ Uniform(a = ${distParams.loc}, b = ${distParams.loc + distParams.scale})`;
+                return `X ~ Uniform(a = ${params.loc}, b = ${params.loc + params.scale})`;
             default:
-                return `Unknown distribution: ${distParams.name}`;
+                return `Unknown distribution`;
         }
     }
 
@@ -227,9 +228,18 @@ export default function ResultsPanel({ entities, variablesDict }) {
                 // Add title to each histogram
                 g.append('text')
                     .attr('x', plotWidth / 2)
-                    .attr('y', plotHeight + margin.bottom - 15)
+                    .attr('y', plotHeight + margin.bottom - 20)
                     .attr('text-anchor', 'middle')
                     .text(distName);
+
+                // Add caption below the title
+                g.append('text')
+                    .attr('x', plotWidth / 2)
+                    .attr('y', plotHeight + margin.bottom - 5)
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', '11px')
+                    .attr('fill', 'gray')
+                    .text(getDistributionNotation(distParams));
             });
 
             // If there is no selection yet, Set the first distribution as the selected distribution for this parameter
