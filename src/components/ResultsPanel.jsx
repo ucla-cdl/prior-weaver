@@ -29,19 +29,11 @@ export default function ResultsPanel({ entities, variablesDict }) {
 
     const colors = d3.scaleOrdinal(d3.schemeCategory10);
 
-    /**
-     * Update the apperance when the selected distribution changes
-     */
-    // useEffect(() => {
-    //     // Highlight the border of the selected distribution  
-    //     Object.entries(fittedDistributions).forEach(([parameter, fittedDists]) => {
-    //         const selectedDistName = selectedFittedDistributions[parameter].name;
-    //         Object.entries(fittedDists).forEach(([distName, distParams], distIndex) => {
-    //             const svg = d3.select(`#fitted-distribution-${parameter}-${distName}`);
-
-    //         });
-    //     }
-    //     );
+    // /**
+    //  * Update the apperance when the selected distribution changes
+    //  */
+    // useState(() => {
+    //     updateFittedDistributionsStyle();
     // }, [selectedFittedDistributions]);
 
     const translate = () => {
@@ -122,24 +114,30 @@ export default function ResultsPanel({ entities, variablesDict }) {
         });
     };
 
-    const updateSelectedFittedDistribution = (parameter, selectedDist) => {
-        console.log("set selected distribution for", parameter);
+    const selectFittedDistribution = (parameter, distParams) => {
+        console.log("select fitted distribution", parameter, distParams);
 
-        // Remove the highlight from the previously selected distribution
-        const prevSelectedDist = selectedFittedDistributions[parameter];
-        if (prevSelectedDist) {
-            const prevSvgRect = d3.select(`#fitted-distribution-rect-${parameter}-${prevSelectedDist.name}`);
+        // Update the selectedFittedDistributions state
+        setSelectedFittedDistributions(prev => {
+            updateFittedDistributionsStyle(parameter, prev[parameter]?.name, distParams.name);
+
+            return {
+                ...prev,
+                [parameter]: { ...distParams },
+            }
+        });
+    }
+
+    const updateFittedDistributionsStyle = (parameter, prevSelectedDistName, curSelectedDistName) => {
+        if (prevSelectedDistName) {
+            console.log("remove highlight from", prevSelectedDistName);
+            const prevSvgRect = d3.select(`#fitted-distribution-rect-${parameter}-${prevSelectedDistName}`);
             prevSvgRect.classed('selected-fitted-distribution-rect', false);
         }
 
         // highlight the current selected distribution
-        const svgRect = d3.select(`#fitted-distribution-rect-${parameter}-${selectedDist.name}`);
+        const svgRect = d3.select(`#fitted-distribution-rect-${parameter}-${curSelectedDistName}`);
         svgRect.classed('selected-fitted-distribution-rect', true);
-
-        setSelectedFittedDistributions(prev => ({
-            ...prev,
-            [parameter]: selectedDist,
-        }));
     }
 
     // Dynamically render the distribution notation based on the distribution type
@@ -176,7 +174,10 @@ export default function ResultsPanel({ entities, variablesDict }) {
                     .attr('id', `fitted-distribution-${parameter}-${distName}`)
                     .attr('transform', `translate(${index * (width + offset)}, 0)`)
                     .attr('width', width)
-                    .attr('height', height);
+                    .attr('height', height)
+                    .on('click', function (event, d) {
+                        selectFittedDistribution(parameter, distParams);
+                    });
 
                 const svgGroup = svg.append('g');
 
@@ -203,6 +204,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
                     .x(d => x(d[0]))
                     .y(d => y(d[1]));
 
+                // Append a group element to the SVG for the chart
                 const g = svgGroup.append('g')
                     .attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -232,7 +234,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
 
             // If there is no selection yet, Set the first distribution as the selected distribution for this parameter
             if (!selectedFittedDistributions[parameter]) {
-                updateSelectedFittedDistribution(parameter, Object.values(fittedDists)[0]);
+                selectFittedDistribution(parameter, Object.values(fittedDists)[0]);
             }
         });
     };
