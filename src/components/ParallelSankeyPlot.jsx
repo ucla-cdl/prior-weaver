@@ -688,12 +688,12 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                                 onClick={generateRandomEntities}>
                                 Generate
                             </Button>
-                            <Button
+                            {/* <Button
                                 disabled={selectedEntities.length === 0 || activeInteraction !== INTERACTION_TYPES.SELECTION}
                                 variant='outlined'
                                 onClick={connectRandomEntities}>
                                 Link
-                            </Button>
+                            </Button> */}
                         </Box>
 
                         <Button
