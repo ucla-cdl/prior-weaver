@@ -1,14 +1,14 @@
 .workspace-div {
     width: 100vw;
     min-height: 100vh;
-    padding: 30px;
+    padding: 10px;
     box-sizing: border-box;
     background-color: whitesmoke;
 }
 
 .module-div {
     background-color: white;
-    padding: 30px;
+    padding: 20px;
     border: 2px solid rgb(118, 117, 117);
     border-radius: 15px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);

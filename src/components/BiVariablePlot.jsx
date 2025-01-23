@@ -5,11 +5,11 @@ import { logUserBehavior } from '../utils/BehaviorListener';
 import axios from "axios";
 
 const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariable2, updateVariable, updateBivariable, entities }, ref) => {
-    const chartWidth = 500;
-    const chartHeight = 500;
-    const margin = { top: 30, right: 30, bottom: 80, left: 80 };
-    const marginalPlotWidth = 80; // y-axis marginal hist
-    const marginalPlotHeight = 80; // x-axis marginal hist
+    const chartWidth = 350;
+    const chartHeight = 350;
+    const margin = { top: 30, right: 30, bottom: 60, left: 60 };
+    const marginalPlotWidth = 0; // y-axis marginal hist
+    const marginalPlotHeight = 0; // x-axis marginal hist
     const mainPlotWidth = chartWidth - margin.left - margin.right - marginalPlotWidth;
     const mainPlotHeight = chartHeight - margin.top - margin.bottom - marginalPlotHeight;
     const dotRadius = 5; // Radius of each dot
@@ -763,8 +763,8 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
-                <Button sx={{ m: 1 }} variant="outlined" color='success' onClick={fitRelation}>Fit Trend</Button>
-                <Button sx={{ m: 1 }} variant={enableSelection ? 'contained' : 'outlined'} onClick={activeRegionalSelection}>Selection</Button>
+                {/* <Button sx={{ m: 1 }} variant="outlined" color='success' onClick={fitRelation}>Fit Trend</Button> */}
+                {/* <Button sx={{ m: 1 }} variant={enableSelection ? 'contained' : 'outlined'} onClick={activeRegionalSelection}>Selection</Button> */}
                 {/* <Button sx={{ m: 1 }} onClick={clearRegional}>Clear regional</Button> */}
                 {/* <Button sx={{ m: 1 }} onClick={clearAll}>Clear all</Button> */}
             </Box>

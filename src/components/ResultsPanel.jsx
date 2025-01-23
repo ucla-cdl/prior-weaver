@@ -168,12 +168,17 @@ export default function ResultsPanel({ entities, variablesDict }) {
             // Plot the fitted distributions for each parameter
             const container = d3.select(`#parameter-distributions-div-${parameter}`);
             container.html('');
+
+            const hasSelectedFittedDistributions = selectedFittedDistributions[parameter] !== undefined;
             const yMax = d3.max(Object.values(fittedDists).map(distParams => d3.max(distParams.p)));
+            if (hasSelectedFittedDistributions) {
+                yMax = Math.max(yMax, d3.max(selectedFittedDistributions[parameter].p));
+            }
 
             Object.entries(fittedDists).forEach(([distName, distParams], distIndex) => {
                 const svg = container.append('svg')
                     .attr('id', `fitted-distribution-${parameter}-${distName}`)
-                    .attr('transform', `translate(${index * (width + offset)}, 0)`)
+                    .attr('transform', `translate(${(index + hasSelectedFittedDistributions) * (width + offset)}, 0)`)
                     .attr('width', width)
                     .attr('height', height)
                     .on('click', function (event, d) {
@@ -245,6 +250,10 @@ export default function ResultsPanel({ entities, variablesDict }) {
             // If there is no selection yet, Set the first distribution as the selected distribution for this parameter
             if (!selectedFittedDistributions[parameter]) {
                 selectFittedDistribution(parameter, Object.values(fittedDists)[0]);
+            }
+            // If there is a selection, update the style of the selected distribution
+            else {
+                updateFittedDistributionsStyle(parameter, null, selectedFittedDistributions[parameter].name);
             }
         });
     };

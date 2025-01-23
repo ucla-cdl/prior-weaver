@@ -1,39 +1,19 @@
-# Bi-Level Prior Elicitation
+# Constructive Prior Elicitation
 
 Prior specification, where an analyst incorporates knowledge from outside the dataset as a univariate distribution, is essential to Bayesian analysis. However, precisely specifying such knowledge can be labor-intensive, even for experienced statisticians, let alone novices.
 
-In order to lower the barrier of this process, we develop an interactive prior elicitation system. Our system provides (i) a three-stage scaffold for prior specification, (ii) a flexbile and iterative specification process, (iii) direct manipulation for intuitive specification, and (iv) a mapping of user intentions to specifications (WIP).
+In order to lower the barrier of this process, we develop an interactive prior elicitation system building on a concept called *Constructive Prior Elicitation*. This concept consists of two parts: Construction and Translation.
+
+*Construction* refers to the process where you incrementally build a synthetic dataset to represent your domain knowledge and can be interpreted as “observable priors”. 
+*Translation* refers to the process of translating the observable priors, which is in a form of dataset, to the parametric priors of the Bayesian Model.
+
+Our system allows users to (1) express their domain knowledge as conceptual and observable assumptions through interactive visualizations and refine them iteratively to align with their understanding of the domain, and (2) translate the expressed domain knowledge into prior distributions and incorporate them into Bayesian workflow.
 
 ## Table of Contents
 
-- [Features](#features)
-- [Technologies Used](#technologies-used)
 - [Installation](#installation)
-- [Usage](#usage)
-<!-- - [Contributing](#contributing)
-- [License](#license) -->
-
-## Features
-
-### Three-stage Scaffold
-Users are offered three modules that correspond to three levels of abstraction in the prior elicitation process (i.e., conceptual model, bivariate relationship, and univariate distribution).
-
-[Figure: conceptual model -> bivariate -> marginal]
-
-### Flexible and Iterative Specification
-Users are able to freely navigate between different stages of the specification process, making adjustments and assumptions in a non-linear manner. 
-
-### Direct Manipulation
-Users can modify distrbutions by simple interactions, such as draging and clicking.
-
-### Mapping of User Intentions to Specifications
-[WIP]
-
-## Technologies Used
-
-- [React](https://reactjs.org/)
-- [D3.js](https://www.d3js.org)
-- [Fitter](https://fitter.readthedocs.io/en/latest/index.html)
+- [Libraries](#libraries)
+- [License](#license)
 
 ## Installation
 
@@ -74,6 +54,31 @@ To get a local copy up and running, follow these steps:
 
    The web interface will be running at `http://localhost:3000` and the backend will be running at `http://localhost:8000`.
 
+
+<!-- ## Features
+
+### Three-stage Scaffold
+Users are offered three modules that correspond to three levels of abstraction in the prior elicitation process (i.e., conceptual model, bivariate relationship, and univariate distribution).
+
+[Figure: conceptual model -> bivariate -> marginal]
+
+### Flexible and Iterative Specification
+Users are able to freely navigate between different stages of the specification process, making adjustments and assumptions in a non-linear manner. 
+
+### Direct Manipulation
+Users can modify distrbutions by simple interactions, such as draging and clicking.
+
+### Mapping of User Intentions to Specifications
+[WIP] -->
+
+## Libraries
+
+- [React](https://reactjs.org/)
+- [D3.js](https://www.d3js.org)
+- [FastAPI](https://fastapi.tiangolo.com)
+- [Fitter](https://fitter.readthedocs.io/en/latest/index.html)
+
+<!-- 
 ## Usage
 
 ### Adding a Variable
@@ -93,18 +98,8 @@ After choosing two variables using the selector, a bivariate plot would be autom
 Drag and drop the toggle point on each bin to adjust the histogram.
 
 ### Choose an Appropriate Distribution
-Click `Fit Distribution` to automatically fit the discrete histogram data to possible distributions. The available distrbutions will be shown on the panel right next to the univariate plot, click `Show` to inspect the distribution and click `Select` to pick.   
+Click `Fit Distribution` to automatically fit the discrete histogram data to possible distributions. The available distrbutions will be shown on the panel right next to the univariate plot, click `Show` to inspect the distribution and click `Select` to pick.    -->
 
-<!-- ## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/AmazingFeature`).
-3. Make your changes.
-4. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-5. Push to the branch (`git push origin feature/AmazingFeature`).
-6. Open a Pull Request.
 
 ## License
 

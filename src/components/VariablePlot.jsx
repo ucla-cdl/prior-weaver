@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { logUserBehavior } from '../utils/BehaviorListener';
 import axios from "axios";
-import { Paper } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 
 
 // Define the Variable Component
 export default function VariablePlot({ variable, updateVariable, entities, addEntities, updateEntities }) {
-    const chartWidth = 500;
-    const chartHeight = 400;
+    const chartWidth = 400;
+    const chartHeight = 350;
     const offsetX = 60;
     const offsetY = 60;
     const toggleHeight = 8;
@@ -58,7 +58,7 @@ export default function VariablePlot({ variable, updateVariable, entities, addEn
         let maxY = d3.max(binInfos.map(d => d.height)) < 8 ? 10 : d3.max(binInfos.map(d => d.height)) + 2;
         let yScale = d3.scaleLinear()
             .domain([0, maxY])
-            .range([chartHeight - offsetY, offsetY]);
+            .range([chartHeight - offsetY, offsetY / 2]);
 
         // Draw X axis
         histogramPlot.append('g')
@@ -173,8 +173,8 @@ export default function VariablePlot({ variable, updateVariable, entities, addEn
     }
 
     return (
-        <Paper sx={{ mx: 2, my: 2 }} elevation={3} id={"univariate-div-" + variable.name}>
+        <Box sx={{ mx: 2 }} id={"univariate-div-" + variable.name}>
 
-        </Paper>
+        </Box>
     );
 };

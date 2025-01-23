@@ -2,12 +2,12 @@
     fill: white;
 }
 
-.hovered-entity-dot {
-    fill: orange;
+.hovered-entity-dot{
+    fill: orange !important;
 }
 
 .connect-entity-dot {
-    fill: steelblue;
+    fill: steelblue !important;
 }
 
 .selected-entity-dot {

@@ -161,7 +161,7 @@ export default function Workspace(props) {
                     
                     Results Panel
                 */}
-            <Grid2 sx={{ my: 2 }} container spacing={3}>
+            <Grid2 sx={{ my: 1 }} container spacing={3}>
                 <Grid2 className="module-div" size={4}>
                     <h3>Analysis Context</h3>
                     <Typography>
@@ -183,9 +183,9 @@ export default function Workspace(props) {
                 </Grid2>
             </Grid2>
 
-            <Grid2 sx={{ my: 2 }} container spacing={3}>
+            <Grid2 sx={{ my: 1 }} container spacing={3}>
                 <Grid2 className="module-div" size={8}>
-                    <h3>Parallel Sankey Plot</h3>
+                    <h3>Parallel Coordinates Plot</h3>
                     <ParallelSankeyPlot
                         variablesDict={variablesDict}
                         updateVariable={updateVariable}
@@ -203,56 +203,58 @@ export default function Workspace(props) {
                         </h3>
 
                         {/* Relation List */}
-                        {Object.entries(biVariableDict).map(([biVarName, biVariable]) => {
-                            let [varName, relatedVarName] = biVarName.split("-");
-                            return (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        color: biVariable.specified ? 'green' : 'grey'
-                                    }}
-                                    key={biVarName}
-                                >
-                                    <p><strong>
-                                        {varName}&nbsp;&nbsp;&nbsp;
-                                    </strong></p>
-                                    <FormControl sx={{ minWidth: 120 }}>
-                                        <Select
-                                            value={biVariable.relation}
-                                            onChange={(e) => updateBivariable(biVarName, "relation", e.target.value)}
-                                            displayEmpty
-                                            inputProps={{ 'aria-label': 'Without label' }}
-                                            sx={{
-                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                    border: 'none',
-                                                },
-                                                '& .MuiSelect-select': {
-                                                    padding: '4px 8px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                },
-                                            }}
-                                        >
-                                            {RELATIONS.map((relation) => (
-                                                <MenuItem key={relation} value={relation}>
-                                                    {relation}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                    <p><strong>
-                                        &nbsp;&nbsp;&nbsp;{relatedVarName}
-                                    </strong></p>
-                                    <IconButton sx={{ mx: 1 }} onClick={() => selectBivariable(biVarName)}>
-                                        <BrushIcon fontSize='small' />
-                                    </IconButton>
-                                </Box>
-                            );
-                        })}
+                        <Box sx={{ overflowY: 'auto', maxHeight: 150 }}>
+                            {Object.entries(biVariableDict).map(([biVarName, biVariable]) => {
+                                let [varName, relatedVarName] = biVarName.split("-");
+                                return (
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            color: biVariable.specified ? 'green' : 'grey'
+                                        }}
+                                        key={biVarName}
+                                    >
+                                        <p><strong>
+                                            {varName}&nbsp;&nbsp;&nbsp;
+                                        </strong></p>
+                                        <FormControl sx={{ minWidth: 120 }}>
+                                            <Select
+                                                value={biVariable.relation}
+                                                onChange={(e) => updateBivariable(biVarName, "relation", e.target.value)}
+                                                displayEmpty
+                                                inputProps={{ 'aria-label': 'Without label' }}
+                                                sx={{
+                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                        border: 'none',
+                                                    },
+                                                    '& .MuiSelect-select': {
+                                                        padding: '4px 8px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                    },
+                                                }}
+                                            >
+                                                {RELATIONS.map((relation) => (
+                                                    <MenuItem key={relation} value={relation}>
+                                                        {relation}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <p><strong>
+                                            &nbsp;&nbsp;&nbsp;{relatedVarName}
+                                        </strong></p>
+                                        <IconButton sx={{ mx: 1 }} onClick={() => selectBivariable(biVarName)}>
+                                            <BrushIcon fontSize='small' />
+                                        </IconButton>
+                                    </Box>
+                                );
+                            })}
+                        </Box>
 
                         {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
                             <BiVariablePlot
@@ -270,9 +272,9 @@ export default function Workspace(props) {
                 </Grid2>
             </Grid2>
 
-            <Box className="module-div" sx={{ width: "100%", my: 2 }}>
+            <Box className="module-div" sx={{ width: "100%", my: 1 }}>
                 <h3>Univariate Distributions</h3>
-                <Box sx={{ display: 'flex', flexDirection: 'row', overflowX: 'auto', justifyContent: 'space-around' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', overflowX: 'auto', justifyContent: 'center' }}>
                     {Object.entries(variablesDict).map(([varName, curVar], i) => {
                         return (
                             <VariablePlot
@@ -288,8 +290,8 @@ export default function Workspace(props) {
                 </Box>
             </Box>
 
-            <Grid2 sx={{ my: 2 }} container spacing={3}>
-                <Box className="module-div" sx={{ width: "100%", my: 2 }}>
+            <Grid2 sx={{ my: 1 }} container spacing={3}>
+                <Box className="module-div" sx={{ width: "100%", my: 1 }}>
                     <h3>Results Panel</h3>
                     <ResultsPanel entities={entities} variablesDict={variablesDict} />
                 </Box>
