@@ -27,7 +27,7 @@ To get a local copy up and running, follow these steps:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/realxavierx/Prior-Elicitation.git
+   git clone https://github.com/xavier-shaw/Prior-Elicitation.git
    ```
 
 2. Navigate into the project directory:
@@ -44,7 +44,6 @@ To get a local copy up and running, follow these steps:
    ```bash
    conda env create -f environment.yml
    conda activate interactive_prior_elicitation
-   pip install -r requirements.txt
    ```
 
 5. Start the  server:
