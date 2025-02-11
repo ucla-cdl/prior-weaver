@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import List, Dict
 
 import numpy as np
+import re
 import scipy.stats as stats
 from fitter import Fitter
 
@@ -38,6 +39,94 @@ def shutdown_db_client():
 def root():
     print("checking root")
     return {"message": "Hello World!"}
+
+
+class StanCodeRequest(BaseModel):
+    code: str
+
+
+@app.post('/getStanCodeInfo')
+def parse_stan_code(request: StanCodeRequest):
+    parsed_res = parse_glm_code(request.code)
+    return {
+        "code_info": parsed_res
+    }
+
+
+def parse_glm_code(code):
+    # Define the pattern to match the glm formula and components
+    formula_pattern = r"glm\s*\((.*?)\,\s*"
+    family_pattern = r"family\s*=\s*([a-zA-Z]+)"
+    link_pattern = r"link\s*=\s*\"?([a-zA-Z]+)\"?"
+
+    # Extract the glm formula (inside the glm() function)
+    formula_match = re.search(formula_pattern, code)
+    if not formula_match:
+        raise ValueError("No glm formula found in the code.")
+    
+    formula = formula_match.group(1).strip()
+    
+    # Parse the response and predictors from the formula
+    formula_parts = formula.split("~")
+    if len(formula_parts) != 2:
+        raise ValueError("Invalid glm formula structure.")
+    
+    response = formula_parts[0].strip()
+    predictors = formula_parts[1].strip()
+    predictors = [pred.strip() for pred in predictors.split("+")]
+
+    # Extract family and link function using the patterns
+    family_match = re.search(family_pattern, code)
+    link_match = re.search(link_pattern, code)
+
+    family = family_match.group(1) if family_match else None
+    link = link_match.group(1) if link_match else None
+
+    return {
+        "code": code,
+        "formula": formula,
+        "response": response,
+        "predictors": predictors,
+        "family": family,
+        "link": link
+    }
+
+
+def parse_stan_code(code):
+    block_patterns = {
+        "data": r"data\s*{([^}]*)}",
+        "parameters": r"parameters\s*{([^}]*)}",
+        "model": r"model\s*{([^}]*)}",
+    }
+
+    def parse_block(block):
+        """Parse a block and return detailed information for each variable."""
+        if not block:
+            return []
+        lines = block.strip().split("\n")
+        variables = []
+
+        for line in lines:
+            line = line.strip().replace(";", "")  # Remove semicolons
+            parts = re.split(r"\s+", line)
+            if len(parts) >= 2:
+                var_type = parts[0]  # First part is the type (e.g., real, int)
+                var_name = parts[-1]  # Last part is the variable name
+
+                variables.append({
+                    "name": var_name,
+                    "full_declaration": line
+                })
+
+        return variables
+
+    # Extract and parse each block
+    result = {}
+    for block_name, pattern in block_patterns.items():
+        match = re.search(pattern, code, re.DOTALL)
+        result[block_name] = parse_block(match.group(1)) if match else []
+
+    return result
 
 
 class BiVariableData(BaseModel):
@@ -141,7 +230,7 @@ def convert_samples_to_distribution(parameter_samples):
     fit_dists = {}
     for param, samples in parameter_samples.items():
         fit_dists[param] = {}
-        
+
         f = Fitter(samples, distributions=[
             'norm', 'expon', 'lognorm', 'gamma', 'beta', 'uniform'])
         f.fit()
@@ -203,3 +292,28 @@ def get_fit_var_pdf(x, fit_name, fit_params):
     p = dist.pdf(x, **fit_params)
 
     return p
+
+
+
+def prior_predictive_check(fitted_distributions, num_samples=1000):
+    # Extract fitted parameters for alpha, beta, and sigma
+    parameter_samples = []
+    for param, dists in fitted_distributions.items():
+        dist = list(dists.values())[0]
+        samples = getattr(stats, dist['name']).rvs(**dist["params"], size=num_samples)
+        
+    # Simulate age and education data (prior predictive range)
+    age_range = np.linspace(20, 60, 50)  # Replace with actual prior range for age
+    education_range = np.linspace(8, 20, 50)  # Replace with actual prior range for education
+
+    simulated_incomes = []
+    for age in age_range:
+        for edu in education_range:
+            alpha = np.random.choice(alpha_samples)
+            beta = np.random.choice(beta_samples)
+            sigma = np.random.choice(sigma_samples)
+            
+            # Simulate income using the prior model
+            income = alpha * age + beta * edu + sigma
+            simulated_incomes.append(income)
+    

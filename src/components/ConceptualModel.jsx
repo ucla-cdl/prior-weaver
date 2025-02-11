@@ -6,9 +6,13 @@ import { logUserBehavior } from '../utils/BehaviorListener';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BrushIcon from '@mui/icons-material/Brush';
 
-const RELATIONS = ["causes", "associates with", "not related to"];
+const RELATIONS = {
+    INFLUENCE: "influences", 
+    ASSOCIATE: "associates with", 
+    NONE: "not related to",
+};
 
-export default function ConceptualModel({ variablesDict, setVariablesDict, biVariableDict, setBiVariableDict, updateBivariable, selectBivariable, addAttributeToEntities }) {
+export default function ConceptualModel({ variablesDict, updateVariable, setVariablesDict, biVariableDict, setBiVariableDict, updateBivariable, selectBivariable, addAttributeToEntities }) {
 
     const [isAddingVariable, setIsAddingVariable] = useState(false);
     const [newVarName, setNewVarName] = useState('');
@@ -16,6 +20,9 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
     const [newMax, setNewMax] = useState(100);
     const [newUnitLabel, setNewUnitLabel] = useState('');
     const [newBins, setNewBins] = useState(10);
+
+    const [isEditingVariable, setIsEditingVariable] = useState(false);
+    const [editingVariable, setEditingVariable] = useState(null);
 
     useEffect(() => {
         drawConceptualModel();
@@ -35,10 +42,10 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
         Object.entries(biVariableDict).forEach(([biVarName, biVariable]) => {
             const [var1, var2] = biVarName.split("-");
             switch (biVariable.relation) {
-                case "causes":
-                    conceptualModel += `${var1} -> ${var2} [label="causes"];\n`;
+                case RELATIONS.INFLUENCE:
+                    conceptualModel += `${var1} -> ${var2} [label="influences"];\n`;
                     break;
-                case "associates with":
+                case RELATIONS.ASSOCIATE:
                     conceptualModel += `${var1} -> ${var2} [dir="both" label="assoc."];\n`;
                 default:
                     break;
@@ -91,7 +98,7 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
                 ...prev,
                 [biVarName]: {
                     name: biVarName,
-                    relation: "not related to",
+                    relation: RELATIONS.NONE,
                     specified: false,
                     predictionDots: [],
                     populateDots: [],
@@ -104,8 +111,18 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
         // Add an attribute to every existing entities
         addAttributeToEntities(newVarName);
 
-        setVariablesDict(prev => ({ ...prev, [newVariable.name]: newVariable }));
+        updateVariable(newVariable.name, newVariable)
+        // setVariablesDict(prev => ({ ...prev, [newVariable.name]: newVariable }));
     };
+
+    const confirmEditvariable = () => {
+        setVariablesDict(prev => ({
+            ...prev,
+            [editingVariable.name]: editingVariable
+        }));
+        updateVariable(editingVariable.name, editingVariable);
+        setIsEditingVariable(false);
+    }
 
     const deleteVar = (name) => {
         let newVariablesDict = { ...variablesDict };
@@ -127,9 +144,16 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
                         <IconButton onClick={() => deleteVar(varName)}>
                             <DeleteIcon fontSize='small' />
                         </IconButton>
+                        <IconButton onClick={() => {
+                            setEditingVariable(variable);
+                            setIsEditingVariable(true);
+                        }}>
+                            <BrushIcon fontSize='small' />
+                        </IconButton>
                     </Box>
                 ))}
                 <Button sx={{ m: 2 }} variant="outlined" onClick={addNewVariable}>Add Variable</Button>
+
                 <Dialog open={isAddingVariable}>
                     <DialogTitle>Adding a New Variable</DialogTitle>
                     <DialogContent>
@@ -169,9 +193,48 @@ export default function ConceptualModel({ variablesDict, setVariablesDict, biVar
                         <Button variant="contained" onClick={confirmAddVariable}>Confirm</Button>
                     </DialogActions>
                 </Dialog>
-            </Grid2>
 
-            {/* Conceptual Model */}
+                <Dialog open={isEditingVariable}>
+                    <DialogTitle>Editing Variable</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            sx={{ m: '10px' }}
+                            label="Variable Name"
+                            value={editingVariable?.name || ''}
+                            disabled
+                        // onChange={(e) => setEditingVariable({ ...editingVariable, name: e.target.value })}
+                        />
+                        <Box>
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Unit Label"
+                                value={editingVariable?.unitLabel || ''}
+                                onChange={(e) => setEditingVariable({ ...editingVariable, unitLabel: e.target.value })}
+                            />
+                        </Box>
+                        <Box>
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Min Value"
+                                type="number"
+                                value={editingVariable?.min || 0}
+                                onChange={(e) => setEditingVariable({ ...editingVariable, min: parseFloat(e.target.value) })}
+                            />
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Max Value"
+                                type="number"
+                                value={editingVariable?.max || 100}
+                                onChange={(e) => setEditingVariable({ ...editingVariable, max: parseFloat(e.target.value) })}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button color='danger' onClick={() => setIsEditingVariable(false)}>Cancel</Button>
+                        <Button variant="contained" onClick={confirmEditvariable}>Confirm</Button>
+                    </DialogActions>
+                </Dialog>
+            </Grid2>
             <Grid2 size={7} className="module-div">
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <h3>Conceptual Model</h3>

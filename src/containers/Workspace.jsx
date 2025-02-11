@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import "./Workspace.css";
-import { Button, Box, Select, MenuItem, Grid2, Backdrop, CircularProgress, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip, Grid, IconButton } from '@mui/material';
+import { Button, Box, Select, MenuItem, Grid2, Backdrop, CircularProgress, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip, Grid, IconButton, TextField } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
@@ -8,6 +8,7 @@ import BrushIcon from '@mui/icons-material/Brush';
 import ParallelSankeyPlot from '../components/ParallelSankeyPlot';
 import { v4 as uuidv4 } from 'uuid';
 import ResultsPanel from '../components/ResultsPanel';
+import axios from 'axios';
 
 const context = {
     "human_growth_model": "During the early stages of life the stature of female and male are about the same,\
@@ -25,36 +26,53 @@ const context = {
                 You aim to use this information to better understand socioeconomic patterns and inform policy recommendations.",
 }
 
-const RELATIONS = ["causes", "associates with", "not related to"];
+const RELATIONS = {
+    INFLUENCE: "influences",
+    ASSOCIATE: "associates with",
+    NONE: "not related to",
+};
+
+const DEFAULT_VARIABLE_ATTRIBUTES = {
+    min: 0,
+    max: 100,
+    unitLabel: "",
+    binEdges: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+    counts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+}
 
 // Main Component for Adding Variables and Histograms
 export default function Workspace(props) {
     const bivarRef = useRef();
 
+    const [finishParseCode, setFinishParseCode] = useState(false);
+    const [stanCode, setStanCode] = useState('model <- glm(income ~ age + education, family = binomial(link = "logit"))');
+
+    const [model, setModel] = useState('');
+    const [parameters, setParameters] = useState('');
+
     const [variablesDict, setVariablesDict] = useState({});
-    const [selectedVarName, setSelectedVarName] = useState('');
-    const [selectedVariable, setSelectedVariable] = useState('');
     const [bivariateVarName1, setBivariateVarName1] = useState('');
     const [bivariateVarName2, setBivariateVarName2] = useState('');
     const [biVariableDict, setBiVariableDict] = useState({});
+    const [parametersDict, setParametersDict] = useState({});
 
     const [entities, setEntities] = useState({});
 
     const [studyContext, setStudyContext] = useState(context["income_education_age"]);
 
-    const updateVariable = (name, key, value) => {
-        console.log("update variable", name, key, value);
+    const updateVariable = (name, updates) => {
+        console.log("update variable", name, updates);
         setVariablesDict(prev => ({
             ...prev,
-            [name]: { ...prev[name], [key]: value }
+            [name]: { ...prev[name], ...updates }
         }));
     }
 
-    const updateBivariable = (name, key, value) => {
-        console.log("update bivariable", name, key, value);
+    const updateBivariable = (name, updates) => {
+        console.log("update bivariable", name, updates);
         setBiVariableDict(prev => ({
             ...prev,
-            [name]: { ...prev[name], [key]: value }
+            [name]: { ...prev[name], ...updates}
         }));
     }
 
@@ -136,46 +154,170 @@ export default function Workspace(props) {
         bivarRef.current?.synchronizeSelection(selectedEntities);
     }
 
-    const loadData = () => {
-        fetch("/synthetic_dataset.json")
+    const handleStanCode = () => {
+        axios.post(window.BACKEND_ADDRESS + '/getStanCodeInfo', {
+            code: stanCode
+        })
             .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Failed to fetch the dataset");
-                }
-                return response.json();
+                console.log(response.data);
+                const codeInfo = response.data.code_info;
+                /**
+                 * Parse GLM code
+                 * 
+                 * Format:
+                 * {
+                 *  'code': 'model <- glm(outcome ~ age + gender, family = binomial(link = "logit"))',
+                 *  'formula': 'outcome ~ age + gender', 
+                 *  'response': 'outcome', 
+                 *  'predictors': ['age', 'gender'], 
+                 *  'family': 'binomial', 
+                 *  'link': 'logit'
+                 * }
+                 */
+                Object.entries(codeInfo).forEach(([section, sectionInfo]) => {
+                    switch (section) {
+                        case "response":
+                            updateVariable(sectionInfo, {
+                                name: sectionInfo,
+                                type: "response",
+                                min: DEFAULT_VARIABLE_ATTRIBUTES.min,
+                                max: DEFAULT_VARIABLE_ATTRIBUTES.max,
+                                unitLabel: DEFAULT_VARIABLE_ATTRIBUTES.unitLabel,
+                                binEdges: DEFAULT_VARIABLE_ATTRIBUTES.binEdges,
+                                counts: DEFAULT_VARIABLE_ATTRIBUTES.counts,
+                                sequenceNum: 0
+                            });
+                            break;
+                        case "predictors":
+                            console.log("PREDICTORS", sectionInfo);
+                            sectionInfo.forEach((predictor, index) => {
+                                updateVariable(predictor, {
+                                    name: predictor,
+                                    type: "predictor",
+                                    min: DEFAULT_VARIABLE_ATTRIBUTES.min,
+                                    max: DEFAULT_VARIABLE_ATTRIBUTES.max,
+                                    unitLabel: DEFAULT_VARIABLE_ATTRIBUTES.unitLabel,
+                                    binEdges: DEFAULT_VARIABLE_ATTRIBUTES.binEdges,
+                                    counts: DEFAULT_VARIABLE_ATTRIBUTES.counts,
+                                    sequenceNum: index + 1
+                                });
+                            });
+                            break;
+                        case "code":
+                            setModel(sectionInfo);
+                            break;
+                        default:
+                            break;
+                    }
+                });
+
+                // Add bivariate relationship
+                let predictors = codeInfo['predictors'];
+                let responseVar = codeInfo['response'];
+                predictors.forEach((predictor1, index1) => {
+                    let biVarName = `${predictor1}-${responseVar}`;
+                    console.log("BIVARIABLE", predictor1, biVarName);
+                    updateBivariable(biVarName, {
+                        name: biVarName,
+                        relation: RELATIONS.INFLUENCE,
+                        specified: false,
+                        predictionDots: [],
+                        populateDots: [],
+                        chipDots: [],
+                        fittedRelation: {},
+                    });
+
+                    predictors.forEach((predictor2, index2) => {
+                        if (index1 < index2) {
+                            biVarName = `${predictor1}-${predictor2}`;
+                            console.log("BIVARIABLE", predictor2, biVarName);
+                            updateBivariable(biVarName, {
+                                name: biVarName,
+                                relation: RELATIONS.ASSOCIATE,
+                                specified: false,
+                                predictionDots: [],
+                                populateDots: [],
+                                chipDots: [],
+                                fittedRelation: {},
+                            });
+                        }
+                    });
+                });
             })
-            .then((data) => addEntities(data))
-            .catch((error) => console.error("Error loading dataset:", error));
+            .finally(() => {
+                console.log("FINISH PARSE CODE", biVariableDict);
+                setFinishParseCode(true);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
     }
 
     return (
         <div className='workspace-div'>
             {/* 
-                    UI LAYOUT:
+                    MAIN PAGE UI LAYOUT:
                     
-                    Analysis Context | Variables | Conceptual Model
+                    Variables | Conceptual Model
 
-                    Parallel Sankey Plot | Bivariate Relationship
-
-                    Univariate Distributions
+                    Parallel Sankey Plot | Bivariate/Univariate
                     
+                    -------------------------
+                    RESULT PAGE UI LAYOUT:
+
                     Results Panel
                 */}
+
             <Grid2 sx={{ my: 1 }} container spacing={3}>
-                <Grid2 className="module-div" size={4}>
+                <Grid2 className="module-div" size={12}>
                     <h3>Analysis Context</h3>
                     <Typography>
                         {studyContext}
                     </Typography>
-                </Grid2>
+                    <Typography>
+                        Please input your model in R code.
+                    </Typography>
 
-                <Grid2 size={8}>
+                    {finishParseCode ?
+                        <Box>
+                            <h3>Model</h3>
+                            <Typography>
+                                {model}
+                            </Typography>
+                        </Box>
+                        :
+                        <Box>
+                            <TextField
+                                id="stan-code"
+                                label="R Code"
+                                multiline
+                                rows={3}
+                                variant="outlined"
+                                fullWidth
+                                sx={{ my: 2 }}
+                                value={stanCode}
+                                onChange={(e) => setStanCode(e.target.value)}
+                            />
+                            <Button
+                                disabled={!stanCode}
+                                onClick={handleStanCode}
+                                variant="contained"
+                            >
+                                Continue
+                            </Button>
+                        </Box>
+                    }
+                </Grid2>
+            </Grid2>
+
+            <Grid2 sx={{ my: 1 }} container spacing={3}>
+                <Grid2 size={12}>
                     <ConceptualModel
                         variablesDict={variablesDict}
+                        updateVariable={updateVariable}
                         setVariablesDict={setVariablesDict}
                         biVariableDict={biVariableDict}
                         setBiVariableDict={setBiVariableDict}
-                        updateVariable={updateVariable}
                         updateBivariable={updateBivariable}
                         selectBivariable={selectBivariable}
                         addAttributeToEntities={addAttributeToEntities}
@@ -238,9 +380,9 @@ export default function Workspace(props) {
                                                     },
                                                 }}
                                             >
-                                                {RELATIONS.map((relation) => (
-                                                    <MenuItem key={relation} value={relation}>
-                                                        {relation}
+                                                {Object.entries(RELATIONS).map(([relation, label]) => (
+                                                    <MenuItem key={label} value={label}>
+                                                        {label}
                                                     </MenuItem>
                                                 ))}
                                             </Select>

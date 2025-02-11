@@ -1,5 +1,6 @@
 export default {
-    home: "/",
+    default: "/",
+    home: "/test",
     workspace: "/workspace",
     logger: "/logger",
     admin: "/admin"

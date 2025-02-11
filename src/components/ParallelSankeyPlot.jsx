@@ -601,7 +601,9 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
                 const newItems = arrayMove(items, oldIndex, newIndex);
                 newItems.forEach((item, index) => {
-                    updateVariable(item.name, "sequenceNum", index);
+                    updateVariable(item.name, { 
+                        "sequenceNum": index 
+                    });
                 });
 
                 return newItems;

@@ -300,7 +300,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
                     newCounts[index] = newHeight;
 
                     // Set the actual counts
-                    updateVariable(biVariable1.name, "counts", newCounts);
+                    updateVariable(biVariable1.name, { "counts": newCounts });
                 })
 
         // Append Marginal X Toggle
@@ -396,7 +396,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
                 newCounts[index] = newWidth;
 
                 // Set the actual counts
-                updateVariable(biVariable2.name, "counts", newCounts);
+                updateVariable(biVariable2.name, { "counts": newCounts });
             })
 
         // Append Marginal Y Toggle
@@ -559,8 +559,8 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         )
         const biVarName = biVariable1.name + "-" + biVariable2.name;
         updateBivariable(biVarName, "populateDots", newPopulateDots);
-        updateVariable(biVariable1.name, "counts", newBivar1Counts);
-        updateVariable(biVariable2.name, "counts", newBivar2Counts);
+        updateVariable(biVariable1.name, { "counts": newBivar1Counts });
+        updateVariable(biVariable2.name, { "counts": newBivar2Counts });
     }
 
     const fitRelation = () => {
@@ -732,8 +732,8 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
             newBivar1Counts[binIndexX] -= 1;
             newBivar2Counts[binIndexY] -= 1;
         });
-        updateVariable(biVariable1.name, "counts", newBivar1Counts);
-        updateVariable(biVariable2.name, "counts", newBivar2Counts);
+        updateVariable(biVariable1.name, { "counts": newBivar1Counts });
+        updateVariable(biVariable2.name, { "counts": newBivar2Counts });
 
         updateBivariable(biVarName, "populateDots", newPopulateDots);
         updateBivariable(biVarName, "chipDots", newChipDots);

@@ -11,7 +11,8 @@ function App() {
     <div className="App">
       <Router>
         <Routes>
-          <Route path={routes.home} element={<Workspace />}></Route>
+          <Route path={routes.default} element={<Workspace />}></Route>
+          <Route path={routes.home} element={<Home />}></Route>
           <Route path={routes.workspace} element={<Workspace />}></Route>
           <Route path={routes.logger} element={<Logger />}></Route>
           <Route path={routes.admin} element={<Admin />}></Route>
