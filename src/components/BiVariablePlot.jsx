@@ -31,7 +31,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     useEffect(() => {
         drawPlot();
         drawGridPlot();
-    }, [biVariable1.name, biVariable2.name])
+    }, [biVariable1, biVariable2])
 
     useEffect(() => {
         populateEntities();
@@ -119,36 +119,36 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
             .style("font-family", "Times New Roman");
 
         // create interactive grid cells
-        for (let i = 0; i < biVariable1.binEdges.length - 1; i++) {
-            const curGridX = xScale(biVariable1.binEdges[i]);
-            const nextGridX = xScale(biVariable1.binEdges[i + 1]);
-            for (let j = 0; j < biVariable2.binEdges.length - 1; j++) {
-                const curGridY = yScale(biVariable2.binEdges[j]);
-                const nextGridY = yScale(biVariable2.binEdges[j + 1]);
+        // for (let i = 0; i < biVariable1.binEdges.length - 1; i++) {
+        //     const curGridX = xScale(biVariable1.binEdges[i]);
+        //     const nextGridX = xScale(biVariable1.binEdges[i + 1]);
+        //     for (let j = 0; j < biVariable2.binEdges.length - 1; j++) {
+        //         const curGridY = yScale(biVariable2.binEdges[j]);
+        //         const nextGridY = yScale(biVariable2.binEdges[j + 1]);
 
-                mainPlot.append("rect")
-                    .attr("class", "grids")
-                    .attr("id", `grid-${i}-${j}`)
-                    .attr("x", curGridX)
-                    .attr("y", nextGridY)
-                    .attr("width", nextGridX - curGridX)
-                    .attr("height", curGridY - nextGridY)
-                    .attr("fill", "transparent")
-                    .attr("stroke", "lightgray")
-                    .on("mouseover", function () {
-                        d3.select(this)
-                            .attr("fill", "whitesmoke")
-                            .attr("stroke", "gray");
-                    })
-                    .on("mouseout", function () {
-                        d3.select(this)
-                            .attr("fill", "transparent")
-                            .attr("stroke", "lightgray");
-                    })
-            }
-        }
+        //         mainPlot.append("rect")
+        //             .attr("class", "grids")
+        //             .attr("id", `grid-${i}-${j}`)
+        //             .attr("x", curGridX)
+        //             .attr("y", nextGridY)
+        //             .attr("width", nextGridX - curGridX)
+        //             .attr("height", curGridY - nextGridY)
+        //             .attr("fill", "transparent")
+        //             .attr("stroke", "lightgray")
+        //             .on("mouseover", function () {
+        //                 d3.select(this)
+        //                     .attr("fill", "whitesmoke")
+        //                     .attr("stroke", "gray");
+        //             })
+        //             .on("mouseout", function () {
+        //                 d3.select(this)
+        //                     .attr("fill", "transparent")
+        //                     .attr("stroke", "lightgray");
+        //             })
+        //     }
+        // }
 
-        populateEntities();
+        // populateEntities();
     }
 
     const drawMarginPlot = () => {
@@ -558,7 +558,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         })
         )
         const biVarName = biVariable1.name + "-" + biVariable2.name;
-        updateBivariable(biVarName, "populateDots", newPopulateDots);
+        updateBivariable(biVarName, { "populateDots": newPopulateDots });
         updateVariable(biVariable1.name, { "counts": newBivar1Counts });
         updateVariable(biVariable2.name, { "counts": newBivar2Counts });
     }
@@ -571,8 +571,10 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
                 chipDots: biVariableDict[biVarName].chipDots
             })
             .then((resp) => {
-                updateBivariable(biVarName, "fittedRelation", resp.data);
-                updateBivariable(biVarName, "specified", true);
+                updateBivariable(biVarName, { 
+                    "fittedRelation": resp.data,
+                    "specified": true,
+                });
                 drawFittedRelation(resp.data.fittedLine);
                 logUserBehavior(`bi-plot(${biVarName})`, "click", `fit bvariate relationship`, `${resp.data.equation}`)
             })
@@ -614,11 +616,12 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         d3.selectAll(".predict-line").remove();
         // d3.selectAll(".grids").attr("fill", "transparent");
 
-        updateBivariable(biVarName, "predictionDots", []);
-        updateBivariable(biVarName, "populateDots", []);
-        updateBivariable(biVarName, "chipDots", []);
-        updateBivariable(biVarName, "fittedRelation", {});
-        // updateBivariable(biVarName, "specified", false);
+        updateBivariable(biVarName, {
+            "predictionDots": [],
+            "populateDots": [],
+            "chipDots": [],
+            "fittedRelation": {},
+        });
     }
 
     const activeRegionalSelection = () => {
@@ -735,8 +738,10 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
         updateVariable(biVariable1.name, { "counts": newBivar1Counts });
         updateVariable(biVariable2.name, { "counts": newBivar2Counts });
 
-        updateBivariable(biVarName, "populateDots", newPopulateDots);
-        updateBivariable(biVarName, "chipDots", newChipDots);
+        updateBivariable(biVarName, {
+            "populateDots": newPopulateDots,
+            "chipDots": newChipDots,
+        });
         setSelectedDots([]);
     }
 

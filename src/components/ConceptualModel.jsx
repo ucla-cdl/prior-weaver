@@ -12,7 +12,7 @@ const RELATIONS = {
     NONE: "not related to",
 };
 
-export default function ConceptualModel({ variablesDict, updateVariable, setVariablesDict, biVariableDict, setBiVariableDict, updateBivariable, selectBivariable, addAttributeToEntities }) {
+export default function ConceptualModel({ variablesDict, updateVariable, setVariablesDict, biVariableDict, updateBivariable, selectBivariable, addAttributeToEntities }) {
 
     const [isAddingVariable, setIsAddingVariable] = useState(false);
     const [newVarName, setNewVarName] = useState('');
@@ -53,6 +53,7 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
         });
 
         conceptualModel += "}";
+        console.log("draw conceptual model", conceptualModel);
         d3.select("#conceptual-model-div")
             .graphviz()
             .renderDot(conceptualModel);
@@ -93,19 +94,15 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
         // Add a bivariable relationship
         Object.entries(variablesDict).forEach(([varName, variable]) => {
             let biVarName = varName + "-" + newVarName;
-            console.log("add bi-var relation:", biVarName);
-            setBiVariableDict(prev => ({
-                ...prev,
-                [biVarName]: {
-                    name: biVarName,
-                    relation: RELATIONS.NONE,
-                    specified: false,
-                    predictionDots: [],
-                    populateDots: [],
-                    chipDots: [],
-                    fittedRelation: {},
-                }
-            }))
+            updateBivariable(biVarName, {
+                name: biVarName,
+                relation: RELATIONS.NONE,
+                specified: false,
+                predictionDots: [],
+                populateDots: [],
+                chipDots: [],
+                fittedRelation: {},
+            })
         })
 
         // Add an attribute to every existing entities
@@ -116,11 +113,11 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
     };
 
     const confirmEditvariable = () => {
-        setVariablesDict(prev => ({
-            ...prev,
-            [editingVariable.name]: editingVariable
-        }));
-        updateVariable(editingVariable.name, editingVariable);
+        let updatedVaribale = { ...editingVariable };
+        let updatedMin = updatedVaribale.min;
+        let updatedMax = updatedVaribale.max;
+        updatedVaribale.binEdges = d3.range(newBins + 1).map(i => updatedMin + i * (updatedMax - updatedMin) / newBins)
+        updateVariable(updatedVaribale.name, updatedVaribale);
         setIsEditingVariable(false);
     }
 

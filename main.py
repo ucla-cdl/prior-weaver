@@ -178,11 +178,11 @@ def translate(data: TranslationData = Body(...)):
     variables = data.variables
 
     # Dynamically determine predictors and response variable
-    variable_names = [var["name"] for var in variables]
+    predictors = [var["name"] for var in variables if var["type"] == "predictor"]
     # Treat the last variable as the response
-    response_var = variable_names[-1]
-    predictors = variable_names[:-1]  # Remaining variables are predictors
-
+    response = [var["name"] for var in variables if var["type"] == "response"]
+    variable_names = predictors + response
+    
     # Convert dataset to NumPy arrays
     dataset = np.array([
         [entity[var_name] for var_name in variable_names]
@@ -219,10 +219,14 @@ def translate(data: TranslationData = Body(...)):
     # Convert samples to distributions
     fitted_distributions = convert_samples_to_distribution(parameter_samples)
     print("distribution converted")
+    
+    # Perform prior predictive check
+    simulated_results = prior_predictive_check(variables, fitted_distributions)
 
     return {
         "parameter_distributions": parameter_samples,
-        "fitted_distributions": fitted_distributions
+        "fitted_distributions": fitted_distributions,
+        "simulated_results": simulated_results
     }
 
 
@@ -295,25 +299,56 @@ def get_fit_var_pdf(x, fit_name, fit_params):
 
 
 
-def prior_predictive_check(fitted_distributions, num_samples=1000):
-    # Extract fitted parameters for alpha, beta, and sigma
+def prior_predictive_check(variables, fitted_distributions, num_checks=10, num_samples=100):
+    predictors = [var for var in variables if var["type"] == "predictor"]
+    response = [var for var in variables if var["type"] == "response"][0]
+    
+    # ideal data structure for the simulated dataset
+    # [{params: {a: val1, b: val2, c: val3}, dataset: [{age: val1, edu: val2, income: val3}]} ]
+    simulated_results = []
+    
+    # sample n sets of parameters values
+    # parameter_samples = [
+        # [param1_val1, param1_val2, param1_val3, ...], 
+        # [param2_val1, param2_val2, param2_val3, ...], 
+        # ...]
     parameter_samples = []
     for param, dists in fitted_distributions.items():
         dist = list(dists.values())[0]
-        samples = getattr(stats, dist['name']).rvs(**dist["params"], size=num_samples)
+        samples = getattr(stats, dist['name']).rvs(**dist["params"], size=num_checks)
+        parameter_samples.append(samples)
+    
+    # sample m sets of predictor values for each set of parameter values
+    # predictor_samples = [
+        # [[age_val1, age_val2, age_val3, ...], [edu_val1, edu_val2, edu_val3, ...]], 
+        # [[age_val1, age_val2, age_val3, ...], [edu_val1, edu_val2, edu_val3, ...]], 
+        # ...]
+    predictor_samples = [[] for _ in range(num_checks)]
+    for check_index in range(num_checks):
+        for predictor in predictors:
+            predictor_sample = np.random.uniform(
+                predictor['min'], predictor['max'], size=num_samples)
+            predictor_samples[check_index].append(predictor_sample)
+    
+    # simulate the outcomes using each set of parameter values and the corresponding sets of predictor values
+    simulated_results = []
+    for check_index in range(num_checks):
+        simu_results = {}
+        simu_results['params'] = [para_samples[check_index] for para_samples in parameter_samples]
+        simu_results['dataset'] = []
         
-    # Simulate age and education data (prior predictive range)
-    age_range = np.linspace(20, 60, 50)  # Replace with actual prior range for age
-    education_range = np.linspace(8, 20, 50)  # Replace with actual prior range for education
-
-    simulated_incomes = []
-    for age in age_range:
-        for edu in education_range:
-            alpha = np.random.choice(alpha_samples)
-            beta = np.random.choice(beta_samples)
-            sigma = np.random.choice(sigma_samples)
-            
-            # Simulate income using the prior model
-            income = alpha * age + beta * edu + sigma
-            simulated_incomes.append(income)
+        for sample_index in range(num_samples):
+            simu_data = {}
+            simu_response_val = 0
+            for predictor_index, predictor in enumerate(predictors):
+                simu_data[predictor['name']] = predictor_samples[check_index][predictor_index][sample_index]
+                simu_response_val += simu_results['params'][predictor_index] * predictor_samples[check_index][predictor_index][sample_index]
+   
+            simu_response_val += simu_results['params'][-1]  # Add intercept
+            simu_data[response['name']] = simu_response_val
+            simu_results['dataset'].append(simu_data)
+        
+        simulated_results.append(simu_results)
+    
+    return simulated_results
     

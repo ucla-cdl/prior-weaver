@@ -1,0 +1,14 @@
+.hover-grid-cell {
+    fill: #dd4d37;
+    stroke: black;
+}
+
+.fill-grid-cell {
+    fill: hsla(0, 100%, 84%, 0.983);
+    stroke: black;
+}
+
+.non-fill-grid-cell {
+    fill: transparent;
+    stroke: black;
+}

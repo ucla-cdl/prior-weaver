@@ -38,6 +38,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
 
     const translate = () => {
         setIsTranslating(true);
+        console.log("variablesDict", variablesDict);
 
         axios
             .post(window.BACKEND_ADDRESS + "/translate", {
@@ -48,12 +49,81 @@ export default function ResultsPanel({ entities, variablesDict }) {
                 console.log("translated", response.data);
                 plotParametersHistogram(response.data.parameter_distributions);
                 plotFittedDistributions(response.data.fitted_distributions);
+                // plotPredictiveCheck(response.data.simulated_results);
             })
             .finally(() => {
                 setIsTranslating(false);
                 setTranslated(true);
             });
     };
+
+    const plotPredictiveCheck = (simulatedResults) => {
+        /**
+         * Plot the predictive check for the simulated dataset
+         * 
+         * simulated dataset: [
+         * { 
+         *  params: [p1, p2, p3],
+         *  dataset: [{age: 20, education: 12, income: 1000}, {...}, ...]
+         * }, 
+         * {
+         *  ...
+         * },
+         * ...
+         * ]
+         */
+        document.getElementById('predictive-check-div').innerHTML = '';
+        const svg = d3.select('#predictive-check-div')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+        const g = svg.append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+        
+        const incomeData = simulatedResults.map(d => d.income);
+
+        const x = d3.scaleLinear()
+            .domain([d3.min(incomeData), d3.max(incomeData)])
+            .nice()
+            .range([0, plotWidth]);
+
+        const bins = d3.bin()
+            .domain(x.domain())
+            .thresholds(x.ticks(15))(incomeData);
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(bins, d => d.length)])
+            .nice()
+            .range([plotHeight, 0]);
+
+        // Create the x-axis
+        g.append('g')
+            .attr('transform', `translate(0,${plotHeight})`)
+            .call(d3.axisBottom(x));
+
+        // Create the y-axis
+        g.append('g')
+            .call(d3.axisLeft(y));
+
+        // Add bars for the histogram
+        g.selectAll('.bar')
+            .data(bins)
+            .enter().append('rect')
+            .attr('class', 'bar')
+            .attr('x', d => x(d.x0))
+            .attr('width', d => x(d.x1) - x(d.x0) - 1) // Adjust width for padding
+            .attr('y', d => y(d.length))
+            .attr('height', d => plotHeight - y(d.length))
+            .attr('fill', colors(0));
+
+        // Add title to the histogram
+        g.append('text')
+            .attr('x', plotWidth / 2)
+            .attr('y', plotHeight + margin.bottom - 15)
+            .attr('text-anchor', 'middle')
+            .text('Income');
+    }
 
     const plotParametersHistogram = (parameterDistributions) => {
         // Plot the histogram of simulated parametric data for each parameter 
@@ -178,7 +248,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
             Object.entries(fittedDists).forEach(([distName, distParams], distIndex) => {
                 const svg = container.append('svg')
                     .attr('id', `fitted-distribution-${parameter}-${distName}`)
-                    .attr('transform', `translate(${(index + hasSelectedFittedDistributions) * (width + offset)}, 0)`)
+                    // .attr('transform', `translate(${(index + hasSelectedFittedDistributions) * (width + offset)}, 0)`)
                     .attr('width', width)
                     .attr('height', height)
                     .on('click', function (event, d) {
@@ -283,6 +353,9 @@ export default function ResultsPanel({ entities, variablesDict }) {
                     <Box sx={{ my: 1 }} id={'parameter-distributions-div-' + 'intercept'}></Box>
                 </Grid2>
             </Grid2>
+            <Box sx={{ my: 2 }} id={'predictive-check-div'}>
+
+            </Box>
         </Box>
     )
 };

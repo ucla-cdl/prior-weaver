@@ -72,7 +72,7 @@ export default function Workspace(props) {
         console.log("update bivariable", name, updates);
         setBiVariableDict(prev => ({
             ...prev,
-            [name]: { ...prev[name], ...updates}
+            [name]: { ...prev[name], ...updates }
         }));
     }
 
@@ -138,6 +138,12 @@ export default function Workspace(props) {
             newEntities[entityID] = newEntity;
         });
 
+        newEntities = Object.fromEntries(
+            Object.entries(newEntities).filter(([id, entity]) => 
+                Object.values(entity).some(value => value !== null)
+            )
+        );
+        
         console.log("new", newEntities)
         setEntities(newEntities);
     }
@@ -365,7 +371,7 @@ export default function Workspace(props) {
                                         <FormControl sx={{ minWidth: 120 }}>
                                             <Select
                                                 value={biVariable.relation}
-                                                onChange={(e) => updateBivariable(biVarName, "relation", e.target.value)}
+                                                onChange={(e) => updateBivariable(biVarName, { "relation": e.target.value })}
                                                 displayEmpty
                                                 inputProps={{ 'aria-label': 'Without label' }}
                                                 sx={{
