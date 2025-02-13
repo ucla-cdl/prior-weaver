@@ -49,7 +49,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
                 console.log("translated", response.data);
                 plotParametersHistogram(response.data.parameter_distributions);
                 plotFittedDistributions(response.data.fitted_distributions);
-                // plotPredictiveCheck(response.data.simulated_results);
+                plotPredictiveCheck(response.data.results);
             })
             .finally(() => {
                 setIsTranslating(false);
@@ -57,7 +57,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
             });
     };
 
-    const plotPredictiveCheck = (simulatedResults) => {
+    const plotPredictiveCheck = (results) => {
         /**
          * Plot the predictive check for the simulated dataset
          * 
@@ -72,57 +72,62 @@ export default function ResultsPanel({ entities, variablesDict }) {
          * ...
          * ]
          */
-        document.getElementById('predictive-check-div').innerHTML = '';
-        const svg = d3.select('#predictive-check-div')
+
+        const containerDiv = d3.select('#predictive-check-div');
+        containerDiv.html('');
+
+        const simulatedResults = results["simulated_results"];
+        const minX = results["min_response_val"]
+        const maxX = results["max_response_val"]
+        const maxY = results["max_density_val"]
+
+        const svg = containerDiv
             .append('svg')
             .attr('width', width)
             .attr('height', height);
 
-        const g = svg.append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
-        
-        const incomeData = simulatedResults.map(d => d.income);
-
         const x = d3.scaleLinear()
-            .domain([d3.min(incomeData), d3.max(incomeData)])
+            .domain([minX, maxX])
             .nice()
             .range([0, plotWidth]);
 
-        const bins = d3.bin()
-            .domain(x.domain())
-            .thresholds(x.ticks(15))(incomeData);
-
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(bins, d => d.length)])
+        const yKDE = d3.scaleLinear()
+            .domain([0, maxY])
             .nice()
             .range([plotHeight, 0]);
 
-        // Create the x-axis
-        g.append('g')
-            .attr('transform', `translate(0,${plotHeight})`)
-            .call(d3.axisBottom(x));
+        simulatedResults.forEach((simulatedData, index) => {
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
 
-        // Create the y-axis
-        g.append('g')
-            .call(d3.axisLeft(y));
+            // Create the x-axis
+            g.append('g')
+                .attr('transform', `translate(0,${plotHeight})`)
+                .call(d3.axisBottom(x));
 
-        // Add bars for the histogram
-        g.selectAll('.bar')
-            .data(bins)
-            .enter().append('rect')
-            .attr('class', 'bar')
-            .attr('x', d => x(d.x0))
-            .attr('width', d => x(d.x1) - x(d.x0) - 1) // Adjust width for padding
-            .attr('y', d => y(d.length))
-            .attr('height', d => plotHeight - y(d.length))
-            .attr('fill', colors(0));
+            // Create the y-axis for the kde
+            g.append('g')
+                .call(d3.axisLeft(yKDE));
 
-        // Add title to the histogram
-        g.append('text')
-            .attr('x', plotWidth / 2)
-            .attr('y', plotHeight + margin.bottom - 15)
-            .attr('text-anchor', 'middle')
-            .text('Income');
+            // Add title to the histogram
+            g.append('text')
+                .attr('x', plotWidth / 2)
+                .attr('y', plotHeight + margin.bottom - 15)
+                .attr('text-anchor', 'middle')
+                .text('Income');
+
+            // Plot fitted kde
+            const line = d3.line()
+                .x(d => x(d.x))
+                .y(d => yKDE(d.density));
+
+            g.append('path')
+                .datum(simulatedData["kde"])
+                .attr('fill', 'none')
+                .attr('stroke', 'red')
+                .attr('stroke-width', 1.5)
+                .attr('d', line);
+        });
     }
 
     const plotParametersHistogram = (parameterDistributions) => {
@@ -210,7 +215,6 @@ export default function ResultsPanel({ entities, variablesDict }) {
         svgRect.classed('selected-fitted-distribution-rect', true);
     }
 
-    // Dynamically render the distribution notation based on the distribution type
     const getDistributionNotation = (distParams) => {
         const params = distParams.params;
         switch (distParams.name) {
@@ -240,7 +244,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
             container.html('');
 
             const hasSelectedFittedDistributions = selectedFittedDistributions[parameter] !== undefined;
-            const yMax = d3.max(Object.values(fittedDists).map(distParams => d3.max(distParams.p)));
+            let yMax = d3.max(Object.values(fittedDists).map(distParams => d3.max(distParams.p)));
             if (hasSelectedFittedDistributions) {
                 yMax = Math.max(yMax, d3.max(selectedFittedDistributions[parameter].p));
             }
@@ -341,7 +345,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
                     {Object.values(variablesDict).map((variable, idx) => (
                         <Box sx={{ my: 1 }} key={idx} id={'parameter-histogram-div-' + variable.name}></Box>
                     ))}
-                    <Box sx={{ my: 1 }} id={'parameter-histogram-div-' + 'intercept'}></Box>
+                    <Box sx={{ my: 1 }} id={'parameter-histogram-div-intercept'}></Box>
                 </Grid2>
 
                 {/* Fitted Distributions Column */}
@@ -350,7 +354,7 @@ export default function ResultsPanel({ entities, variablesDict }) {
                     {Object.values(variablesDict).map((variable, idx) => (
                         <Box sx={{ my: 1 }} key={idx} id={'parameter-distributions-div-' + variable.name}></Box>
                     ))}
-                    <Box sx={{ my: 1 }} id={'parameter-distributions-div-' + 'intercept'}></Box>
+                    <Box sx={{ my: 1 }} id={'parameter-distributions-div-intercept'}></Box>
                 </Grid2>
             </Grid2>
             <Box sx={{ my: 2 }} id={'predictive-check-div'}>
