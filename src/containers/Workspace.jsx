@@ -48,17 +48,24 @@ export default function Workspace(props) {
     const [stanCode, setStanCode] = useState('model <- glm(income ~ age + education, family = binomial(link = "logit"))');
 
     const [model, setModel] = useState('');
-    const [parameters, setParameters] = useState('');
 
     const [variablesDict, setVariablesDict] = useState({});
+    const [parametersDict, setParametersDict] = useState({});
+
     const [bivariateVarName1, setBivariateVarName1] = useState('');
     const [bivariateVarName2, setBivariateVarName2] = useState('');
     const [biVariableDict, setBiVariableDict] = useState({});
-    const [parametersDict, setParametersDict] = useState({});
 
     const [entities, setEntities] = useState({});
 
     const [studyContext, setStudyContext] = useState(context["income_education_age"]);
+
+    const addVariable = (data) => {
+        updateVariable(data.name, data);
+
+        const paramName = `p_${data.name}`;
+        setParametersDict((prev) => ({ ...prev, [paramName]: { name: paramName } }));
+    }
 
     const updateVariable = (name, updates) => {
         console.log("update variable", name, updates);
@@ -66,6 +73,10 @@ export default function Workspace(props) {
             ...prev,
             [name]: { ...prev[name], ...updates }
         }));
+    }
+
+    const updateParameter = () => {
+
     }
 
     const updateBivariable = (name, updates) => {
@@ -139,11 +150,11 @@ export default function Workspace(props) {
         });
 
         newEntities = Object.fromEntries(
-            Object.entries(newEntities).filter(([id, entity]) => 
+            Object.entries(newEntities).filter(([id, entity]) =>
                 Object.values(entity).some(value => value !== null)
             )
         );
-        
+
         console.log("new", newEntities)
         setEntities(newEntities);
     }
@@ -183,7 +194,7 @@ export default function Workspace(props) {
                 Object.entries(codeInfo).forEach(([section, sectionInfo]) => {
                     switch (section) {
                         case "response":
-                            updateVariable(sectionInfo, {
+                            addVariable({
                                 name: sectionInfo,
                                 type: "response",
                                 min: DEFAULT_VARIABLE_ATTRIBUTES.min,
@@ -197,7 +208,7 @@ export default function Workspace(props) {
                         case "predictors":
                             console.log("PREDICTORS", sectionInfo);
                             sectionInfo.forEach((predictor, index) => {
-                                updateVariable(predictor, {
+                                addVariable({
                                     name: predictor,
                                     type: "predictor",
                                     min: DEFAULT_VARIABLE_ATTRIBUTES.min,
@@ -216,6 +227,9 @@ export default function Workspace(props) {
                             break;
                     }
                 });
+
+                // Add Extra parameters
+                setParametersDict((prev) => ({ ...prev, 'intercept': { name: 'intercept' } }));
 
                 // Add bivariate relationship
                 let predictors = codeInfo['predictors'];
@@ -441,7 +455,11 @@ export default function Workspace(props) {
             <Grid2 sx={{ my: 1 }} container spacing={3}>
                 <Box className="module-div" sx={{ width: "100%", my: 1 }}>
                     <h3>Results Panel</h3>
-                    <ResultsPanel entities={entities} variablesDict={variablesDict} />
+                    <ResultsPanel
+                        entities={entities}
+                        variablesDict={variablesDict}
+                        parametersDict={parametersDict}
+                    />
                 </Box>
             </Grid2>
         </div>

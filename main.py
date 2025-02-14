@@ -177,30 +177,29 @@ def translate(data: TranslationData = Body(...)):
     entities = data.entities
     variables = data.variables
 
-    # Dynamically determine predictors and response variable
-    predictors = [var["name"]
-                  for var in variables if var["type"] == "predictor"]
-    # Treat the last variable as the response
-    response = [var["name"] for var in variables if var["type"] == "response"]
-    variable_names = predictors + response
+    predictors = [var for var in variables if var["type"] == "predictor"]
+    response = [var for var in variables if var["type"] == "response"][0]
+    sorted_variables = predictors + [response]
 
     # Convert dataset to NumPy arrays
     dataset = np.array([
-        [entity[var_name] for var_name in variable_names]
+        [entity[var['name']] for var in sorted_variables]
         for entity in entities
     ])
-    X = dataset[:, :-1]  # Predictor variables
-    y = dataset[:, -1]   # Response variable
+    X = dataset[:, :-1]  # Predictor
+    y = dataset[:, -1]   # Response
 
     # Sampling and fitting
     num_samples = 100
-    n_records = len(entities)
-    parameter_samples = {var: [] for var in predictors}  # Store coefficients
+    n_records = 50
+    parameter_samples = {var['name']: []
+                         for var in predictors}  # Store coefficients
     intercept_samples = []
 
     for _ in range(num_samples):
         # Bootstrap sampling
-        indices = np.random.choice(n_records, n_records, replace=True)
+        # Sample n_records from the dataset with replacement
+        indices = np.random.choice(len(entities), n_records, replace=True)
         X_sample = X[indices]
         y_sample = y[indices]
 
@@ -210,83 +209,99 @@ def translate(data: TranslationData = Body(...)):
 
         # Store parameter estimates
         for i, var in enumerate(predictors):
-            parameter_samples[var].append(model.coef_[i])
+            parameter_samples[var['name']].append(model.coef_[i])
         intercept_samples.append(model.intercept_)
 
     # Prepare the response
     parameter_samples["intercept"] = intercept_samples
-    print("translation done")
 
     # Convert samples to distributions
-    fitted_distributions = convert_samples_to_distribution(parameter_samples)
-    print("distribution converted")
+    priors_results = {}
+    prior_distributions = []
+    for param, samples in parameter_samples.items():
+        fitted_dists, param_min, param_max = fit_samples_to_distributions(
+            samples)
+        priors_results[param] = {
+            "samples": samples,
+            "distributions": fitted_dists,
+            "min": param_min,
+            "max": param_max
+        }
+        prior_distributions.append(fitted_dists[0])
 
     # Perform prior predictive check
-    results = prior_predictive_check(variables, fitted_distributions)
+    check_results = prior_predictive_check(
+        predictors, response, prior_distributions)
 
     return {
-        "parameter_distributions": parameter_samples,
-        "fitted_distributions": fitted_distributions,
-        "results": results
+        "priors_results": priors_results,
+        "check_results": check_results
     }
 
 
-def convert_samples_to_distribution(parameter_samples):
-    fit_dists = {}
-    for param, samples in parameter_samples.items():
-        fit_dists[param] = {}
+def fit_samples_to_distributions(samples):
+    fit_dists = []
 
-        f = Fitter(samples, distributions=[
-            'norm', 'expon', 'lognorm', 'gamma', 'beta', 'uniform'])
-        f.fit()
+    f = Fitter(samples, distributions=[
+        'norm', 'expon', 'lognorm', 'gamma', 'beta', 'uniform'])
+    f.fit()
 
-        # Generate x values for plotting the PDF of the fitted distributions
-        x = np.linspace(min(samples), max(samples), 1000)
+    # Generate x values for plotting the PDF of the fitted distributions
+    min_sample = min(samples)
+    max_sample = max(samples)
 
-        sum = f.summary(plot=False)
+    # Extend min/max range for smooth kde
+    padding_ratio = 0.15
+    padding = (max_sample - min_sample) * padding_ratio
+    x_min = min_sample - padding
+    x_max = max_sample + padding
 
-        dist_cnt = 0
-        idx = 0
-        while dist_cnt < 3:
-            fit_name = sum.iloc[idx].name
-            fit_params = f.fitted_param[fit_name]
-            fit_distribution = getattr(stats, fit_name)
-            param_names = (fit_distribution.shapes + ", loc, scale").split(
-                ", ") if fit_distribution.shapes else ["loc", "scale"]
+    x = np.linspace(x_min, x_max, 1000)
 
-            fit_params_dict = {}
-            for d_key, d_val in zip(param_names, fit_params):
-                if not np.isnan(d_val) and not np.isinf(d_val):
-                    fit_params_dict[d_key] = float(f"{d_val:.4f}")
-                else:
-                    print("invalid param: ", d_key, " = ", d_val)
+    sum = f.summary(plot=False)
 
-            p = get_fit_var_pdf(x, fit_name, fit_params_dict)
+    dist_cnt = 0
+    idx = 0
+    while dist_cnt < 3:
+        fit_name = sum.iloc[idx].name
+        fit_params = f.fitted_param[fit_name]
+        fit_distribution = getattr(stats, fit_name)
+        param_names = (fit_distribution.shapes + ", loc, scale").split(
+            ", ") if fit_distribution.shapes else ["loc", "scale"]
 
-            metrics = {}
-            sum_row = sum.loc[fit_name]
-            for col_label in sum.columns:
-                if not np.isnan(sum_row[col_label]) and not np.isinf(sum_row[col_label]):
-                    metrics[col_label] = float(f"{sum_row[col_label]:.4f}")
+        fit_params_dict = {}
+        for d_key, d_val in zip(param_names, fit_params):
+            if not np.isnan(d_val) and not np.isinf(d_val):
+                fit_params_dict[d_key] = float(f"{d_val:.4f}")
+            else:
+                print("invalid param: ", d_key, " = ", d_val)
 
-            if np.isnan(p).any() or np.isinf(p).any() or np.isnan(x).any() or np.isinf(x).any():
-                print("invalid distribution: ", fit_name)
-                idx += 1
-                continue
+        p = get_fit_var_pdf(x, fit_name, fit_params_dict)
 
-            fit_dists[param][fit_name] = {
-                'name': fit_name,
-                'params': fit_params_dict,
-                'x': x.tolist(),
-                'p': p.tolist(),
-                'metrics': metrics
-            }
+        metrics = {}
+        sum_row = sum.loc[fit_name]
+        for col_label in sum.columns:
+            if not np.isnan(sum_row[col_label]) and not np.isinf(sum_row[col_label]):
+                metrics[col_label] = float(f"{sum_row[col_label]:.4f}")
 
-            dist_cnt += 1
+        if np.isnan(p).any() or np.isinf(p).any() or np.isnan(x).any() or np.isinf(x).any():
+            print("invalid distribution: ", fit_name)
             idx += 1
-            print("distribution fitted: ", fit_name)
+            continue
 
-    return fit_dists
+        fit_dists.append({
+            'name': fit_name,
+            'params': fit_params_dict,
+            'x': x.tolist(),
+            'p': p.tolist(),
+            'metrics': metrics
+        })
+
+        dist_cnt += 1
+        idx += 1
+        print("distribution fitted: ", fit_name)
+
+    return fit_dists, x_min, x_max
 
 
 def get_fit_var_pdf(x, fit_name, fit_params):
@@ -299,10 +314,7 @@ def get_fit_var_pdf(x, fit_name, fit_params):
     return p
 
 
-def prior_predictive_check(variables, fitted_distributions, num_checks=10, num_samples=100):
-    predictors = [var for var in variables if var["type"] == "predictor"]
-    response = [var for var in variables if var["type"] == "response"][0]
-
+def prior_predictive_check(predictors, response, prior_distributions, num_checks=10, num_samples=100):
     # ideal data structure for the simulated dataset
     # [{params: {a: val1, b: val2, c: val3}, dataset: [{age: val1, edu: val2, income: val3}]} ]
     simulated_results = []
@@ -313,8 +325,7 @@ def prior_predictive_check(variables, fitted_distributions, num_checks=10, num_s
     # [param2_val1, param2_val2, param2_val3, ...],
     # ...]
     parameter_samples = []
-    for param, dists in fitted_distributions.items():
-        dist = list(dists.values())[0]
+    for dist in prior_distributions:
         samples = getattr(stats, dist['name']).rvs(
             **dist["params"], size=num_checks)
         parameter_samples.append(samples)
@@ -335,7 +346,7 @@ def prior_predictive_check(variables, fitted_distributions, num_checks=10, num_s
     simulated_results = []
     min_simulated_response_val = response['min']
     max_simulated_response_val = response['max']
-    
+
     for check_index in range(num_checks):
         simu_results = {}
         simu_results['params'] = [para_samples[check_index]
@@ -356,45 +367,45 @@ def prior_predictive_check(variables, fitted_distributions, num_checks=10, num_s
             simu_response_val += simu_results['params'][-1]  # Add intercept
             simu_data[response['name']] = simu_response_val
             simu_results['dataset'].append(simu_data)
-            
+
             response_values.append(simu_response_val)
 
-        min_simulated_response_val = min(min_simulated_response_val, min(response_values))
-        max_simulated_response_val = max(max_simulated_response_val, max(response_values))
-        
+        min_simulated_response_val = min(
+            min_simulated_response_val, min(response_values))
+        max_simulated_response_val = max(
+            max_simulated_response_val, max(response_values))
+
         simulated_results.append(simu_results)
-        
-    # Extend min/max range for smooth kde 
+
+    # Extend min/max range for smooth kde
     padding_ratio = 0.15
-    padding = (max_simulated_response_val - min_simulated_response_val) * padding_ratio
+    padding = (max_simulated_response_val -
+               min_simulated_response_val) * padding_ratio
     x_min = min_simulated_response_val - padding
     x_max = max_simulated_response_val + padding
-    
+
     max_density_val = 0
     for check_index in range(num_checks):
         simu_results = simulated_results[check_index]
         response_values = [simu_data[response['name']]
                            for simu_data in simu_results['dataset']]
-        
+
         # Fit KDE to the simulated response values
         kde = stats.gaussian_kde(response_values)
         x_values = np.linspace(x_min, x_max, 100)
         density_values = kde(x_values)
 
         max_density_val = max(max_density_val, max(density_values))
-        # Ensure KDE curve reaches zero at both ends
-        density_values[0] = 0  # Force density at min to 0
-        density_values[-1] = 0  # Force density at max to 0
 
         # Store KDE results for visualization
         simu_results['kde'] = [
             {'x': x_values[i], 'density': density_values[i]} for i in range(len(x_values))]
-    
+
     results = {
         'min_response_val': x_min,
         'max_response_val': x_max,
         'max_density_val': max_density_val,
         'simulated_results': simulated_results
     }
-    
+
     return results
