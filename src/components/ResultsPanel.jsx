@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Grid2 } from '@mui/material';
+import { Box, Button, CircularProgress, FormControl, Grid2, InputLabel, MenuItem, Select } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
@@ -16,7 +16,8 @@ const DISTRIBUTION_TYPES = {
 export default function ResultsPanel({ entities, variablesDict, parametersDict }) {
     const [isTranslating, setIsTranslating] = useState(false);
     const [translated, setTranslated] = useState(false);
-
+    
+    const [priorsDict, setPriorsDict] = useState({});
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
     const width = 300;
@@ -28,26 +29,35 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
 
     const colors = d3.scaleOrdinal(d3.schemeCategory10);
 
-    // /**
-    //  * Update the apperance when the selected distribution changes
-    //  */
-    // useState(() => {
-    //     updateFittedDistributionsStyle();
-    // }, [selectedFittedDistributions]);
+    /**
+     * Update the plot when the selected distribution changes
+     */
+    useEffect(() => {
+        if (translated) {
+            console.log("selectedPriorDistributions", selectedPriorDistributions);
+            // Update the appearance of the selected distribution
+            Object.entries(selectedPriorDistributions).forEach(([paramName, dist]) => {
+                plotFittedDistribution(paramName, priorsDict[paramName], dist);
+            });
+
+            predictiveCheck();
+        }
+    }, [selectedPriorDistributions]);
 
     const translate = () => {
         setIsTranslating(true);
         console.log("variablesDict", variablesDict);
+        console.log("parametersDict", parametersDict);
 
         axios
             .post(window.BACKEND_ADDRESS + "/translate", {
                 entities: Object.values(entities),
                 variables: Object.values(variablesDict),
+                parameters: Object.values(parametersDict),
             })
             .then((response) => {
                 console.log("translated", response.data);
                 plotPriorsResults(response.data.priors_results);
-                plotCheckResults(response.data.check_results);
             })
             .finally(() => {
                 setIsTranslating(false);
@@ -55,7 +65,22 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             });
     };
 
+    const predictiveCheck = () => {
+        console.log("predictive check", selectedPriorDistributions);
+        axios
+            .post(window.BACKEND_ADDRESS + "/check", {
+                variables: Object.values(variablesDict),
+                priors: Object.values(selectedPriorDistributions),
+            })
+            .then((response) => {
+                console.log("predictive check", response.data);
+                plotCheckResults(response.data.check_results);
+            });
+    }
+
     const plotPriorsResults = (priorsResults) => {
+        setPriorsDict(priorsResults);
+
         Object.entries(priorsResults).forEach(([paramName, priorResult], index) => {
             // Create an SVG element
             document.getElementById('parameter-div-' + paramName).innerHTML = '';
@@ -65,16 +90,11 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                 .attr('width', width)
                 .attr('height', height);
 
-            const xScale = d3.scaleLinear()
-                .domain([priorResult.min, priorResult.max])
-                .nice()
-                .range([0, plotWidth]);
-
             // Plot the histogram of simulated parametric data for each parameter 
-            plotParameterHistogram(paramName, priorResult.samples, xScale, index);
+            plotParameterHistogram(paramName, priorResult);
 
             // Plot the best fitted distribution for each parameter
-            plotFittedDistribution(paramName, priorResult.distributions[0], xScale, index);
+            plotFittedDistribution(paramName, priorResult, priorResult.distributions[0]);
 
             // If there is no selection yet, Set the first distribution as the selected distribution for this parameter
             if (!selectedPriorDistributions[paramName]) {
@@ -83,7 +103,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         });
     }
 
-    const plotParameterHistogram = (paramName, samples, xScale, paramIndex) => {
+    const plotParameterHistogram = (paramName, priorResult) => {
         const svg = d3.select('#parameter-svg-' + paramName)
 
         // Append a group element to the SVG to position the chart
@@ -91,9 +111,14 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             .attr('id', 'parameter-histogram-' + paramName)
             .attr('transform', `translate(${margin.left},${margin.top})`);
 
+        const x = d3.scaleLinear()
+            .domain([priorResult.min, priorResult.max])
+            .nice()
+            .range([0, plotWidth]);
+
         const bins = d3.bin()
-            .domain(xScale.domain())
-            .thresholds(xScale.ticks(15))(samples);
+            .domain(x.domain())
+            .thresholds(x.ticks(15))(priorResult.samples);
 
         const y = d3.scaleLinear()
             .domain([0, d3.max(bins, d => d.length)])
@@ -103,7 +128,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         // Create the x-axis
         g.append('g')
             .attr('transform', `translate(0,${plotHeight})`)
-            .call(d3.axisBottom(xScale));
+            .call(d3.axisBottom(x));
 
         // Create the y-axis
         g.append('g')
@@ -114,11 +139,12 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             .data(bins)
             .enter().append('rect')
             .attr('class', 'bar')
-            .attr('x', d => xScale(d.x0))
-            .attr('width', d => xScale(d.x1) - xScale(d.x0) - 1) // Adjust width for padding
+            .attr('x', d => x(d.x0))
+            .attr('width', d => d3.max([x(d.x1) - x(d.x0) - 1, 0])) // Adjust width for padding
             .attr('y', d => y(d.length))
             .attr('height', d => plotHeight - y(d.length))
-            .attr('fill', colors(paramIndex));
+            .attr('fill', 'lightgray')
+            .lower();
 
         // Add title to each histogram
         g.append('text')
@@ -128,8 +154,14 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             .text(paramName);
     }
 
-    const plotFittedDistribution = (paramName, dist, xScale, paramIndex) => {
+    const plotFittedDistribution = (paramName, priorResult, dist) => {
         const svg = d3.select('#parameter-svg-' + paramName)
+        d3.select('#parameter-distribution-' + paramName)?.remove();
+
+        const x = d3.scaleLinear()
+            .domain([priorResult.min, priorResult.max])
+            .nice()
+            .range([0, plotWidth]);
 
         const yMax = d3.max(dist.p);
         const y = d3.scaleLinear()
@@ -137,7 +169,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             .range([plotHeight, 0]);
 
         const line = d3.line()
-            .x(d => xScale(d[0]))
+            .x(d => x(d[0]))
             .y(d => y(d[1]));
 
         // Append a group element to the SVG for the chart
@@ -153,7 +185,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         g.append('path')
             .datum(dist.x.map((d, i) => [d, dist.p[i]]))
             .attr('fill', 'none')
-            .attr('stroke', colors(paramIndex))
+            .attr('stroke', 'blue')
             .attr('stroke-width', 1.5)
             .attr('d', line);
 
@@ -183,7 +215,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         const params = dist.params;
         switch (dist.name) {
             case DISTRIBUTION_TYPES.Normal:
-                return `X ~ Normal(μ = ${params.loc}, σ² = ${Math.pow(params.scale, 2)})`;
+                return `X ~ Normal(μ = ${params.loc}, σ = ${params.scale})`;
             case DISTRIBUTION_TYPES.Exponential:
                 return `X ~ Exponential(λ = ${1 / params.scale})`;
             case DISTRIBUTION_TYPES.LogNormal:
@@ -238,26 +270,26 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             .nice()
             .range([plotHeight, 0]);
 
+        const g = svg.append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+
+        // Create the x-axis
+        g.append('g')
+            .attr('transform', `translate(0,${plotHeight})`)
+            .call(d3.axisBottom(x));
+
+        // Create the y-axis for the kde
+        g.append('g')
+            .call(d3.axisLeft(yKDE));
+
+        // Add title to the histogram
+        g.append('text')
+            .attr('x', plotWidth / 2)
+            .attr('y', plotHeight + margin.bottom - 15)
+            .attr('text-anchor', 'middle')
+            .text('Income');
+
         simulatedResults.forEach((simulatedData, index) => {
-            const g = svg.append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
-
-            // Create the x-axis
-            g.append('g')
-                .attr('transform', `translate(0,${plotHeight})`)
-                .call(d3.axisBottom(x));
-
-            // Create the y-axis for the kde
-            g.append('g')
-                .call(d3.axisLeft(yKDE));
-
-            // Add title to the histogram
-            g.append('text')
-                .attr('x', plotWidth / 2)
-                .attr('y', plotHeight + margin.bottom - 15)
-                .attr('text-anchor', 'middle')
-                .text('Income');
-
             // Plot fitted kde
             const line = d3.line()
                 .x(d => x(d.x))
@@ -279,14 +311,36 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             <Grid2 container spacing={3}
                 sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}
             >
-                {Object.values(variablesDict).map((variable, idx) => (
-                    <Box sx={{ my: 1 }} key={idx} id={'parameter-div-' + variable.name}></Box>
+                {Object.values(parametersDict).map((parameter, idx) => (
+                    <Box sx={{ my: 1 }} key={idx}>
+                        {priorsDict[parameter.name] &&
+                            <Box sx={{ minWidth: 120 }}>
+                                <FormControl fullWidth>
+                                    <InputLabel id={`select-label-${idx}`}>Distribution</InputLabel>
+                                    <Select
+                                        labelId={`select-label-${idx}`}
+                                        value={selectedPriorDistributions[parameter.name]?.name || ''}
+                                        label="Distribution"
+                                        onChange={(e) => {
+                                            const selectedDist = priorsDict[parameter.name].distributions.find(dist => dist.name === e.target.value);
+                                            selectFittedDistribution(parameter.name, selectedDist);
+                                        }}
+                                    >
+                                        {priorsDict[parameter.name].distributions.map((dist, distIdx) => (
+                                            <MenuItem key={distIdx} value={dist.name}>
+                                                {dist.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+                        }
+                        <Box sx={{ my: 1 }} key={idx} id={'parameter-div-' + parameter.name}></Box>
+                    </Box>
                 ))}
-                <Box sx={{ my: 1 }} id={'parameter-div-intercept'}></Box>
+                {/* <Box sx={{ my: 1 }} id={'parameter-div-intercept'}></Box> */}
             </Grid2>
-            <Box sx={{ my: 2 }} id={'predictive-check-div'}>
-
-            </Box>
+            <Box sx={{ my: 2 }} id={'predictive-check-div'}></Box>
         </Box>
     )
 };

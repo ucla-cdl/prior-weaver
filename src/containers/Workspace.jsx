@@ -64,7 +64,13 @@ export default function Workspace(props) {
         updateVariable(data.name, data);
 
         const paramName = `p_${data.name}`;
-        setParametersDict((prev) => ({ ...prev, [paramName]: { name: paramName } }));
+        setParametersDict((prev) => ({ 
+            ...prev, 
+            [paramName]: { 
+                name: paramName,
+                relatedVar: data.name,
+            } 
+        }));
     }
 
     const updateVariable = (name, updates) => {
@@ -194,7 +200,7 @@ export default function Workspace(props) {
                 Object.entries(codeInfo).forEach(([section, sectionInfo]) => {
                     switch (section) {
                         case "response":
-                            addVariable({
+                            updateVariable(sectionInfo,{
                                 name: sectionInfo,
                                 type: "response",
                                 min: DEFAULT_VARIABLE_ATTRIBUTES.min,
@@ -229,7 +235,7 @@ export default function Workspace(props) {
                 });
 
                 // Add Extra parameters
-                setParametersDict((prev) => ({ ...prev, 'intercept': { name: 'intercept' } }));
+                setParametersDict((prev) => ({ ...prev, 'intercept': { name: 'intercept', relatedVar: 'intercept' } }));
 
                 // Add bivariate relationship
                 let predictors = codeInfo['predictors'];

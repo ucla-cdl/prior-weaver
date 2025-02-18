@@ -169,6 +169,7 @@ def fit_bi_var_relation(data: BiVariableData = Body(...)):
 class TranslationData(BaseModel):
     entities: List[dict]
     variables: List[dict]
+    parameters: List[dict]
 
 
 @app.post('/translate')
@@ -176,26 +177,78 @@ def translate(data: TranslationData = Body(...)):
     print("translation started")
     entities = data.entities
     variables = data.variables
+    parameters = data.parameters
 
     predictors = [var for var in variables if var["type"] == "predictor"]
     response = [var for var in variables if var["type"] == "response"][0]
+    parameters_dict = {param['relatedVar']: param['name'] for param in parameters}
+
+    # Bootstrapping to fit linear model and get parameter samples
+    parameter_samples = bootstrap_fit_linear_model(
+        entities, predictors, response, parameters_dict)
+
+    # Convert parameter samples to distributions
+    priors_results = {}
+    prior_distributions = []
+    for param_name, samples in parameter_samples.items():
+        fitted_dists, param_min, param_max = fit_samples_to_distributions(
+            samples)
+
+        priors_results[param_name] = {
+            "samples": samples,
+            "distributions": fitted_dists,
+            "min": param_min,
+            "max": param_max
+        }
+
+        prior_distributions.append(fitted_dists[0])
+
+    # Perform prior predictive check
+    # check_results = prior_predictive_check(
+    #     predictors, response, prior_distributions)
+
+    return {
+        "priors_results": priors_results,
+        # "check_results": check_results
+    }
+    
+
+class PredictiveCheckData(BaseModel):
+    variables: List[dict]
+    priors: List[dict]
+    
+@app.post('/check')   
+def update_check_results(data: PredictiveCheckData = Body(...)):
+    variables = data.variables
+    priors = data.priors
+
+    predictors = [var for var in variables if var["type"] == "predictor"]
+    response = [var for var in variables if var["type"] == "response"][0]
+    
+    prior_distributions = [prior for prior in priors]
+    check_results = prior_predictive_check(
+        predictors, response, prior_distributions)
+    
+    return {
+        "check_results": check_results
+    }
+
+
+def bootstrap_fit_linear_model(entities, predictors, response, parameters_dict):
     sorted_variables = predictors + [response]
 
-    # Convert dataset to NumPy arrays
     dataset = np.array([
         [entity[var['name']] for var in sorted_variables]
         for entity in entities
     ])
-    X = dataset[:, :-1]  # Predictor
-    y = dataset[:, -1]   # Response
+    X = dataset[:, :-1]
+    y = dataset[:, -1]
 
-    # Sampling and fitting
     num_samples = 100
     n_records = 50
-    parameter_samples = {var['name']: []
-                         for var in predictors}  # Store coefficients
-    intercept_samples = []
-
+    parameter_samples = {param_name: []
+                         for param_name in parameters_dict.values()}  # Store coefficients
+    
     for _ in range(num_samples):
         # Bootstrap sampling
         # Sample n_records from the dataset with replacement
@@ -209,34 +262,10 @@ def translate(data: TranslationData = Body(...)):
 
         # Store parameter estimates
         for i, var in enumerate(predictors):
-            parameter_samples[var['name']].append(model.coef_[i])
-        intercept_samples.append(model.intercept_)
+            parameter_samples[parameters_dict[var['name']]].append(model.coef_[i])
+        parameter_samples["intercept"].append(model.intercept_)
 
-    # Prepare the response
-    parameter_samples["intercept"] = intercept_samples
-
-    # Convert samples to distributions
-    priors_results = {}
-    prior_distributions = []
-    for param, samples in parameter_samples.items():
-        fitted_dists, param_min, param_max = fit_samples_to_distributions(
-            samples)
-        priors_results[param] = {
-            "samples": samples,
-            "distributions": fitted_dists,
-            "min": param_min,
-            "max": param_max
-        }
-        prior_distributions.append(fitted_dists[0])
-
-    # Perform prior predictive check
-    check_results = prior_predictive_check(
-        predictors, response, prior_distributions)
-
-    return {
-        "priors_results": priors_results,
-        "check_results": check_results
-    }
+    return parameter_samples
 
 
 def fit_samples_to_distributions(samples):

@@ -25,7 +25,7 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
     const [editingVariable, setEditingVariable] = useState(null);
 
     useEffect(() => {
-        drawConceptualModel();
+        // drawConceptualModel();
     }, [variablesDict, biVariableDict]);
 
     const drawConceptualModel = () => {
@@ -232,12 +232,12 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
                     </DialogActions>
                 </Dialog>
             </Grid2>
-            <Grid2 size={7} className="module-div">
+            {/* <Grid2 size={7} className="module-div">
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <h3>Conceptual Model</h3>
                     <div id='conceptual-model-div'></div>
                 </Box>
-            </Grid2>
+            </Grid2> */}
         </Grid2>
     )
 }
