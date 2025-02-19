@@ -295,7 +295,7 @@ export default function Workspace(props) {
                 */}
 
             <Grid2 sx={{ my: 1 }} container spacing={3}>
-                <Grid2 className="module-div" size={12}>
+                <Grid2 className="module-div" size={6}>
                     <h3>Analysis Context</h3>
                     <Typography>
                         {studyContext}
@@ -334,10 +334,7 @@ export default function Workspace(props) {
                         </Box>
                     }
                 </Grid2>
-            </Grid2>
-
-            <Grid2 sx={{ my: 1 }} container spacing={3}>
-                <Grid2 size={12}>
+                <Grid2 size={6}>
                     <ConceptualModel
                         variablesDict={variablesDict}
                         updateVariable={updateVariable}

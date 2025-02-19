@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from concurrent.futures.process import ProcessPoolExecutor
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Any
 
 import numpy as np
 import re
@@ -233,7 +233,23 @@ def update_check_results(data: PredictiveCheckData = Body(...)):
         "check_results": check_results
     }
 
+class DistributionData(BaseModel):
+    dist: Dict[str, Any]
+    params: Dict[str, float]
+    
+    
+@app.post('/updateDist')
+def update_dist(data: DistributionData = Body(...)):
+    dist = data.dist
+    params = data.params
+    
+    p = get_fit_var_pdf(dist['x'], dist['name'], params)
+    
+    return {
+        "p": p.tolist()
+    }
 
+    
 def bootstrap_fit_linear_model(entities, predictors, response, parameters_dict):
     sorted_variables = predictors + [response]
 
@@ -301,7 +317,7 @@ def fit_samples_to_distributions(samples):
         fit_params_dict = {}
         for d_key, d_val in zip(param_names, fit_params):
             if not np.isnan(d_val) and not np.isinf(d_val):
-                fit_params_dict[d_key] = float(f"{d_val:.4f}")
+                fit_params_dict[d_key] = float(f"{d_val:.2f}")
             else:
                 print("invalid param: ", d_key, " = ", d_val)
 
@@ -311,7 +327,7 @@ def fit_samples_to_distributions(samples):
         sum_row = sum.loc[fit_name]
         for col_label in sum.columns:
             if not np.isnan(sum_row[col_label]) and not np.isinf(sum_row[col_label]):
-                metrics[col_label] = float(f"{sum_row[col_label]:.4f}")
+                metrics[col_label] = float(f"{sum_row[col_label]:.2f}")
 
         if np.isnan(p).any() or np.isinf(p).any() or np.isnan(x).any() or np.isinf(x).any():
             print("invalid distribution: ", fit_name)

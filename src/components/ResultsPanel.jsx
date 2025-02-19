@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, FormControl, Grid2, InputLabel, MenuItem, Select } from '@mui/material';
+import { Box, Button, CircularProgress, FormControl, Grid2, InputLabel, MenuItem, Select, Slider } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
@@ -16,8 +16,10 @@ const DISTRIBUTION_TYPES = {
 export default function ResultsPanel({ entities, variablesDict, parametersDict }) {
     const [isTranslating, setIsTranslating] = useState(false);
     const [translated, setTranslated] = useState(false);
-    
+
     const [priorsDict, setPriorsDict] = useState({});
+    const [paramsRange, setParamsRange] = useState({});
+    const paramsRangeDelta = 3;
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
     const width = 300;
@@ -30,7 +32,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     const colors = d3.scaleOrdinal(d3.schemeCategory10);
 
     /**
-     * Update the plot when the selected distribution changes
+     * Update the plot and prior distriburions when the selected distribution changes
      */
     useEffect(() => {
         if (translated) {
@@ -93,13 +95,8 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             // Plot the histogram of simulated parametric data for each parameter 
             plotParameterHistogram(paramName, priorResult);
 
-            // Plot the best fitted distribution for each parameter
-            plotFittedDistribution(paramName, priorResult, priorResult.distributions[0]);
-
-            // If there is no selection yet, Set the first distribution as the selected distribution for this parameter
-            if (!selectedPriorDistributions[paramName]) {
-                selectFittedDistribution(paramName, priorResult.distributions[0]);
-            }
+            // Set the first distribution as the selected distribution for this parameter
+            selectFittedDistribution(paramName, priorResult.distributions[0]);
         });
     }
 
@@ -201,6 +198,13 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
 
     const selectFittedDistribution = (parameter, dist) => {
         console.log("select fitted distribution", parameter, dist);
+
+        // Set the range of the parameter
+        const ranges = {}
+        Object.entries(dist.params).map(([paramName, paramVal]) => {
+            ranges[paramName] = { min: paramVal - paramsRangeDelta, max: paramVal + paramsRangeDelta };
+        });
+        setParamsRange(prev => ({ ...prev, [parameter]: ranges }));
 
         // Update the selectedFittedDistributions state
         setSelectedPriorDistributions(prev => {
@@ -304,6 +308,26 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         });
     }
 
+    const updateSelectedPriorDistribution = (paramName, paramKey, newValue) => {
+        const updatedParams = { ...selectedPriorDistributions[paramName].params, [paramKey]: newValue };
+        console.log("update", selectedPriorDistributions[paramName], updatedParams);
+
+        axios
+            .post(window.BACKEND_ADDRESS + "/updateDist", {
+                dist: selectedPriorDistributions[paramName],
+                params: updatedParams,
+            })
+            .then((response) => {
+                const area = d3.sum(response.data.p) * (selectedPriorDistributions[paramName].x[1] - selectedPriorDistributions[paramName].x[0]);
+                console.log("Area under the PDF curve:", area);
+
+                setSelectedPriorDistributions(prev => {
+                    const updatedDist = { ...prev[paramName], params: updatedParams, p: response.data.p };
+                    return { ...prev, [paramName]: updatedDist };
+                });
+            });
+    }
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Button sx={{ my: 2 }} variant="contained" onClick={translate}>Translate</Button>
@@ -314,7 +338,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                 {Object.values(parametersDict).map((parameter, idx) => (
                     <Box sx={{ my: 1 }} key={idx}>
                         {priorsDict[parameter.name] &&
-                            <Box sx={{ minWidth: 120 }}>
+                            <Box>
                                 <FormControl fullWidth>
                                     <InputLabel id={`select-label-${idx}`}>Distribution</InputLabel>
                                     <Select
@@ -333,6 +357,27 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                                         ))}
                                     </Select>
                                 </FormControl>
+
+                                {Object.keys(selectedPriorDistributions[parameter.name].params).map((paramKey, paramIdx) => {
+                                    return (
+                                        <Box sx={{ my: 1, display: 'flex', flexDirection: 'row' }} key={paramIdx}>
+                                            <InputLabel id={`slider-label-${idx}-${paramIdx}`}>{paramKey}</InputLabel>
+                                            <Slider
+                                                size='small'
+                                                value={selectedPriorDistributions[parameter.name].params[paramKey]}
+                                                min={paramsRange[parameter.name][paramKey].min}
+                                                max={paramsRange[parameter.name][paramKey].max}
+                                                step={0.02}
+                                                marks
+                                                valueLabelDisplay="on"
+                                                onChange={(e, newValue) => {
+                                                    updateSelectedPriorDistribution(parameter.name, paramKey, newValue);
+                                                }}
+                                                aria-labelledby={`slider-label-${idx}-${paramIdx}`}
+                                            />
+                                        </Box>
+                                    )
+                                })}
                             </Box>
                         }
                         <Box sx={{ my: 1 }} key={idx} id={'parameter-div-' + parameter.name}></Box>

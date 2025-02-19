@@ -131,7 +131,7 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
     return (
         <Grid2 container spacing={3}>
             {/* Variable List */}
-            <Grid2 size={5} className="module-div">
+            <Grid2 size={12} className="module-div">
                 <h3>Variables</h3>
                 {Object.entries(variablesDict).map(([varName, variable]) => (
                     <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }} key={varName}>
