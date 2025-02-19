@@ -767,12 +767,12 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
-                {/* <Button sx={{ m: 1 }} variant="outlined" color='success' onClick={fitRelation}>Fit Trend</Button> */}
-                {/* <Button sx={{ m: 1 }} variant={enableSelection ? 'contained' : 'outlined'} onClick={activeRegionalSelection}>Selection</Button> */}
-                {/* <Button sx={{ m: 1 }} onClick={clearRegional}>Clear regional</Button> */}
-                {/* <Button sx={{ m: 1 }} onClick={clearAll}>Clear all</Button> */}
-            </Box>
+            {/* <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+                <Button sx={{ m: 1 }} variant="outlined" color='success' onClick={fitRelation}>Fit Trend</Button>
+                <Button sx={{ m: 1 }} variant={enableSelection ? 'contained' : 'outlined'} onClick={activeRegionalSelection}>Selection</Button>
+                <Button sx={{ m: 1 }} onClick={clearRegional}>Clear regional</Button>
+                <Button sx={{ m: 1 }} onClick={clearAll}>Clear all</Button>
+            </Box> */}
             <div id='bivariate-distribution-div'></div>
         </Box >
     )

@@ -383,9 +383,9 @@ export default function Workspace(props) {
                                         key={biVarName}
                                     >
                                         <p><strong>
-                                            {varName}&nbsp;&nbsp;&nbsp;
+                                            {varName}&nbsp;&nbsp;&nbsp;- 
                                         </strong></p>
-                                        <FormControl sx={{ minWidth: 120 }}>
+                                        {/* <FormControl sx={{ minWidth: 120 }}>
                                             <Select
                                                 value={biVariable.relation}
                                                 onChange={(e) => updateBivariable(biVarName, { "relation": e.target.value })}
@@ -409,7 +409,7 @@ export default function Workspace(props) {
                                                     </MenuItem>
                                                 ))}
                                             </Select>
-                                        </FormControl>
+                                        </FormControl> */}
                                         <p><strong>
                                             &nbsp;&nbsp;&nbsp;{relatedVarName}
                                         </strong></p>

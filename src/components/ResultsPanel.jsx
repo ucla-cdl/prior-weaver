@@ -1,8 +1,9 @@
-import { Box, Button, CircularProgress, FormControl, Grid2, InputLabel, MenuItem, Select, Slider } from '@mui/material';
+import { Box, Button, CircularProgress, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, Slider } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
 import "./ResultsPanel.css";
+import EditIcon from '@mui/icons-material/Edit';
 
 const DISTRIBUTION_TYPES = {
     'Normal': 'norm',
@@ -18,11 +19,12 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     const [translated, setTranslated] = useState(false);
 
     const [priorsDict, setPriorsDict] = useState({});
+    const [editParams, setEditParams] = useState(false);
     const [paramsRange, setParamsRange] = useState({});
     const paramsRangeDelta = 3;
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
-    const width = 300;
+    const width = 350;
     const height = 300;
     const margin = { top: 40, right: 40, bottom: 60, left: 40 };
     const plotWidth = width - margin.left - margin.right;
@@ -31,6 +33,12 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
 
     const colors = d3.scaleOrdinal(d3.schemeCategory10);
 
+    useEffect(() => {
+        if (translated) {
+            plotPriorsResults();
+        }
+    }, [translated]);
+    
     /**
      * Update the plot and prior distriburions when the selected distribution changes
      */
@@ -59,7 +67,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             })
             .then((response) => {
                 console.log("translated", response.data);
-                plotPriorsResults(response.data.priors_results);
+                setPriorsDict(response.data.priors_results);
             })
             .finally(() => {
                 setIsTranslating(false);
@@ -80,10 +88,8 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             });
     }
 
-    const plotPriorsResults = (priorsResults) => {
-        setPriorsDict(priorsResults);
-
-        Object.entries(priorsResults).forEach(([paramName, priorResult], index) => {
+    const plotPriorsResults = () => {
+        Object.entries(priorsDict).forEach(([paramName, priorResult], index) => {
             // Create an SVG element
             document.getElementById('parameter-div-' + paramName).innerHTML = '';
             d3.select('#parameter-div-' + paramName)
@@ -221,11 +227,11 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             case DISTRIBUTION_TYPES.Normal:
                 return `X ~ Normal(μ = ${params.loc}, σ = ${params.scale})`;
             case DISTRIBUTION_TYPES.Exponential:
-                return `X ~ Exponential(λ = ${1 / params.scale})`;
+                return `X ~ Exponential(λ = ${(1 / params.scale).toFixed(2)})`;
             case DISTRIBUTION_TYPES.LogNormal:
-                return `X ~ Log-Normal(μ = ${Math.log(params.scale)}, σ = ${params.s})`;
+                return `X ~ Log-Normal(μ = ${Math.log(params.scale).toFixed(2)}, σ = ${params.s})`;
             case DISTRIBUTION_TYPES.Gamma:
-                return `X ~ Gamma(α = ${params.a}, β = ${1 / params.scale})`;
+                return `X ~ Gamma(α = ${params.a}, β = ${(1 / params.scale).toFixed(2)})`;
             case DISTRIBUTION_TYPES.Beta:
                 return `X ~ Beta(${params.a}, ${params.b}, loc = ${params.loc}, scale = ${params.scale})`;
             case DISTRIBUTION_TYPES.Uniform:
@@ -332,60 +338,72 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Button sx={{ my: 2 }} variant="contained" onClick={translate}>Translate</Button>
             {isTranslating && <CircularProgress sx={{ my: 3 }} />}
-            <Grid2 container spacing={3}
-                sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}
-            >
-                {Object.values(parametersDict).map((parameter, idx) => (
-                    <Box sx={{ my: 1 }} key={idx}>
-                        {priorsDict[parameter.name] &&
-                            <Box>
-                                <FormControl fullWidth>
-                                    <InputLabel id={`select-label-${idx}`}>Distribution</InputLabel>
-                                    <Select
-                                        labelId={`select-label-${idx}`}
-                                        value={selectedPriorDistributions[parameter.name]?.name || ''}
-                                        label="Distribution"
-                                        onChange={(e) => {
-                                            const selectedDist = priorsDict[parameter.name].distributions.find(dist => dist.name === e.target.value);
-                                            selectFittedDistribution(parameter.name, selectedDist);
-                                        }}
-                                    >
-                                        {priorsDict[parameter.name].distributions.map((dist, distIdx) => (
-                                            <MenuItem key={distIdx} value={dist.name}>
-                                                {dist.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+            {translated &&
+                <Grid2 container spacing={2}
+                    sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}
+                >
+                    <Grid2 item xs={4} sx={{ borderRight: '1px solid #ccc', pr: 2 }}>
+                        <h4>Prior Predictive Check Result</h4>
+                        <Box sx={{ my: 2 }} id={'predictive-check-div'}></Box>
+                    </Grid2>
+                    <Grid2 item xs={8}>
+                        <h4>Prior Distributions</h4>
+                        <IconButton color={editParams ? 'primary' : ''} onClick={() => setEditParams(!editParams)}>
+                            <EditIcon />
+                        </IconButton>
+                        <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                            {Object.values(parametersDict).map((parameter, idx) => (
+                                <Box sx={{ my: 1 }} key={idx}>
+                                    {priorsDict[parameter.name] &&
+                                        <Box>
+                                            <FormControl fullWidth>
+                                                <InputLabel id={`select-label-${idx}`}>Distribution</InputLabel>
+                                                <Select
+                                                    labelId={`select-label-${idx}`}
+                                                    value={selectedPriorDistributions[parameter.name]?.name || ''}
+                                                    label="Distribution"
+                                                    onChange={(e) => {
+                                                        const selectedDist = priorsDict[parameter.name].distributions.find(dist => dist.name === e.target.value);
+                                                        selectFittedDistribution(parameter.name, selectedDist);
+                                                    }}
+                                                >
+                                                    {priorsDict[parameter.name].distributions.map((dist, distIdx) => (
+                                                        <MenuItem key={distIdx} value={dist.name}>
+                                                            {dist.name}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
 
-                                {Object.keys(selectedPriorDistributions[parameter.name].params).map((paramKey, paramIdx) => {
-                                    return (
-                                        <Box sx={{ my: 1, display: 'flex', flexDirection: 'row' }} key={paramIdx}>
-                                            <InputLabel id={`slider-label-${idx}-${paramIdx}`}>{paramKey}</InputLabel>
-                                            <Slider
-                                                size='small'
-                                                value={selectedPriorDistributions[parameter.name].params[paramKey]}
-                                                min={paramsRange[parameter.name][paramKey].min}
-                                                max={paramsRange[parameter.name][paramKey].max}
-                                                step={0.02}
-                                                marks
-                                                valueLabelDisplay="on"
-                                                onChange={(e, newValue) => {
-                                                    updateSelectedPriorDistribution(parameter.name, paramKey, newValue);
-                                                }}
-                                                aria-labelledby={`slider-label-${idx}-${paramIdx}`}
-                                            />
+                                            {editParams && Object.keys(selectedPriorDistributions[parameter.name].params).map((paramKey, paramIdx) => {
+                                                return (
+                                                    <Box sx={{ my: 1, display: 'flex', flexDirection: 'row' }} key={paramIdx}>
+                                                        <InputLabel id={`slider-label-${idx}-${paramIdx}`}>{paramKey}</InputLabel>
+                                                        <Slider
+                                                            size='small'
+                                                            value={selectedPriorDistributions[parameter.name].params[paramKey]}
+                                                            min={paramsRange[parameter.name][paramKey].min}
+                                                            max={paramsRange[parameter.name][paramKey].max}
+                                                            step={0.02}
+                                                            marks
+                                                            valueLabelDisplay="on"
+                                                            onChange={(e, newValue) => {
+                                                                updateSelectedPriorDistribution(parameter.name, paramKey, newValue);
+                                                            }}
+                                                            aria-labelledby={`slider-label-${idx}-${paramIdx}`}
+                                                        />
+                                                    </Box>
+                                                )
+                                            })}
                                         </Box>
-                                    )
-                                })}
-                            </Box>
-                        }
-                        <Box sx={{ my: 1 }} key={idx} id={'parameter-div-' + parameter.name}></Box>
-                    </Box>
-                ))}
-                {/* <Box sx={{ my: 1 }} id={'parameter-div-intercept'}></Box> */}
-            </Grid2>
-            <Box sx={{ my: 2 }} id={'predictive-check-div'}></Box>
+                                    }
+                                    <Box sx={{ my: 1 }} key={idx} id={'parameter-div-' + parameter.name}></Box>
+                                </Box>
+                            ))}
+                        </Box>
+                    </Grid2>
+                </Grid2>
+            }
         </Box>
     )
 };

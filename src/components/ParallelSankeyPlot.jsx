@@ -53,6 +53,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const [draggedItem, setDraggedItem] = useState(null);
     const [connectedPoint, setConnectedPoint] = useState(null);
 
+    const [generatedNum, setGeneratedNum] = useState(10);
+
     const [activeInteraction, setActiveInteraction] = useState(INTERACTION_TYPES.SELECTION);
     const [activeFilter, setActiveFilter] = useState(null);
     const [axesFilterStatus, setAxesFilterStatus] = useState({});
@@ -471,9 +473,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
     // Randomly populate data points in the selected region
     const generateRandomEntities = () => {
-        const newEntitiesNum = 10;
         const newEntitiesData = [];
-        for (let i = 0; i < newEntitiesNum; i++) {
+        for (let i = 0; i < generatedNum; i++) {
             let entityData = {};
             Array.from(brushSelectedRegions).forEach(([varName, range]) => {
                 const [min, max] = range;
@@ -601,8 +602,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
                 const newItems = arrayMove(items, oldIndex, newIndex);
                 newItems.forEach((item, index) => {
-                    updateVariable(item.name, { 
-                        "sequenceNum": index 
+                    updateVariable(item.name, {
+                        "sequenceNum": index
                     });
                 });
 
@@ -690,6 +691,13 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                                 onClick={generateRandomEntities}>
                                 Generate
                             </Button>
+                            <input
+                                type="number"
+                                value={generatedNum}
+                                onChange={(e) => setGeneratedNum(Number(e.target.value))}
+                                min="1"
+                                style={{ width: '60px', textAlign: 'center' }}
+                            />
                             {/* <Button
                                 disabled={selectedEntities.length === 0 || activeInteraction !== INTERACTION_TYPES.SELECTION}
                                 variant='outlined'
