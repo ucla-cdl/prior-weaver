@@ -1,4 +1,4 @@
-import { Routes, Route, BrowserRouter as Router } from "react-router-dom";
+import { Routes, Route, HashRouter } from "react-router-dom";
 import './App.css';
 import routes from './shared/routes';
 import Workspace from "./containers/Workspace";
@@ -9,7 +9,7 @@ import Admin from "./containers/Admin";
 function App() {
   return (
     <div className="App">
-      <Router>
+      <HashRouter>
         <Routes>
           <Route path={routes.default} element={<Workspace />}></Route>
           <Route path={routes.home} element={<Home />}></Route>
@@ -17,7 +17,7 @@ function App() {
           <Route path={routes.logger} element={<Logger />}></Route>
           <Route path={routes.admin} element={<Admin />}></Route>
         </Routes>
-      </Router>
+      </HashRouter>
     </div>
   );
 }
