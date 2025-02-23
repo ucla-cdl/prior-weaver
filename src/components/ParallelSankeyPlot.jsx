@@ -210,9 +210,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
          */
         Object.values(entities).forEach(entity => {
             Object.entries(entity).filter(([key, value]) => key !== "id" && value !== null).forEach(([key, value]) => {
-                cir = svg.append("circle")
-
-                   cir .attr("class", "entity-dot")
+                svg.append("circle")
+                    .attr("class", "entity-dot")
                     .attr("id", `dot_${entity["id"]}_${key}`)
                     .attr("cx", variableAxesRef.current(key))
                     .attr("cy", valueAxesRef.current.get(key)(value))
