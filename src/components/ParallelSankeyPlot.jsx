@@ -29,14 +29,12 @@ const INTERACTION_TYPES = {
  * Define filter types
  * 
  * TYPES:
- * - FULLY: All axes are connected
- * - PARTIALLY: Some axes are connected
- * - NONE: No axis is connected
+ * - COMPLETE: All axes are connected
+ * - INCOMPLETE: No all axes are connected
  */
 const FILTER_TYPES = {
-    FULLY: 'fully',
-    PARTIALLY: 'partially',
-    NONE: 'none',
+    COMPLETE: 'complete',
+    INCOMPLETE: 'incomplete',
 }
 
 export default function ParallelSankeyPlot({ variablesDict, updateVariable, entities, addEntities, deleteEntities, updateEntities, synchronizeSankeySelection }) {
@@ -56,7 +54,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const [generatedNum, setGeneratedNum] = useState(10);
 
     const [activeInteraction, setActiveInteraction] = useState(INTERACTION_TYPES.SELECTION);
-    const [activeFilter, setActiveFilter] = useState(null);
+    const [activeFilter, setActiveFilter] = useState(FILTER_TYPES.COMPLETE);
     const [axesFilterStatus, setAxesFilterStatus] = useState({});
 
     const valueAxesRef = useRef(new Map());
@@ -69,16 +67,15 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             return acc;
         }, {}));
         updatePlotLayout();
+
         populateEntities();
+        filterEntities(activeFilter);
     }, [variablesDict]);
 
     useEffect(() => {
         populateEntities();
-    }, [entities]);
-
-    useEffect(() => {
         filterEntities(activeFilter);
-    }, [axesFilterStatus]);
+    }, [entities]);
 
     const updatePlotLayout = () => {
         const divId = "sankey-div";
@@ -133,12 +130,9 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         variableAxesRef.current = newVariableAxes;
     }
 
-    const changeInteractionType = (interactionType, isInit = false) => {
-        if (isInit) {
-            interactionType = activeInteraction;
-        }
-
+    const changeInteractionType = (interactionType) => {
         console.log("Change interaction type to: ", interactionType);
+
         clearInteractions();
 
         switch (interactionType) {
@@ -167,7 +161,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         svg.selectAll(".temp-line").remove();
 
         // Remove Connect feature interactions
-        svg.selectAll(".entity-dot").attr("fill", "white");
+        // svg.selectAll(".entity-dot").classed("connect-entity-dot", false);
         svg.selectAll(".entity-dot").on("mouseover", null).on("mouseout", null).on("click", null);
         setConnectedPoint(null);
 
@@ -212,36 +206,23 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
          * 
          * Draw circles for values on each axis
          * Draw path for entities across axes
+         * 
          */
         Object.values(entities).forEach(entity => {
-            Object.entries(entity).filter(([key]) => key !== "id").forEach(([key, value]) => {
-                if (value !== null) {
-                    svg.append("circle")
-                        .attr("class", "entity-dot")
-                        .attr("id", `dot_${entity["id"]}_${key}`)
-                        .attr("cx", variableAxesRef.current(key))
-                        .attr("cy", valueAxesRef.current.get(key)(value))
-                        .attr("r", 4)
-                        .attr("fill", "white")
-                        .attr("stroke", "black")
-                        .attr("stroke-width", 1)
-                }
-            });
+            Object.entries(entity).filter(([key, value]) => key !== "id" && value !== null).forEach(([key, value]) => {
+                cir = svg.append("circle")
 
-            if (sortableVariables.some(variable => entity[variable.name] === null)) {
-                svg.append("path")
-                    .datum(entity)
-                    .attr("class", "entity-path highlighted-path")
-                    .attr("d", d => line(
-                        sortableVariables
-                            .filter(variable => d[variable.name] !== null)
-                            .map(variable => [variable.name, d[variable.name]])
-                    ));
-            }
+                   cir .attr("class", "entity-dot")
+                    .attr("id", `dot_${entity["id"]}_${key}`)
+                    .attr("cx", variableAxesRef.current(key))
+                    .attr("cy", valueAxesRef.current.get(key)(value))
+                    .attr("r", 4)
+
+            });
 
             svg.append("path")
                 .datum(entity) // Pass the entity directly
-                .attr("class", "entity-path brush-selection")
+                .attr("class", "entity-path")
                 .attr("d", d => line(
                     sortableVariables
                         .filter(variable => d[variable.name] !== null)
@@ -252,7 +233,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         svg.selectAll(".entity-dot")
             .raise();
 
-        changeInteractionType(null, true);
+        changeInteractionType(activeInteraction);
     }
 
     const activateAddFeature = () => {
@@ -414,23 +395,42 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             } else {
                 selections.set(key, selection.map(valueAxesRef.current.get(key).invert));
             }
-            const selectedSingleEntities = [];
-            const selectedConnectedEntities = [];
 
+            const selectedEntities = [];
             svg.selectAll(".entity-path").each(function (d) {
                 if (d) {
                     // Should applicable for entities that have values in all selected regions and the entities that are single but within the selected regions
                     const active = Array.from(selections).every(([key, [max, min]]) => d[key] >= min && d[key] <= max);
-                    const isSingleActive = Array.from(selections).every(([key, [max, min]]) => d[key] === null || (d[key] >= min && d[key] <= max));
-                    if (active) {
-                        d3.select(this).classed("brush-selection", true);
-                        d3.select(this).classed("brush-non-selection", false);
-                        d3.select(this).raise();
-                        selectedConnectedEntities.push(d);
+
+                    const isComplete = sortableVariables.every(variable => d[variable.name] !== null);
+
+                    // if current filter is incomplete
+                    if (activeFilter === FILTER_TYPES.INCOMPLETE) {
+                        // filter the entity in -> if entity is incomplete and within the selected regions
+                        if (active && !isComplete) {
+                            d3.select(this).classed("brush-selection", true);
+                            d3.select(this).classed("brush-non-selection", false);
+                            d3.select(this).raise();
+                            selectedEntities.push(d);
+                        }
+                        else {
+                            d3.select(this).classed("brush-selection", false);
+                            d3.select(this).classed("brush-non-selection", true);
+                        }
                     }
+                    // if current filter is complete
                     else {
-                        d3.select(this).classed("brush-selection", false);
-                        d3.select(this).classed("brush-non-selection", true);
+                        // filter the entity in -> if entity is complete and within the selected regions
+                        if (active && isComplete) {
+                            d3.select(this).classed("brush-selection", true);
+                            d3.select(this).classed("brush-non-selection", false);
+                            d3.select(this).raise();
+                            selectedEntities.push(d);
+                        }
+                        else {
+                            d3.select(this).classed("brush-selection", false);
+                            d3.select(this).classed("brush-non-selection", true);
+                        }
                     }
                 }
             });
@@ -438,7 +438,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             svg.selectAll(".entity-dot")
                 .raise();
 
-            svg.node().value = selectedConnectedEntities;
+            svg.node().value = selectedEntities;
             svg.dispatch("input");
             setBrushSelectedRegions(selections);
         }
@@ -495,34 +495,13 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const changeFilterType = (filter) => {
         console.log("change filter type to ", filter);
 
-        // Double click to clear the filter
-        if (filter === activeFilter) {
-            const svg = d3.select("#sankey-svg");
-            svg.selectAll(".entity-path").classed("brush-selection", true);
-            svg.selectAll(".entity-path").classed("brush-non-selection", false);
-            svg.selectAll(".entity-dot").classed("unselected-entity-dot", false);
-
-            const newAxesFilterStatus = {};
-            Object.keys(variablesDict).forEach(axis => {
-                newAxesFilterStatus[axis] = false;
-            });
-            setAxesFilterStatus(newAxesFilterStatus);
-
-            setActiveFilter(null);
-            svg.node().value = Object.values(entities);
-            svg.dispatch("input");
-        }
-        else {
-            if (filter !== FILTER_TYPES.PARTIALLY) {
-                const newAxesFilterStatus = {};
-                Object.keys(variablesDict).forEach(axis => {
-                    newAxesFilterStatus[axis] = false;
-                });
-                setAxesFilterStatus(newAxesFilterStatus);
-            }
-            filterEntities(filter);
-        }
+        filterEntities(filter);
+        setActiveFilter(filter);
     }
+
+    useEffect(() => {
+        changeInteractionType(activeInteraction);
+    }, [activeFilter]);
 
     const filterEntities = (filter) => {
         const svg = d3.select("#sankey-svg");
@@ -531,22 +510,21 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         svg.selectAll(".entity-path").each(function (d) {
             if (d) {
                 switch (filter) {
-                    case FILTER_TYPES.FULLY:
+                    case FILTER_TYPES.COMPLETE:
                         // Filter out the fully connected entities
-                        const isFullyConnected = sortableVariables.every(variable => d[variable.name] !== null);
-                        changeFilteredEntitiesStyle(this, d, isFullyConnected, highlightedItems);
+                        const isComplete = sortableVariables.every(variable => d[variable.name] !== null);
+                        changeFilteredEntitiesStyle(this, d, isComplete);
+                        if (isComplete) {
+                            highlightedItems.push(d);
+                        }
                         break;
-                    case FILTER_TYPES.PARTIALLY:
-                        // Filter out the partially connected entities
-                        const filterOutAxes = Object.entries(axesFilterStatus).filter(([key, value]) => !value).map(([key]) => key);
-                        const filteredInAxes = Object.entries(axesFilterStatus).filter(([key, value]) => value).map(([key]) => key);
-                        const isPartiallyConnected = filteredInAxes.length > 0 && filteredInAxes.every(axisName => d[axisName] !== null) && filterOutAxes.every(axisName => d[axisName] === null);
-                        changeFilteredEntitiesStyle(this, d, isPartiallyConnected, highlightedItems);
-                        break;
-                    case FILTER_TYPES.NONE:
-                        // Filter out the entities that are completely not connected
-                        const isNoneConnected = sortableVariables.filter(variable => d[variable.name] !== null).length === 1;
-                        changeFilteredEntitiesStyle(this, d, isNoneConnected, highlightedItems);
+                    case FILTER_TYPES.INCOMPLETE:
+                        // Filter out the entities that are not completely connected
+                        const isIncomplete = sortableVariables.some(variable => d[variable.name] === null);
+                        changeFilteredEntitiesStyle(this, d, isIncomplete);
+                        if (isIncomplete) {
+                            highlightedItems.push(d);
+                        }
                         break;
                     default:
                         break;
@@ -556,16 +534,14 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
         svg.node().value = highlightedItems;
         svg.dispatch("input");
-
-        setActiveFilter(filter);
     }
 
-    const changeFilteredEntitiesStyle = (htmlItem, entity, isFilteredIn, highlightedItems) => {
+    const changeFilteredEntitiesStyle = (htmlItem, entity, isFilteredIn) => {
         if (isFilteredIn) {
             d3.select(htmlItem).classed("brush-selection", true);
             d3.select(htmlItem).classed("brush-non-selection", false);
             d3.select(htmlItem).raise();
-            highlightedItems.push(entity);
+
             // Highlight the dots that are filtered in
             Object.entries(entity).forEach(([key, value]) => {
                 if (key !== "id" && value !== null) {
@@ -644,7 +620,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                             p: 1
                         }}
                     >
-                        <FormLabel component="legend">Show Entities that connected </FormLabel>
+                        <FormLabel component="legend">Show Entities that are </FormLabel>
                         <RadioGroup
                             row
                             aria-label="filterType"
@@ -791,14 +767,14 @@ export const Item = forwardRef(({ id, axesFilterStatus, toggleAxesFilter, axisPo
         >
             <DragHandleIcon />
             <Typography>{id}</Typography>
-            <Radio
+            {/* <Radio
                 size='small'
                 sx={{ padding: "2px" }}
                 disabled={activeFilter !== FILTER_TYPES.PARTIALLY}
                 checked={axesFilterStatus ? axesFilterStatus[id] : false}
                 value={id}
                 onClick={(event) => toggleAxesFilter(event)}
-            />
+            /> */}
         </Box>
     )
 });

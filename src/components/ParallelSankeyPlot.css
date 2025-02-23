@@ -1,5 +1,7 @@
 .entity-dot {
     fill: white;
+    stroke: black;
+    stroke-width: 1;
 }
 
 .hovered-entity-dot{
@@ -19,18 +21,18 @@
     stroke: #ddd;
 }
 
+.entity-path {
+    fill: none;
+    stroke-width: 2;
+    stroke-opacity: 0.6;
+}
+
 .brush-non-selection {
     stroke: #ddd;
 }
 
 .brush-selection {
     stroke: steelblue;
-}
-
-.entity-path {
-    fill: none;
-    stroke-width: 2;
-    stroke-opacity: 0.6;
 }
 
 .solid{

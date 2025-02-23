@@ -454,3 +454,26 @@ def prior_predictive_check(predictors, response, prior_distributions, num_checks
     }
 
     return results
+
+
+def get_r_code_from_dist(dist_name, params):
+    if dist_name == "norm":
+        return f"dnorm(x, mean={params['loc']}, sd={params['scale']})"
+    elif dist_name == "expon":
+        rate = 1 / params["scale"]
+        return f"dexp(x, rate={rate})"
+    elif dist_name == "lognorm":
+        import numpy as np
+        scale = params["scale"]
+        meanlog = np.log(scale)
+        return f"dlnorm(x, meanlog={meanlog}, sdlog={params['s']})"
+    elif dist_name == "gamma":
+        rate = 1 / params["scale"]
+        return f"dgamma(x, shape={params['a']}, rate={rate})"
+    elif dist_name == "beta":
+        return f"dbeta(x, shape1={params['a']}, shape2={params['b']})"
+    elif dist_name == "uniform":
+        max_val = params["loc"] + params["scale"]
+        return f"dunif(x, min={params['loc']}, max={max_val})"
+    else:
+        return "Distribution not supported"

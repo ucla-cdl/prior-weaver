@@ -1,0 +1,7 @@
+fastapi[all]
+uvicorn
+numpy
+scipy
+fitter
+pandas
+scikit-learn
