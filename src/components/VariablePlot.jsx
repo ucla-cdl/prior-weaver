@@ -37,6 +37,8 @@ export default function VariablePlot({ variable, updateVariable, entities, addEn
     }
 
     const drawRoulette = () => {
+        console.log("populate entities in univariate plot");
+        
         document.getElementById("univariate-histogram-" + variable.name).innerHTML = "";
         let histogramPlot = d3.select("#univariate-histogram-" + variable.name);
         const chartWidth = document.getElementById("univariate-div-" + variable.name).clientWidth;

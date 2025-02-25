@@ -31,6 +31,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     useEffect(() => {
         drawPlot();
         drawGridPlot();
+        populateEntities();
     }, [biVariable1, biVariable2])
 
     useEffect(() => {
@@ -46,7 +47,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
             .domain([biVariable2.min, biVariable2.max])
             .range([mainPlotHeight, 0]);
 
-        console.log("populate entities", entities);
+        console.log("populate entities in bivar");
 
         const specifiedEntities = Object.values(entities).filter(d => d[biVariable1.name] !== null && d[biVariable2.name] !== null);
 

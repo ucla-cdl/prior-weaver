@@ -5,7 +5,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-window.BACKEND_ADDRESS = 'https://prior-elicitation-564612806113.southamerica-west1.run.app';
+window.BACKEND_ADDRESS = process.env.REACT_APP_API_URL;
 
 root.render(
   <React.StrictMode>

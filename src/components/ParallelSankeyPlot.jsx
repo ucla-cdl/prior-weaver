@@ -190,6 +190,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     }
 
     const populateEntities = () => {
+        console.log("Populate entities in PCP");
+
         const svg = d3.select("#sankey-svg");
 
         // Draw path for the entity
