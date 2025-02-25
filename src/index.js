@@ -5,7 +5,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-window.BACKEND_ADDRESS = process.env.REACT_APP_API_URL;
+window.BACKEND_ADDRESS = process.env.NODE_ENV === 'production' ? process.env.REACT_APP_BACKEND_URL : 'http://localhost:8000';
 
 root.render(
   <React.StrictMode>

@@ -60,6 +60,10 @@ export default function Workspace(props) {
 
     const [studyContext, setStudyContext] = useState(context["income_education_age"]);
 
+    useEffect(() => {
+        console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
+    }, []);
+
     const addVariable = (data) => {
         updateVariable(data.name, data);
 
