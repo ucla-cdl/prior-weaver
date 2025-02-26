@@ -60,6 +60,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
                 .attr("cx", d => xScale(d[biVariable1.name]))
                 .attr("cy", d => yScale(d[biVariable2.name]))
                 .attr("r", dotRadius)
+                .attr('stroke', 'black')
                 .attr("fill", "white")
         });
     }
