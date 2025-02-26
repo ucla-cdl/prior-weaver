@@ -368,11 +368,11 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                 <Grid2 container spacing={2}
                     sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}
                 >
-                    <Grid2 item xs={4} sx={{ borderRight: '1px solid #ccc', pr: 2 }}>
+                    <Grid2 xs={4} sx={{ borderRight: '1px solid #ccc', pr: 2 }}>
                         <h4>Prior Predictive Check Result</h4>
                         <Box sx={{ my: 2 }} id={'predictive-check-div'}></Box>
                     </Grid2>
-                    <Grid2 item xs={8}>
+                    <Grid2 xs={8}>
                         <h4>Prior Distributions</h4>
                         <IconButton color={editParams ? 'primary' : ''} onClick={() => setEditParams(!editParams)}>
                             <EditIcon />
