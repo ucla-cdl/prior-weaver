@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/Prior-Elicitation/static/css/main.6b11878f.css",
-    "main.js": "/Prior-Elicitation/static/js/main.7bd3854c.js",
+    "main.css": "/Prior-Elicitation/static/css/main.f55a9fe2.css",
+    "main.js": "/Prior-Elicitation/static/js/main.1a32512e.js",
     "static/js/453.ebed4254.chunk.js": "/Prior-Elicitation/static/js/453.ebed4254.chunk.js",
     "index.html": "/Prior-Elicitation/index.html",
-    "main.6b11878f.css.map": "/Prior-Elicitation/static/css/main.6b11878f.css.map",
-    "main.7bd3854c.js.map": "/Prior-Elicitation/static/js/main.7bd3854c.js.map",
+    "main.f55a9fe2.css.map": "/Prior-Elicitation/static/css/main.f55a9fe2.css.map",
+    "main.1a32512e.js.map": "/Prior-Elicitation/static/js/main.1a32512e.js.map",
     "453.ebed4254.chunk.js.map": "/Prior-Elicitation/static/js/453.ebed4254.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.6b11878f.css",
-    "static/js/main.7bd3854c.js"
+    "static/css/main.f55a9fe2.css",
+    "static/js/main.1a32512e.js"
   ]
 }
