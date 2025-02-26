@@ -16,7 +16,7 @@ const DISTRIBUTION_TYPES = {
 
 export default function ResultsPanel({ entities, variablesDict, parametersDict }) {
     const [isTranslating, setIsTranslating] = useState(false);
-    const [translated, setTranslated] = useState(false);
+    const [translated, setTranslated] = useState(0);
 
     const [priorsDict, setPriorsDict] = useState({});
     const [editParams, setEditParams] = useState(false);
@@ -37,16 +37,16 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
     useEffect(() => {
-        if (translated) {
-            plotPriorsResults();
+        if (translated > 0) {
+            plotPriorsResults(priorsDict);
         }
     }, [translated]);
-    
+
     /**
      * Update the plot and prior distriburions when the selected distribution changes
      */
     useEffect(() => {
-        if (translated) {
+        if (translated > 0) {
             console.log("selectedPriorDistributions", selectedPriorDistributions);
             // Update the appearance of the selected distribution
             Object.entries(selectedPriorDistributions).forEach(([paramName, dist]) => {
@@ -61,7 +61,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         const incompleteEntities = Object.values(entities).some(entity => {
             return Object.values(entity).some(value => value === null);
         });
-
+        
         if (incompleteEntities) {
             setSnackbarMessage('All entities must be completed before translating');
             setSnackbarOpen(true);
@@ -89,10 +89,8 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             .then((response) => {
                 console.log("translated", response.data);
                 setPriorsDict(response.data.priors_results);
-            })
-            .finally(() => {
                 setIsTranslating(false);
-                setTranslated(true);
+                setTranslated(prev => prev + 1);
             });
     };
 
@@ -357,16 +355,16 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Button 
-                sx={{ my: 2 }} 
-                variant="contained" 
+            <Button
+                sx={{ my: 2 }}
+                variant="contained"
                 onClick={translate}
                 disabled={Object.values(entities).length === 0}
             >
                 Translate
             </Button>
             {isTranslating && <CircularProgress sx={{ my: 3 }} />}
-            {translated &&
+            {translated > 0 &&
                 <Grid2 container spacing={2}
                     sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}
                 >
@@ -432,14 +430,14 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                     </Grid2>
                 </Grid2>
             }
-            <Snackbar 
-                open={snackbarOpen} 
-                autoHideDuration={6000} 
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
                 onClose={() => setSnackbarOpen(false)}
                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
             >
-                <Alert 
-                    severity="error" 
+                <Alert
+                    severity="error"
                     sx={{ width: '100%' }}
                 >
                     {snackbarMessage}
