@@ -445,11 +445,13 @@ export default function Workspace(props) {
                         return (
                             <VariablePlot
                                 key={i}
+                                variablesDict={variablesDict}
                                 variable={curVar}
                                 updateVariable={updateVariable}
                                 entities={entities}
                                 addEntities={addEntities}
                                 updateEntities={updateEntities}
+                                deleteEntities={deleteEntities}
                             />
                         )
                     })}

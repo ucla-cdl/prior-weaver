@@ -38,14 +38,14 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const [draggedItem, setDraggedItem] = useState(null);
     const [connectedPoint, setConnectedPoint] = useState(null);
 
-    const [generatedNum, setGeneratedNum] = useState(10);
+    const [generatedNum, setGeneratedNum] = useState(5);
 
     const [activeInteraction, setActiveInteraction] = useState(INTERACTION_TYPES.EXPLORE);
     const activeInteractionRef = useRef(INTERACTION_TYPES.EXPLORE);
     const [axesFilterStatus, setAxesFilterStatus] = useState({});
 
-    const [isBatchMode, setIsBatchMode] = useState(true);
-    const isBatchModeRef = useRef(true);
+    const [isBatchMode, setIsBatchMode] = useState(false);
+    const isBatchModeRef = useRef(false);
 
     const valueAxesRef = useRef(new Map());
     const variableAxesRef = useRef(null);

@@ -6,7 +6,7 @@ import { Box, Paper } from '@mui/material';
 import "./VariablePlot.css";
 
 // Define the Variable Component
-export default function VariablePlot({ variable, updateVariable, entities, addEntities, updateEntities }) {
+export default function VariablePlot({ variableDict, variable, updateVariable, entities, addEntities, updateEntities, deleteEntities }) {
     const chartWidth = 400;
     const chartHeight = 350;
     const offsetX = 60;
@@ -137,11 +137,43 @@ export default function VariablePlot({ variable, updateVariable, entities, addEn
                         // - if current count is smaller than previous, then update values of existing entities
                         else if (deltaHeight < 0) {
                             let updatedEntities = binInfos[index].entities.slice(grid + 1); // remove based on FIFO
-                            let updatedEntitiesIDs = updatedEntities.map(e => e.id);
-                            let updatedEntitiesData = updatedEntities.map(e => ({
-                                [variable.name]: null
-                            }));
-                            updateEntities(updatedEntitiesIDs, updatedEntitiesData);
+                            
+                            // Separate entities into those to delete and those to update
+                            let entitiesToDelete = [];
+                            let entitiesToUpdate = [];
+                            
+                            updatedEntities.forEach(entity => {
+                                // Check if entity would have all null values after update
+                                let wouldBeAllNull = true;
+                                for (let key in entity) {
+                                    if (key !== 'id' && key !== variable.name && entity[key] !== null) {
+                                        wouldBeAllNull = false;
+                                        break;
+                                    }
+                                }
+                                
+                                if (wouldBeAllNull) {
+                                    entitiesToDelete.push(entity.id);
+                                } else {
+                                    entitiesToUpdate.push({
+                                        id: entity.id,
+                                        data: { [variable.name]: null }
+                                    });
+                                }
+                            });
+
+                            // Delete entities that would have all null values
+                            if (entitiesToDelete.length > 0) {
+                                deleteEntities(entitiesToDelete);
+                            }
+                            
+                            // Update remaining entities
+                            if (entitiesToUpdate.length > 0) {
+                                updateEntities(
+                                    entitiesToUpdate.map(e => e.id),
+                                    entitiesToUpdate.map(e => e.data)
+                                );
+                            }
                         }
                     });
             }

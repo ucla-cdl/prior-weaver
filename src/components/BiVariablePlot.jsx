@@ -51,18 +51,16 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
 
         const specifiedEntities = Object.values(entities).filter(d => d[biVariable1.name] !== null && d[biVariable2.name] !== null);
 
-        mainPlot.selectAll(".entity-dot").remove();
+        mainPlot.selectAll(".bivar-entity-dot").remove();
 
         specifiedEntities.forEach(entity => {
             mainPlot.append("circle")
                 .datum(entity)
-                .attr("class", "entity-dot")
+                .attr("class", "bivar-entity-dot")
                 .attr("cx", d => xScale(d[biVariable1.name]))
                 .attr("cy", d => yScale(d[biVariable2.name]))
                 .attr("r", dotRadius)
                 .attr("fill", "white")
-                .style("stroke-width", 1.5)
-                .attr("stroke", "steelblue")
         });
     }
 
@@ -749,9 +747,8 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     const synchronizeSelection = (selectedEntities) => {
         let mainPlot = d3.select("#bivariate-main-plot");
 
-        mainPlot.selectAll(".entity-dot")
-            .style("fill", d => selectedEntities.includes(d) ? "steelblue" : "white")
-            .style("opacity", d => selectedEntities.includes(d) ? 1 : 0.3);
+        mainPlot.selectAll(".bivar-entity-dot")
+            .attr("fill", d => selectedEntities.includes(d) ? "steelblue" : "white")
     }
 
     const drawPlot = () => {
