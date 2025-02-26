@@ -83,7 +83,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             varName,
             d3.scaleLinear()
                 .domain([variable.min, variable.max])
-                .range([chartHeight - marginTop, marginBottom])
+                .range([chartHeight - marginBottom, marginTop])
         ]));
 
         const newVariableAxes = d3.scalePoint()
