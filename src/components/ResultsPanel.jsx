@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, Slider } from '@mui/material';
+import { Box, Button, CircularProgress, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Alert } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
@@ -33,6 +33,9 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
 
     const colors = d3.scaleOrdinal(d3.schemeCategory10);
 
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+
     useEffect(() => {
         if (translated) {
             plotPriorsResults();
@@ -54,7 +57,19 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         }
     }, [selectedPriorDistributions]);
 
+    const hasNullValues = () => {
+        return Object.values(entities).some(entity => {
+            return Object.values(entity).some(value => value === null);
+        });
+    };
+
     const translate = () => {
+        if (hasNullValues()) {
+            setSnackbarMessage('All entities must be completed before translating');
+            setSnackbarOpen(true);
+            return;
+        }
+
         setIsTranslating(true);
         console.log("variablesDict", variablesDict);
         console.log("parametersDict", parametersDict);
@@ -336,7 +351,14 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Button sx={{ my: 2 }} variant="contained" onClick={translate}>Translate</Button>
+            <Button 
+                sx={{ my: 2 }} 
+                variant="contained" 
+                onClick={translate}
+                disabled={Object.values(entities).length === 0}
+            >
+                Translate
+            </Button>
             {isTranslating && <CircularProgress sx={{ my: 3 }} />}
             {translated &&
                 <Grid2 container spacing={2}
@@ -404,6 +426,19 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                     </Grid2>
                 </Grid2>
             }
+            <Snackbar 
+                open={snackbarOpen} 
+                autoHideDuration={6000} 
+                onClose={() => setSnackbarOpen(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert 
+                    severity="error" 
+                    sx={{ width: '100%' }}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     )
 };

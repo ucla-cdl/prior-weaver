@@ -57,6 +57,7 @@ export default function Workspace(props) {
     const [biVariableDict, setBiVariableDict] = useState({});
 
     const [entities, setEntities] = useState({});
+    const [selectedEntities, setSelectedEntities] = useState([]);
 
     const [studyContext, setStudyContext] = useState(context["income_education_age"]);
 
@@ -135,15 +136,11 @@ export default function Workspace(props) {
 
     const deleteEntities = (entitiesIDs) => {
         console.log("delete entities", entitiesIDs);
-
-        setEntities((prev) => {
-            let newEntities = { ...prev };
-            entitiesIDs.forEach((entityID) => {
-                delete newEntities[entityID];
-            });
-
-            return newEntities;
+        let newEntities = { ...entities };
+        entitiesIDs.forEach((entityID) => {
+            delete newEntities[entityID];
         });
+        setEntities(newEntities);
     }
 
     // Update the entities with new data

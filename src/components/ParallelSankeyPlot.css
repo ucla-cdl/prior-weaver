@@ -13,26 +13,34 @@
 }
 
 .selected-entity-dot {
-    fill: white;
+    fill: blue;
 }
 
 .unselected-entity-dot {
+    fill: white;
+}
+
+.hidden-entity-dot {
     fill: #ddd;
     stroke: #ddd;
 }
 
 .entity-path {
     fill: none;
-    stroke-width: 2;
+    stroke-width: 1;
     stroke-opacity: 0.6;
 }
 
 .brush-non-selection {
-    stroke: #ddd;
+    stroke: black;
 }
 
 .brush-selection {
-    stroke: steelblue;
+    stroke: blue;
+}
+
+.hidden-selection {
+    stroke: #ddd;
 }
 
 .solid{
@@ -42,3 +50,9 @@
  .dashed{
     stroke-dasharray: 5,5; 
  }
+
+ .selection-count {
+    font-size: 12px;
+    fill: #666;
+    pointer-events: none;
+}

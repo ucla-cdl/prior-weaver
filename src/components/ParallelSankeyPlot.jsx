@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
-import { Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Radio, RadioGroup, ToggleButton, Typography } from '@mui/material';
+import { Alert, Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Radio, RadioGroup, Snackbar, Switch, ToggleButton, Typography } from '@mui/material';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { DndContext, closestCenter, DragOverlay, useSensors, useSensor, PointerSensor } from '@dnd-kit/core';
@@ -14,27 +14,13 @@ import "./ParallelSankeyPlot.css";
  * Define interaction types
  * 
  * TYPES:
- * - ADD: Add a new entity
- * - DRAG: Drag an entity
- * - BRUSH: Brush to select entities
+ * - EXPLORE: For exploring complete patterns
+ * - CONNECT: For connecting incomplete patterns
+ * - ADD: For adding new points
  */
 const INTERACTION_TYPES = {
-    ADD: "add",
-    CONNECT: "connect",
-    SELECTION: "selection",
-}
-
-
-/**
- * Define filter types
- * 
- * TYPES:
- * - COMPLETE: All axes are connected
- * - INCOMPLETE: No all axes are connected
- */
-const FILTER_TYPES = {
-    COMPLETE: 'complete',
-    INCOMPLETE: 'incomplete',
+    EXPLORE: "explore",
+    CONNECT: "connect"
 }
 
 export default function ParallelSankeyPlot({ variablesDict, updateVariable, entities, addEntities, deleteEntities, updateEntities, synchronizeSankeySelection }) {
@@ -46,6 +32,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const chartHeight = 350;
 
     const [brushSelectedRegions, setBrushSelectedRegions] = useState(new Map());
+    const selectedEntitiesRef = useRef([]);
     const [selectedEntities, setSelectedEntities] = useState([]);
     const [sortableVariables, setSortableVariables] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
@@ -53,12 +40,17 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
     const [generatedNum, setGeneratedNum] = useState(10);
 
-    const [activeInteraction, setActiveInteraction] = useState(INTERACTION_TYPES.SELECTION);
-    const [activeFilter, setActiveFilter] = useState(FILTER_TYPES.COMPLETE);
+    const [activeInteraction, setActiveInteraction] = useState(INTERACTION_TYPES.EXPLORE);
+    const activeInteractionRef = useRef(INTERACTION_TYPES.EXPLORE);
     const [axesFilterStatus, setAxesFilterStatus] = useState({});
+
+    const [isBatchMode, setIsBatchMode] = useState(true);
+    const isBatchModeRef = useRef(true);
 
     const valueAxesRef = useRef(new Map());
     const variableAxesRef = useRef(null);
+
+    const [warningMessage, setWarningMessage] = useState("");
 
     useEffect(() => {
         setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
@@ -69,12 +61,10 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         updatePlotLayout();
 
         populateEntities();
-        filterEntities(activeFilter);
     }, [variablesDict]);
 
     useEffect(() => {
         populateEntities();
-        filterEntities(activeFilter);
     }, [entities]);
 
     const updatePlotLayout = () => {
@@ -130,39 +120,91 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         variableAxesRef.current = newVariableAxes;
     }
 
-    const changeInteractionType = (interactionType) => {
-        console.log("Change interaction type to: ", interactionType);
+    const changeBatchMode = (enabled) => {
+        setIsBatchMode(enabled);
+        isBatchModeRef.current = enabled;
+
+        // Reapply the current interaction mode with new batch setting
+        changeInteractionMode(activeInteractionRef.current);
+    }
+
+    const changeInteractionMode = (interactionType) => {
+        console.log("Change interaction mode to: ", interactionType);
+        activeInteractionRef.current = interactionType;
+        setActiveInteraction(interactionType);
 
         clearInteractions();
 
-        switch (interactionType) {
-            case INTERACTION_TYPES.CONNECT:
-                activateConnectFeature();
-                break;
-            case INTERACTION_TYPES.ADD:
+        // Filter entities based on interaction type
+        Object.entries(entities).forEach(([entityId, entity]) => {
+            const isComplete = sortableVariables.every(variable => entity[variable.name] !== null);
+
+            if (interactionType === INTERACTION_TYPES.EXPLORE) {
+                // In Explore mode: show only complete entities
+                d3.select(`#entity_path_${entityId}`)
+                    .classed("brush-non-selection", isComplete)
+                    .classed("hidden-selection", !isComplete);
+
+                // Update associated dots
+                Object.entries(entity).forEach(([key, value]) => {
+                    if (key !== "id" && value !== null) {
+                        d3.select(`#dot_${entity["id"]}_${key}`)
+                            .classed("unselected-entity-dot", isComplete)
+                            .classed("hidden-entity-dot", !isComplete);
+                    }
+                });
+            } else if (interactionType === INTERACTION_TYPES.CONNECT) {
+                // In Connect mode: show only incomplete entities
+                d3.select(`#entity_path_${entityId}`)
+                    .classed("brush-non-selection", !isComplete)
+                    .classed("hidden-selection", isComplete);
+
+                // Update associated dots
+                Object.entries(entity).forEach(([key, value]) => {
+                    if (key !== "id" && value !== null) {
+                        d3.select(`#dot_${entity["id"]}_${key}`)
+                            .classed("unselected-entity-dot", !isComplete)
+                            .classed("hidden-entity-dot", isComplete);
+                    }
+                });
+            }
+        })
+
+        if (isBatchModeRef.current) {
+            // Batch mode: use brush selection
+            activateBrushFeature();
+        } else {
+            // Individual mode: use click interactions
+            if (interactionType === INTERACTION_TYPES.EXPLORE) {
                 addAxisRegion();
                 activateAddFeature();
-                break;
-            case INTERACTION_TYPES.SELECTION:
-                activateBrushFeature();
-                break;
-            default:
-                break;
+            } else if (interactionType === INTERACTION_TYPES.CONNECT) {
+                activateConnectFeature();
+            }
         }
 
-        setActiveInteraction(interactionType);
+        d3.selectAll(".unselected-entity-dot").raise();
+
+        // Reset selections when changing modes
+        setBrushSelectedRegions(new Map());
+        setSelectedEntities([]);
     }
 
     const clearInteractions = () => {
         const svg = d3.select("#sankey-svg");
+
         // Remove Add feature interactions
         svg.selectAll(".axis-region").remove();
         svg.selectAll(".temp-circle").remove();
         svg.selectAll(".temp-line").remove();
 
         // Remove Connect feature interactions
-        // svg.selectAll(".entity-dot").classed("connect-entity-dot", false);
-        svg.selectAll(".entity-dot").on("mouseover", null).on("mouseout", null).on("click", null);
+        svg.selectAll(".entity-dot")
+            .on("mouseover", null)
+            .on("mouseout", null)
+            .on("click", null)
+            .classed("connect-entity-dot", false)
+            .classed("hovered-entity-dot", false);
         setConnectedPoint(null);
 
         // Remove brush feature interactions
@@ -173,6 +215,9 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         svg.selectAll(".overlay").remove();
         svg.on("start brush end", null);
         setBrushSelectedRegions(new Map());
+        // Clear selected entities ref
+        selectedEntitiesRef.current = [];
+        setSelectedEntities([]);
     }
 
     const addAxisRegion = () => {
@@ -190,7 +235,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     }
 
     const populateEntities = () => {
-        console.log("Populate entities in PCP");
+        console.log("Populate entities in PCP", entities);
 
         const svg = d3.select("#sankey-svg");
 
@@ -224,6 +269,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             svg.append("path")
                 .datum(entity) // Pass the entity directly
                 .attr("class", "entity-path")
+                .attr("id", `entity_path_${entity["id"]}`)
                 .attr("d", d => line(
                     sortableVariables
                         .filter(variable => d[variable.name] !== null)
@@ -234,7 +280,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         svg.selectAll(".entity-dot")
             .raise();
 
-        changeInteractionType(activeInteraction);
+        changeInteractionMode(activeInteractionRef.current);
     }
 
     const activateAddFeature = () => {
@@ -308,7 +354,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         const svg = d3.select("#sankey-svg");
         let connectedPoint = null;
 
-        svg.selectAll(".entity-dot")
+        svg.selectAll(".unselected-entity-dot")
             .on("mouseover", function () {
                 d3.select(this).classed("hovered-entity-dot", true);
             })
@@ -386,90 +432,218 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 [-(brushWidth / 2), marginTop],
                 [brushWidth / 2, chartHeight - marginBottom]
             ])
-            .on("start brush end", brushed);
+            .on("start brush end", (event, key) => {
+                // Skip if the event was triggered by a programmatic brush clear
+                if (event.sourceEvent === null) return;
+                brushed(event, key);
+            });
 
         function brushed(event, key) {
+            // Only process brush events in batch mode
+            if (!isBatchModeRef.current) return;
+
             const { selection } = event;
 
             if (selection === null) {
                 selections.delete(key);
+                svg.select(`#count-label-${key}`).remove();
+                return;
             } else {
                 selections.set(key, selection.map(valueAxesRef.current.get(key).invert));
             }
 
-            const selectedEntities = [];
+            const newSelectedEntities = [];
+            const countsByAxis = new Map();
+            Array.from(selections.keys()).forEach(axis => countsByAxis.set(axis, 0));
+
             svg.selectAll(".entity-path").each(function (d) {
                 if (d) {
-                    // Should applicable for entities that have values in all selected regions and the entities that are single but within the selected regions
-                    const active = Array.from(selections).every(([key, [max, min]]) => d[key] >= min && d[key] <= max);
+                    const active = Array.from(selections).every(([key, [max, min]]) => {
+                        if (d[key] === null) return false;
+                        return d[key] >= min && d[key] <= max;
+                    });
 
                     const isComplete = sortableVariables.every(variable => d[variable.name] !== null);
 
-                    // if current filter is incomplete
-                    if (activeFilter === FILTER_TYPES.INCOMPLETE) {
-                        // filter the entity in -> if entity is incomplete and within the selected regions
-                        if (active && !isComplete) {
-                            d3.select(this).classed("brush-selection", true);
-                            d3.select(this).classed("brush-non-selection", false);
-                            d3.select(this).raise();
-                            selectedEntities.push(d);
-                        }
-                        else {
-                            d3.select(this).classed("brush-selection", false);
-                            d3.select(this).classed("brush-non-selection", true);
-                        }
+                    let shouldSelect = false;
+                    if (activeInteractionRef.current === INTERACTION_TYPES.CONNECT) {
+                        const hasPointInSelection = Array.from(selections).some(([key, [max, min]]) =>
+                            d[key] !== null && d[key] >= min && d[key] <= max
+                        );
+                        shouldSelect = hasPointInSelection && !isComplete;
+                    } else if (activeInteractionRef.current === INTERACTION_TYPES.EXPLORE) {
+                        shouldSelect = active && isComplete;
                     }
-                    // if current filter is complete
-                    else {
-                        // filter the entity in -> if entity is complete and within the selected regions
-                        if (active && isComplete) {
-                            d3.select(this).classed("brush-selection", true);
-                            d3.select(this).classed("brush-non-selection", false);
-                            d3.select(this).raise();
-                            selectedEntities.push(d);
-                        }
-                        else {
-                            d3.select(this).classed("brush-selection", false);
-                            d3.select(this).classed("brush-non-selection", true);
-                        }
+
+                    if (shouldSelect) {
+                        d3.select(this).classed("brush-selection", true);
+                        d3.select(this).classed("brush-non-selection", false);
+                        d3.select(this).raise();
+                        newSelectedEntities.push(d);
+
+                        // Highlight associated dots
+                        Object.entries(d).forEach(([key, value]) => {
+                            if (key !== "id" && value !== null) {
+                                d3.select(`#dot_${d["id"]}_${key}`)
+                                    .classed("selected-entity-dot", true)
+                                    .classed("unselected-entity-dot", false)
+                                    .raise();
+                            }
+                        });
+
+                        // Count points per axis for selected entities
+                        Array.from(selections.keys()).forEach(axis => {
+                            if (d[axis] !== null) {
+                                const [max, min] = selections.get(axis);
+                                if (d[axis] >= min && d[axis] <= max) {
+                                    countsByAxis.set(axis, countsByAxis.get(axis) + 1);
+                                }
+                            }
+                        });
+                    } else {
+                        d3.select(this).classed("brush-selection", false);
+                        d3.select(this).classed("brush-non-selection", true);
+
+                        // De-highlight associated dots
+                        Object.entries(d).forEach(([key, value]) => {
+                            if (key !== "id" && value !== null) {
+                                d3.select(`#dot_${d["id"]}_${key}`)
+                                    .classed("selected-entity-dot", false)
+                                    .classed("unselected-entity-dot", true);
+                            }
+                        });
                     }
                 }
             });
 
-            svg.selectAll(".entity-dot")
-                .raise();
+            // Update both ref and state
+            console.log("activeInteraction", activeInteractionRef.current);
+            console.log("selections", selections);
+            console.log("newSelectedEntities", newSelectedEntities);
+            selectedEntitiesRef.current = newSelectedEntities;
+            setSelectedEntities(newSelectedEntities);
 
-            svg.node().value = selectedEntities;
-            svg.dispatch("input");
+            // Synchronize immediately with the new selection
+            synchronizeSankeySelection(newSelectedEntities);
+
+            // Update count labels for each axis
+            countsByAxis.forEach((count, axis) => {
+                // Remove existing label
+                svg.select(`#count-label-${axis}`).remove();
+
+                // Add new label if there's a selection
+                if (selections.has(axis)) {
+                    const axisX = variableAxesRef.current(axis);
+                    const axisY = valueAxesRef.current.get(axis);
+                    const [selectionY1, selectionY2] = selections.get(axis);
+                    const labelY = (selectionY1 + selectionY2) / 2; // Middle of brush selection
+
+                    svg.append("text")
+                        .attr("id", `count-label-${axis}`)
+                        .attr("x", axisX + 15) // Offset from axis
+                        .attr("y", axisY(labelY))
+                        .attr("dy", ".35em") // Vertical alignment
+                        .attr("class", "selection-count")
+                        .text(`n = ${count}`);
+                }
+            });
+
+            svg.selectAll(".entity-dot").raise();
+            svg.selectAll(".selection-count").raise();
             setBrushSelectedRegions(selections);
         }
 
-        svg.node().value = Object.values(entities);
-
-        svg.on("input", function () {
-            const selectedEntities = svg.node().value;
-            setSelectedEntities(selectedEntities);
-            synchronizeSankeySelection(selectedEntities);
-        });
-
         svg.selectAll(".axis")
             .call(brush)
-            .call(brush.move, null) // Clear the brush selection
-    }
-
-
-    const linkEntitiesInRegion = () => {
-        if (activeInteraction === INTERACTION_TYPES.SELECTION) {
-            generateRandomEntities();
-        }
-        else if (activeInteraction === INTERACTION_TYPES.CONNECT) {
-            connectRandomEntities();
-        }
+            .call(brush.move, null);
     }
 
     const connectRandomEntities = () => {
-        console.log("Connect random entities", selectedEntities);
+        const entitiesInRegions = selectedEntitiesRef.current;
 
+        // Group entities by axis to find points on each axis
+        const pointsByAxis = new Map();
+        Array.from(brushSelectedRegions.keys()).forEach(axis => {
+            const [max, min] = brushSelectedRegions.get(axis);
+            const pointsOnAxis = entitiesInRegions.filter(entity =>
+                entity[axis] !== null &&
+                entity[axis] >= min &&
+                entity[axis] <= max
+            );
+            pointsByAxis.set(axis, pointsOnAxis);
+        });
+
+        // Check if all selected regions have the same number of points
+        const pointCounts = Array.from(pointsByAxis.values()).map(points => points.length);
+        const allSameCount = pointCounts.every(count => count === pointCounts[0]);
+
+        if (!allSameCount) {
+            setWarningMessage("Selected regions must have the same number of available points for 1-to-1 mapping");
+            return;
+        }
+
+        // For 1-to-1 mapping between points
+        const selectedAxes = Array.from(brushSelectedRegions.keys());
+        const pointsPerAxis = pointCounts[0];
+        const newEntities = [];
+        const pointsToDelete = [];
+
+        // For each set of points to connect
+        for (let i = 0; i < pointsPerAxis; i++) {
+            const combinedEntity = {};
+
+            // Get one point from each axis
+            selectedAxes.forEach(axis => {
+                const point = pointsByAxis.get(axis)[i];
+                combinedEntity[axis] = point[axis];
+                pointsToDelete.push(point.id);
+            });
+
+            newEntities.push(combinedEntity);
+        }
+
+        deleteEntities(pointsToDelete);
+        addEntities(newEntities);
+    }
+
+    const generateConditionalEntities = () => {
+        // Find axis with selected points
+        const axisWithPoints = Array.from(brushSelectedRegions.keys()).find(axis => {
+            const [max, min] = brushSelectedRegions.get(axis);
+            return selectedEntities.some(entity =>
+                entity[axis] !== null &&
+                entity[axis] >= min &&
+                entity[axis] <= max
+            );
+        });
+
+        if (!axisWithPoints) return;
+
+        // Get selected points on the axis
+        const [max, min] = brushSelectedRegions.get(axisWithPoints);
+        const selectedPoints = selectedEntities.filter(entity =>
+            entity[axisWithPoints] !== null &&
+            entity[axisWithPoints] >= min &&
+            entity[axisWithPoints] <= max
+        );
+
+        // Generate connected entities for each selected point
+        const newEntities = [];
+        selectedPoints.forEach(point => {
+            const newEntity = { [axisWithPoints]: point[axisWithPoints] };
+
+            // Generate random values for other selected regions
+            Array.from(brushSelectedRegions.keys()).forEach(axis => {
+                if (axis !== axisWithPoints) {
+                    const [max, min] = brushSelectedRegions.get(axis);
+                    newEntity[axis] = Math.random() * (max - min) + min;
+                }
+            });
+
+            newEntities.push(newEntity);
+        });
+
+        addEntities(newEntities);
     }
 
     // Randomly populate data points in the selected region
@@ -490,79 +664,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     }
 
     const deleteSelectedEntities = () => {
-        deleteEntities(selectedEntities.map(entity => entity.id));
-    }
-
-    const changeFilterType = (filter) => {
-        console.log("change filter type to ", filter);
-
-        filterEntities(filter);
-        setActiveFilter(filter);
-    }
-
-    useEffect(() => {
-        changeInteractionType(activeInteraction);
-    }, [activeFilter]);
-
-    const filterEntities = (filter) => {
-        const svg = d3.select("#sankey-svg");
-
-        const highlightedItems = [];
-        svg.selectAll(".entity-path").each(function (d) {
-            if (d) {
-                switch (filter) {
-                    case FILTER_TYPES.COMPLETE:
-                        // Filter out the fully connected entities
-                        const isComplete = sortableVariables.every(variable => d[variable.name] !== null);
-                        changeFilteredEntitiesStyle(this, d, isComplete);
-                        if (isComplete) {
-                            highlightedItems.push(d);
-                        }
-                        break;
-                    case FILTER_TYPES.INCOMPLETE:
-                        // Filter out the entities that are not completely connected
-                        const isIncomplete = sortableVariables.some(variable => d[variable.name] === null);
-                        changeFilteredEntitiesStyle(this, d, isIncomplete);
-                        if (isIncomplete) {
-                            highlightedItems.push(d);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-        })
-
-        svg.node().value = highlightedItems;
-        svg.dispatch("input");
-    }
-
-    const changeFilteredEntitiesStyle = (htmlItem, entity, isFilteredIn) => {
-        if (isFilteredIn) {
-            d3.select(htmlItem).classed("brush-selection", true);
-            d3.select(htmlItem).classed("brush-non-selection", false);
-            d3.select(htmlItem).raise();
-
-            // Highlight the dots that are filtered in
-            Object.entries(entity).forEach(([key, value]) => {
-                if (key !== "id" && value !== null) {
-                    d3.select(`#dot_${entity["id"]}_${key}`).classed("selected-entity-dot", true);
-                    d3.select(`#dot_${entity["id"]}_${key}`).classed("unselected-entity-dot", false);
-                    d3.select(`#dot_${entity["id"]}_${key}`).raise();
-                }
-            });
-        }
-        else {
-            d3.select(htmlItem).classed("brush-selection", false);
-            d3.select(htmlItem).classed("brush-non-selection", true);
-            // De-Highlight the dots that are not filtered in
-            Object.entries(entity).forEach(([key, value]) => {
-                if (key !== "id" && value !== null) {
-                    d3.select(`#dot_${entity["id"]}_${key}`).classed("unselected-entity-dot", true);
-                    d3.select(`#dot_${entity["id"]}_${key}`).classed("selected-entity-dot", false);
-                }
-            });
-        }
+        deleteEntities(selectedEntitiesRef.current.map(entity => entity.id));
     }
 
     const handleDragStart = (event) => {
@@ -611,84 +713,99 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     return (
         <Box>
             <Box sx={{ my: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                     <FormControl
                         component="fieldset"
                         sx={{
                             border: '1px solid',
                             borderColor: 'grey.500',
                             borderRadius: 1,
-                            p: 1
+                            p: 2
                         }}
                     >
-                        <FormLabel component="legend">Show Entities that are </FormLabel>
+                        <FormLabel component="legend">Interaction Mode</FormLabel>
                         <RadioGroup
                             row
-                            aria-label="filterType"
-                            name="filterType"
-                            value={activeFilter || ""}
-                            onClick={(event) => changeFilterType(event.target.value)}
+                            aria-label="interactionMode"
+                            name="interactionMode"
+                            value={activeInteraction}
+                            onChange={(event) => changeInteractionMode(event.target.value)}
                         >
-                            {Object.values(FILTER_TYPES).map(type => (
-                                <FormControlLabel key={type} value={type} control={<Radio />} label={type} />
-                            ))}
+                            <FormControlLabel
+                                value={INTERACTION_TYPES.EXPLORE}
+                                control={<Radio />}
+                                label="Explore Complete Patterns"
+                            />
+                            <FormControlLabel
+                                value={INTERACTION_TYPES.CONNECT}
+                                control={<Radio />}
+                                label="Connect Incomplete Patterns"
+                            />
                         </RadioGroup>
                     </FormControl>
 
-                    <FormControl
-                        component="fieldset"
-                        sx={{
-                            border: '1px solid',
-                            borderColor: 'grey.500',
-                            borderRadius: 1,
-                            p: 2,
-                            ml: 2
-                        }}
-                    >
-                        <FormLabel component="legend">Manipulate Data by</FormLabel>
-                        <RadioGroup
-                            row
-                            aria-label="interactionType"
-                            name="interactionType"
-                            value={activeInteraction}
-                            onChange={(event) => changeInteractionType(event.target.value)}
-                        >
-                            {Object.values(INTERACTION_TYPES).map(type => (
-                                <FormControlLabel key={type} value={type} control={<Radio />} label={type} />
-                            ))}
-                        </RadioGroup>
-                    </FormControl>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={isBatchMode}
+                                onChange={(e) => changeBatchMode(e.target.checked)}
+                            />
+                        }
+                        label="Batch Mode"
+                        sx={{ ml: 2 }}
+                    />
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', ml: 2 }}>
-                        <Box sx={{ mx: 2, display: 'flex', flexDirection: 'column', alignContent: 'center' }}>
-                            <Button
-                                sx={{ my: 1 }}
-                                disabled={brushSelectedRegions.size === 0 || activeInteraction !== INTERACTION_TYPES.SELECTION}
-                                variant='outlined'
-                                onClick={generateRandomEntities}>
-                                Generate
-                            </Button>
-                            <input
-                                type="number"
-                                value={generatedNum}
-                                onChange={(e) => setGeneratedNum(Number(e.target.value))}
-                                min="1"
-                                style={{ width: '60px', textAlign: 'center' }}
-                            />
-                            {/* <Button
-                                disabled={selectedEntities.length === 0 || activeInteraction !== INTERACTION_TYPES.SELECTION}
-                                variant='outlined'
-                                onClick={connectRandomEntities}>
-                                Link
-                            </Button> */}
-                        </Box>
+                        {activeInteraction === INTERACTION_TYPES.EXPLORE && isBatchMode && (
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+                                <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <Button
+                                        sx={{ mb: 1 }}
+                                        disabled={
+                                            (isBatchMode && (brushSelectedRegions.size === 0 || activeInteraction !== INTERACTION_TYPES.EXPLORE)) ||
+                                            (!isBatchMode)
+                                        }
+                                        variant='outlined'
+                                        onClick={generateRandomEntities}>
+                                        Generate
+                                    </Button>
+                                    <input
+                                        type="number"
+                                        value={generatedNum}
+                                        onChange={(e) => setGeneratedNum(Number(e.target.value))}
+                                        min="1"
+                                        style={{ width: '60px', textAlign: 'center' }}
+                                    />
+                                </Box>
+                                <Button
+                                    disabled={selectedEntities.length === 0}
+                                    variant='outlined'
+                                    onClick={deleteSelectedEntities}>
+                                    Delete
+                                </Button>
+                            </Box>
+                        )}
 
-                        <Button
-                            disabled={selectedEntities.length === 0}
-                            variant='outlined'
-                            onClick={deleteSelectedEntities}>
-                            Delete
-                        </Button>
+                        {activeInteraction === INTERACTION_TYPES.CONNECT && isBatchMode && (
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+                                <Button
+                                    disabled={
+                                        (isBatchMode && (selectedEntities.length === 0 || activeInteraction !== INTERACTION_TYPES.CONNECT || brushSelectedRegions.size < 2)) ||
+                                        (!isBatchMode)
+                                    }
+                                    variant='outlined'
+                                    onClick={connectRandomEntities}>
+                                    Link
+                                </Button>
+                                <Button
+                                    sx={{ ml: 1 }}
+                                    disabled={selectedEntities.length === 0}
+                                    variant='outlined'
+                                    onClick={deleteSelectedEntities}>
+                                    Delete
+                                </Button>
+                            </Box>
+                        )}
                     </Box>
                 </Box>
             </Box>
@@ -710,7 +827,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                                         axesFilterStatus={axesFilterStatus}
                                         toggleAxesFilter={toggleAxesFilter}
                                         axisPosition={axisPosition}
-                                        activeFilter={activeFilter}
+                                        activeInteraction={activeInteraction}
                                     />
                                 )
                             })}
@@ -723,11 +840,25 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
                 <Box sx={{ width: "100%", mx: 'auto', mt: 1 }} id='sankey-div'></Box>
             </Box>
+
+            <Snackbar
+                open={warningMessage !== ""}
+                autoHideDuration={4000}
+                onClose={() => setWarningMessage("")}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert
+                    severity="error"
+                    sx={{ width: '100%' }}
+                >
+                    {warningMessage}
+                </Alert>
+            </Snackbar>
         </Box >
     )
 }
 
-export const SortableItem = forwardRef(({ id, axesFilterStatus, toggleAxesFilter, axisPosition, activeFilter }, ref) => {
+export const SortableItem = forwardRef(({ id, axesFilterStatus, toggleAxesFilter, axisPosition, activeInteraction }, ref) => {
     const {
         attributes,
         listeners,
@@ -748,7 +879,7 @@ export const SortableItem = forwardRef(({ id, axesFilterStatus, toggleAxesFilter
             axesFilterStatus={axesFilterStatus}
             toggleAxesFilter={toggleAxesFilter}
             axisPosition={axisPosition}
-            activeFilter={activeFilter}
+            activeInteraction={activeInteraction}
             style={style}
             {...attributes}
             {...listeners}
@@ -756,7 +887,7 @@ export const SortableItem = forwardRef(({ id, axesFilterStatus, toggleAxesFilter
     );
 });
 
-export const Item = forwardRef(({ id, axesFilterStatus, toggleAxesFilter, axisPosition, activeFilter, ...props }, ref) => {
+export const Item = forwardRef(({ id, axesFilterStatus, toggleAxesFilter, axisPosition, activeInteraction, ...props }, ref) => {
 
     return (
         <Box {...props}
@@ -771,7 +902,7 @@ export const Item = forwardRef(({ id, axesFilterStatus, toggleAxesFilter, axisPo
             {/* <Radio
                 size='small'
                 sx={{ padding: "2px" }}
-                disabled={activeFilter !== FILTER_TYPES.PARTIALLY}
+                disabled={activeInteraction !== INTERACTION_TYPES.PARTIALLY}
                 checked={axesFilterStatus ? axesFilterStatus[id] : false}
                 value={id}
                 onClick={(event) => toggleAxesFilter(event)}
