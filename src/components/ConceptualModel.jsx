@@ -85,9 +85,6 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
             min: newMin,
             max: newMax,
             unitLabel: newUnitLabel,
-            binEdges: binEdges,
-            counts: Array(newBins).fill(0),
-            distributions: [],
             sequenceNum: Object.keys(variablesDict).length
         };
 
@@ -114,9 +111,6 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
 
     const confirmEditvariable = () => {
         let updatedVaribale = { ...editingVariable };
-        let updatedMin = updatedVaribale.min;
-        let updatedMax = updatedVaribale.max;
-        updatedVaribale.binEdges = d3.range(newBins + 1).map(i => updatedMin + i * (updatedMax - updatedMin) / newBins)
         updateVariable(updatedVaribale.name, updatedVaribale);
         setIsEditingVariable(false);
     }

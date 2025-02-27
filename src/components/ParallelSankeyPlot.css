@@ -56,3 +56,18 @@
     fill: #666;
     pointer-events: none;
 }
+
+.original-range {
+    stroke-dasharray: 4;
+    opacity: 0.6;
+}
+
+.axis-handle rect{
+    cursor: row-resize;
+    opacity: 0.5;
+    fill: lightcoral;
+}
+
+.axis-handle rect:hover {
+    opacity: 1;
+}

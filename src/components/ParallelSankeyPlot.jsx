@@ -44,8 +44,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     const activeInteractionRef = useRef(INTERACTION_TYPES.EXPLORE);
     const [axesFilterStatus, setAxesFilterStatus] = useState({});
 
-    const [isBatchMode, setIsBatchMode] = useState(false);
-    const isBatchModeRef = useRef(false);
+    const [isBatchMode, setIsBatchMode] = useState(true);
+    const isBatchModeRef = useRef(true);
 
     const valueAxesRef = useRef(new Map());
     const variableAxesRef = useRef(null);
@@ -59,7 +59,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             return acc;
         }, {}));
         updatePlotLayout();
-
         populateEntities();
     }, [variablesDict]);
 
@@ -71,7 +70,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         const divId = "sankey-div";
         document.getElementById(divId).innerHTML = "";
         const axisNum = Object.keys(variablesDict).length;
-        // const chartWidth = axisNum * 140;
         const chartWidth = d3.select("#" + divId).node().getBoundingClientRect().width;
 
         let svg = d3.select("#" + divId).append("svg")
@@ -79,12 +77,21 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             .attr("width", chartWidth)
             .attr("height", chartHeight);
 
-        const newValueAxes = new Map(Object.entries(variablesDict).map(([varName, variable]) => [
-            varName,
-            d3.scaleLinear()
-                .domain([variable.min, variable.max])
-                .range([chartHeight - marginBottom, marginTop])
-        ]));
+        const newValueAxes = new Map(Object.entries(variablesDict).map(([varName, variable]) => {
+            // Calculate the range padding (5% of the data range)
+            const dataRange = variable.max - variable.min;
+            const padding = dataRange * 0.1;
+
+            return [
+                varName,
+                {
+                    scale: d3.scaleLinear()
+                        .domain([variable.min - padding, variable.max + padding])
+                        .range([chartHeight - marginBottom, marginTop]),
+                    originalDomain: [variable.min, variable.max]
+                }
+            ];
+        }));
 
         const newVariableAxes = d3.scalePoint()
             .domain(
@@ -100,7 +107,148 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             .join("g")
             .attr("transform", d => `translate(${newVariableAxes(d)}, 0)`)
             .each(function (d) {
-                d3.select(this).call(d3.axisLeft(newValueAxes.get(d)));
+                const axisGenerator = d3.axisLeft(newValueAxes.get(d).scale);
+                const axis = d3.select(this).call(axisGenerator);
+                const [min, max] = newValueAxes.get(d).originalDomain;
+
+                // Get the y positions for the original min and max
+                const yMin = newValueAxes.get(d).scale(min);
+                const yMax = newValueAxes.get(d).scale(max);
+
+                // Add dashed lines for padding regions
+                axis.append("line")
+                    .attr("class", "axis-padding")
+                    .attr("x1", 0)
+                    .attr("x2", 0)
+                    .attr("y1", chartHeight - marginBottom)
+                    .attr("y2", yMin)
+                    .style("stroke", "#999")
+                    .style("stroke-dasharray", "2,2");
+
+                axis.append("line")
+                    .attr("class", "axis-padding")
+                    .attr("x1", 0)
+                    .attr("x2", 0)
+                    .attr("y1", marginTop)
+                    .attr("y2", yMax)
+                    .style("stroke", "#999")
+                    .style("stroke-dasharray", "2,2");
+
+                // Add solid line for main region
+                axis.append("line")
+                    .attr("class", "axis-main")
+                    .attr("x1", 0)
+                    .attr("x2", 0)
+                    .attr("y1", yMax)
+                    .attr("y2", yMin)
+                    .style("stroke", "black");
+
+                // Style the ticks based on whether they're in the padding region
+                axis.selectAll(".tick")
+                    .each(function (tickValue) {
+                        if (tickValue < min || tickValue > max) {
+                            d3.select(this)
+                                .select("line")
+                                .style("stroke", "#999")
+                                .style("stroke-dasharray", "2,2");
+                            d3.select(this)
+                                .select("text")
+                                .style("fill", "#999");
+                        }
+                    });
+
+                // Remove the original axis line
+                axis.select(".domain").remove();
+
+                // Add draggable handles at min and max
+                const handleWidth = 20;
+                const handleHeight = 8;
+
+                // Create drag behavior
+                const drag = d3.drag()
+                    .on("drag", function (event, type) {
+                        const handle = d3.select(this);
+                        const newY = Math.min(Math.max(marginTop, event.y), chartHeight - marginBottom);
+                        handle.attr("transform", `translate(0, ${newY})`);
+
+                        // Update the value label
+                        const value = newValueAxes.get(d).scale.invert(newY);
+                        handle.select("text")
+                            .text(value.toFixed(2));
+                    })
+                    .on("end", function (event) {
+                        const handle = d3.select(this);
+                        const newY = Math.min(Math.max(marginTop, event.y), chartHeight - marginBottom);
+                        const newValue = newValueAxes.get(d).scale.invert(newY);
+
+                        // Determine if this is min or max handle based on y position
+                        const [currentMin, currentMax] = newValueAxes.get(d).originalDomain;
+                        const isMinHandle = Math.abs(newValueAxes.get(d).scale(currentMin) - newY) <
+                            Math.abs(newValueAxes.get(d).scale(currentMax) - newY);
+
+                        // Update the variable's range
+                        if (isMinHandle) {
+                            updateVariable(d, {
+                                min: newValue,
+                                max: currentMax
+                            });
+                        } else {
+                            updateVariable(d, {
+                                min: currentMin,
+                                max: newValue
+                            });
+                        }
+                    });
+
+                // Add min handle
+                const minHandle = axis.append("g")
+                    .attr("class", "axis-handle")
+                    .attr("transform", `translate(0, ${yMin})`)
+                    .call(drag)
+                    .on("mouseover", function () {
+                        // trigger a tooltip
+                        d3.select(this)
+                            .append("title")
+                            .text(() => {
+                                const y = d3.select(this).attr("transform").match(/translate\(0,\s*([^)]+)\)/)[1];
+                                return `Min: ${newValueAxes.get(d).scale.invert(y).toFixed(2)}`;
+                            });
+                    })
+                    .on("mouseout", function () {
+                        // hide the tooltip
+                        d3.select(this).select("title").remove();
+                    });
+
+                minHandle.append("rect")
+                    .attr("x", -handleWidth / 2)
+                    .attr("y", -handleHeight / 2)
+                    .attr("width", handleWidth)
+                    .attr("height", handleHeight)
+
+                // Add max handle
+                const maxHandle = axis.append("g")
+                    .attr("class", "axis-handle")
+                    .attr("transform", `translate(0, ${yMax})`)
+                    .call(drag)
+                    .on("mouseover", function () {
+                        // trigger a tooltip
+                        d3.select(this)
+                            .append("title")
+                            .text(() => {
+                                const y = d3.select(this).attr("transform").match(/translate\(0,\s*([^)]+)\)/)[1];
+                                return `Max: ${newValueAxes.get(d).scale.invert(y).toFixed(2)}`;
+                            });
+                    })
+                    .on("mouseout", function () {
+                        // hide the tooltip
+                        d3.select(this).select("title").remove();
+                    });
+
+                maxHandle.append("rect")
+                    .attr("x", -handleWidth / 2)
+                    .attr("y", -handleHeight / 2)
+                    .attr("width", handleWidth)
+                    .attr("height", handleHeight)
             })
             .attr("class", "axis")
             .call(g => g.append("text")
@@ -116,7 +264,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 .attr("stroke-linejoin", "round")
                 .attr("stroke", "white"));
 
-        valueAxesRef.current = newValueAxes;
+        // Update references but use only the scale part
+        valueAxesRef.current = new Map(Array.from(newValueAxes.entries()).map(([key, value]) => [key, value.scale]));
         variableAxesRef.current = newVariableAxes;
     }
 
@@ -517,9 +666,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             });
 
             // Update both ref and state
-            console.log("activeInteraction", activeInteractionRef.current);
-            console.log("selections", selections);
-            console.log("newSelectedEntities", newSelectedEntities);
             selectedEntitiesRef.current = newSelectedEntities;
             setSelectedEntities(newSelectedEntities);
 
@@ -556,6 +702,8 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         svg.selectAll(".axis")
             .call(brush)
             .call(brush.move, null);
+
+        svg.selectAll(".axis-handle").raise();
     }
 
     const connectRandomEntities = () => {

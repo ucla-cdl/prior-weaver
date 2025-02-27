@@ -36,8 +36,6 @@ const DEFAULT_VARIABLE_ATTRIBUTES = {
     min: 0,
     max: 100,
     unitLabel: "",
-    binEdges: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-    counts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 }
 
 // Main Component for Adding Variables and Histograms
@@ -59,7 +57,7 @@ export default function Workspace(props) {
     const [entities, setEntities] = useState({});
     const [selectedEntities, setSelectedEntities] = useState([]);
 
-    const [studyContext, setStudyContext] = useState(context["income_education_age"]);
+    const [scenario, setScenario] = useState(context["income_education_age"]);
 
     useEffect(() => {
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
@@ -80,14 +78,26 @@ export default function Workspace(props) {
 
     const updateVariable = (name, updates) => {
         console.log("update variable", name, updates);
+        let finalUpdates = { ...updates };
+        
+        // If min or max is updated, recalculate bin edges
+        if ('min' in updates || 'max' in updates) {
+            const currentVar = variablesDict[name] || {};
+            const newMin = updates.min ?? currentVar.min;
+            const newMax = updates.max ?? currentVar.max;
+            
+            // Create 10 equally spaced bins
+            const binCount = 10;
+            const step = (newMax - newMin) / binCount;
+            const binEdges = Array.from({length: binCount + 1}, (_, i) => newMin + step * i);
+            
+            finalUpdates.binEdges = binEdges;
+        }
+
         setVariablesDict(prev => ({
             ...prev,
-            [name]: { ...prev[name], ...updates }
+            [name]: { ...prev[name], ...finalUpdates }
         }));
-    }
-
-    const updateParameter = () => {
-
     }
 
     const updateBivariable = (name, updates) => {
@@ -207,8 +217,6 @@ export default function Workspace(props) {
                                 min: DEFAULT_VARIABLE_ATTRIBUTES.min,
                                 max: DEFAULT_VARIABLE_ATTRIBUTES.max,
                                 unitLabel: DEFAULT_VARIABLE_ATTRIBUTES.unitLabel,
-                                binEdges: DEFAULT_VARIABLE_ATTRIBUTES.binEdges,
-                                counts: DEFAULT_VARIABLE_ATTRIBUTES.counts,
                                 sequenceNum: 0
                             });
                             break;
@@ -221,8 +229,6 @@ export default function Workspace(props) {
                                     min: DEFAULT_VARIABLE_ATTRIBUTES.min,
                                     max: DEFAULT_VARIABLE_ATTRIBUTES.max,
                                     unitLabel: DEFAULT_VARIABLE_ATTRIBUTES.unitLabel,
-                                    binEdges: DEFAULT_VARIABLE_ATTRIBUTES.binEdges,
-                                    counts: DEFAULT_VARIABLE_ATTRIBUTES.counts,
                                     sequenceNum: index + 1
                                 });
                             });
@@ -282,24 +288,11 @@ export default function Workspace(props) {
 
     return (
         <div className='workspace-div'>
-            {/* 
-                    MAIN PAGE UI LAYOUT:
-                    
-                    Variables | Conceptual Model
-
-                    Parallel Sankey Plot | Bivariate/Univariate
-                    
-                    -------------------------
-                    RESULT PAGE UI LAYOUT:
-
-                    Results Panel
-                */}
-
             <Grid2 sx={{ my: 1 }} container spacing={3}>
                 <Grid2 className="module-div" size={6}>
-                    <h3>Analysis Context</h3>
+                    <h3>Scenario</h3>
                     <Typography>
-                        {studyContext}
+                        {scenario}
                     </Typography>
                     <Typography>
                         Please input your model in R code.

@@ -9,15 +9,15 @@ import "./VariablePlot.css";
 export default function VariablePlot({ variableDict, variable, updateVariable, entities, addEntities, updateEntities, deleteEntities }) {
     const chartWidth = 400;
     const chartHeight = 350;
-    const offsetX = 60;
-    const offsetY = 40;
+    const offsetX = 50;
+    const offsetY = 50;
     const toggleHeight = 8;
     const titleOffset = 30;
     const svgRef = useRef(null);
 
     useEffect(() => {
         drawPlot();
-    }, []);
+    }, [variable]);
 
     useEffect(() => {
         drawRoulette();
@@ -98,6 +98,17 @@ export default function VariablePlot({ variableDict, variable, updateVariable, e
             .selectAll(".tick text")
             .style("font-size", 15)
             .style("font-family", "Times New Roman");
+        
+        // Add Y axis label
+        histogramPlot
+            .append("g")
+            .attr('transform', `translate(${offsetX - titleOffset}, ${chartHeight / 2})`)
+            .append("text")
+            .attr("text-anchor", "middle")
+            .attr('transform', 'rotate(-90)')
+            .style("font-size", "16px")
+            .style("font-family", "Times New Roman")
+            .text("Count");
 
         // Draw Interactive Grid
         for (let grid = 0; grid < maxY; grid++) {
