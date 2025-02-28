@@ -341,7 +341,27 @@ export default function Workspace(props) {
                     />
                 </Grid2>
             </Grid2>
-
+            
+            <Box className="module-div" sx={{ width: "100%", my: 1 }}>
+                <h3>Univariate Distributions</h3>
+                <Box sx={{ display: 'flex', flexDirection: 'row', overflowX: 'auto', justifyContent: 'center' }}>
+                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
+                        return (
+                            <VariablePlot
+                                key={i}
+                                variablesDict={variablesDict}
+                                variable={curVar}
+                                updateVariable={updateVariable}
+                                entities={entities}
+                                addEntities={addEntities}
+                                updateEntities={updateEntities}
+                                deleteEntities={deleteEntities}
+                            />
+                        )
+                    })}
+                </Box>
+            </Box>
+            
             <Grid2 sx={{ my: 1 }} container spacing={3}>
                 <Grid2 className="module-div" size={8}>
                     <h3>Parallel Coordinates Plot</h3>
@@ -430,26 +450,6 @@ export default function Workspace(props) {
                     </Box>
                 </Grid2>
             </Grid2>
-
-            <Box className="module-div" sx={{ width: "100%", my: 1 }}>
-                <h3>Univariate Distributions</h3>
-                <Box sx={{ display: 'flex', flexDirection: 'row', overflowX: 'auto', justifyContent: 'center' }}>
-                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                        return (
-                            <VariablePlot
-                                key={i}
-                                variablesDict={variablesDict}
-                                variable={curVar}
-                                updateVariable={updateVariable}
-                                entities={entities}
-                                addEntities={addEntities}
-                                updateEntities={updateEntities}
-                                deleteEntities={deleteEntities}
-                            />
-                        )
-                    })}
-                </Box>
-            </Box>
 
             <Grid2 sx={{ my: 1 }} container spacing={3}>
                 <Box className="module-div" sx={{ width: "100%", my: 1 }}>

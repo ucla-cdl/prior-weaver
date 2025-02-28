@@ -892,7 +892,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                         </RadioGroup>
                     </FormControl>
 
-                    <FormControlLabel
+                    {/* <FormControlLabel
                         control={
                             <Switch
                                 checked={isBatchMode}
@@ -901,7 +901,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                         }
                         label="Batch Mode"
                         sx={{ ml: 2 }}
-                    />
+                    /> */}
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', ml: 2 }}>
                         {activeInteraction === INTERACTION_TYPES.EXPLORE && isBatchMode && (
