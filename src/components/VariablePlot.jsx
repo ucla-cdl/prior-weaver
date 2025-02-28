@@ -7,10 +7,10 @@ import "./VariablePlot.css";
 
 // Define the Variable Component
 export default function VariablePlot({ variableDict, variable, updateVariable, entities, addEntities, updateEntities, deleteEntities }) {
-    const chartWidth = 400;
-    const chartHeight = 350;
-    const offsetX = 50;
-    const offsetY = 50;
+    const chartWidth = 300;
+    const chartHeight = 250;
+    const offsetX = 40;
+    const offsetY = 40;
     const toggleHeight = 8;
     const titleOffset = 30;
     const svgRef = useRef(null);
@@ -75,14 +75,14 @@ export default function VariablePlot({ variableDict, variable, updateVariable, e
             .style("stroke-opacity", 0.7)  // Set the opacity of the grid lines
             .style("shape-rendering", "crispEdges") // Prevent anti-aliasing for crisp grid lines
             .selectAll(".tick text")
-            .style("font-size", 15)
+            .style("font-size", 12)
             .style("font-family", "Times New Roman");
 
         histogramPlot.append("text")
             .attr("text-anchor", "middle")
             .attr("x", chartWidth / 2)
             .attr("y", chartHeight - offsetY + titleOffset)
-            .style("font-size", "16px")
+            .style("font-size", "14px")
             .text(variable.name);
 
         // Draw Y axis
@@ -96,7 +96,7 @@ export default function VariablePlot({ variableDict, variable, updateVariable, e
             .style("stroke-opacity", 0.7)  // Set the opacity of the grid lines
             .style("shape-rendering", "crispEdges") // Prevent anti-aliasing for crisp grid lines
             .selectAll(".tick text")
-            .style("font-size", 15)
+            .style("font-size", 12)
             .style("font-family", "Times New Roman");
         
         // Add Y axis label
@@ -106,7 +106,7 @@ export default function VariablePlot({ variableDict, variable, updateVariable, e
             .append("text")
             .attr("text-anchor", "middle")
             .attr('transform', 'rotate(-90)')
-            .style("font-size", "16px")
+            .style("font-size", "14px")
             .style("font-family", "Times New Roman")
             .text("Count");
 

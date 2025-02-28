@@ -24,8 +24,8 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     const paramsRangeDelta = 3;
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
-    const width = 350;
-    const height = 300;
+    const width = 320;
+    const height = 250;
     const margin = { top: 40, right: 40, bottom: 60, left: 40 };
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
@@ -354,7 +354,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     }
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Button
                 sx={{ my: 2 }}
                 variant="contained"
@@ -364,25 +364,23 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                 Translate
             </Button>
             {isTranslating && <CircularProgress sx={{ my: 3 }} />}
-            {translated > 0 &&
-                <Grid2 container spacing={2}
-                    sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}
-                >
-                    <Grid2 xs={4} sx={{ borderRight: '1px solid #ccc', pr: 2 }}>
+            {!isTranslating && translated > 0 &&
+                <Box sx={{ width: '100%' }}>
+                    <Box sx={{ borderRight: '1px solid #ccc', pr: 2 }}>
                         <h4>Prior Predictive Check Result</h4>
                         <Box sx={{ my: 2 }} id={'predictive-check-div'}></Box>
-                    </Grid2>
-                    <Grid2 xs={8}>
+                    </Box>
+                    <Box sx={{ width: '100%', overflowX: 'auto' }}>
                         <h4>Prior Distributions</h4>
                         <IconButton color={editParams ? 'primary' : ''} onClick={() => setEditParams(!editParams)}>
                             <EditIcon />
                         </IconButton>
-                        <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', overflowX: 'auto' }}>
                             {Object.values(parametersDict).map((parameter, idx) => (
                                 <Box sx={{ my: 1 }} key={idx}>
                                     {priorsDict[parameter.name] &&
                                         <Box>
-                                            <FormControl fullWidth>
+                                            <FormControl>
                                                 <InputLabel id={`select-label-${idx}`}>Distribution</InputLabel>
                                                 <Select
                                                     labelId={`select-label-${idx}`}
@@ -427,8 +425,8 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                                 </Box>
                             ))}
                         </Box>
-                    </Grid2>
-                </Grid2>
+                    </Box>
+                </Box>
             }
             <Snackbar
                 open={snackbarOpen}

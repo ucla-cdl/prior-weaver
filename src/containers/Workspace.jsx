@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import "./Workspace.css";
-import { Button, Box, Select, MenuItem, Grid2, Backdrop, CircularProgress, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip, Grid, IconButton, TextField } from '@mui/material';
+import { Button, Box, Select, MenuItem, Grid2, Backdrop, CircularProgress, InputLabel, FormControl, Tabs, Tab, Typography, MenuList, Paper, BottomNavigation, BottomNavigationAction, Tooltip, IconButton, TextField, Slide } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
@@ -9,6 +9,8 @@ import ParallelSankeyPlot from '../components/ParallelSankeyPlot';
 import { v4 as uuidv4 } from 'uuid';
 import ResultsPanel from '../components/ResultsPanel';
 import axios from 'axios';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 const context = {
     "human_growth_model": "During the early stages of life the stature of female and male are about the same,\
@@ -59,6 +61,8 @@ export default function Workspace(props) {
 
     const [scenario, setScenario] = useState(context["income_education_age"]);
 
+    const [activePanel, setActivePanel] = useState('left');
+
     useEffect(() => {
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
     }, []);
@@ -67,30 +71,30 @@ export default function Workspace(props) {
         updateVariable(data.name, data);
 
         const paramName = `p_${data.name}`;
-        setParametersDict((prev) => ({ 
-            ...prev, 
-            [paramName]: { 
+        setParametersDict((prev) => ({
+            ...prev,
+            [paramName]: {
                 name: paramName,
                 relatedVar: data.name,
-            } 
+            }
         }));
     }
 
     const updateVariable = (name, updates) => {
         console.log("update variable", name, updates);
         let finalUpdates = { ...updates };
-        
+
         // If min or max is updated, recalculate bin edges
         if ('min' in updates || 'max' in updates) {
             const currentVar = variablesDict[name] || {};
             const newMin = updates.min ?? currentVar.min;
             const newMax = updates.max ?? currentVar.max;
-            
+
             // Create 10 equally spaced bins
             const binCount = 10;
             const step = (newMax - newMin) / binCount;
-            const binEdges = Array.from({length: binCount + 1}, (_, i) => newMin + step * i);
-            
+            const binEdges = Array.from({ length: binCount + 1 }, (_, i) => newMin + step * i);
+
             finalUpdates.binEdges = binEdges;
         }
 
@@ -211,7 +215,7 @@ export default function Workspace(props) {
                 Object.entries(codeInfo).forEach(([section, sectionInfo]) => {
                     switch (section) {
                         case "response":
-                            updateVariable(sectionInfo,{
+                            updateVariable(sectionInfo, {
                                 name: sectionInfo,
                                 type: "response",
                                 min: DEFAULT_VARIABLE_ATTRIBUTES.min,
@@ -288,179 +292,224 @@ export default function Workspace(props) {
 
     return (
         <div className='workspace-div'>
-            <Grid2 sx={{ my: 1 }} container spacing={3}>
-                <Grid2 className="module-div" size={6}>
-                    <h3>Scenario</h3>
-                    <Typography>
+            {!finishParseCode ? (
+                // Stage 1: Setup
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    maxWidth: '600px',
+                    margin: '0 auto',
+                    padding: '20px'
+                }}>
+                    <Typography variant="h4" gutterBottom>
+                        Scenario
+                    </Typography>
+                    <Typography paragraph sx={{ mb: 4 }}>
                         {scenario}
                     </Typography>
-                    <Typography>
+                    <Typography paragraph>
                         Please input your model in R code.
                     </Typography>
-
-                    {finishParseCode ?
-                        <Box>
-                            <h3>Model</h3>
-                            <Typography>
-                                {model}
-                            </Typography>
-                        </Box>
-                        :
-                        <Box>
-                            <TextField
-                                id="stan-code"
-                                label="R Code"
-                                multiline
-                                rows={3}
-                                variant="outlined"
-                                fullWidth
-                                sx={{ my: 2 }}
-                                value={stanCode}
-                                onChange={(e) => setStanCode(e.target.value)}
-                            />
-                            <Button
-                                disabled={!stanCode}
-                                onClick={handleStanCode}
-                                variant="contained"
-                            >
-                                Continue
-                            </Button>
-                        </Box>
-                    }
-                </Grid2>
-                <Grid2 size={6}>
-                    <ConceptualModel
-                        variablesDict={variablesDict}
-                        updateVariable={updateVariable}
-                        setVariablesDict={setVariablesDict}
-                        biVariableDict={biVariableDict}
-                        setBiVariableDict={setBiVariableDict}
-                        updateBivariable={updateBivariable}
-                        selectBivariable={selectBivariable}
-                        addAttributeToEntities={addAttributeToEntities}
+                    <TextField
+                        id="stan-code"
+                        label="R Code"
+                        multiline
+                        rows={3}
+                        variant="outlined"
+                        fullWidth
+                        sx={{ my: 2 }}
+                        value={stanCode}
+                        onChange={(e) => setStanCode(e.target.value)}
                     />
-                </Grid2>
-            </Grid2>
-            
-            <Box className="module-div" sx={{ width: "100%", my: 1 }}>
-                <h3>Univariate Distributions</h3>
-                <Box sx={{ display: 'flex', flexDirection: 'row', overflowX: 'auto', justifyContent: 'center' }}>
-                    {Object.entries(variablesDict).map(([varName, curVar], i) => {
-                        return (
-                            <VariablePlot
-                                key={i}
+                    <Button
+                        disabled={!stanCode}
+                        onClick={handleStanCode}
+                        variant="contained"
+                        size="large"
+                    >
+                        Continue
+                    </Button>
+                </Box>
+            ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', position: 'relative' }}>
+                    {/* Left Panel */}
+                    <Box 
+                        className="panel left-panel" 
+                        sx={{ 
+                            display: activePanel === 'left' ? 'block' : 'none',
+                            position: 'relative'
+                        }}
+                    >
+                        {/* <div className="component-container">
+                            <Typography variant="h6" gutterBottom>Scenario</Typography>
+                            <Typography>{scenario}</Typography>
+                        </div> */}
+
+                        <div className="context-container">
+                            <Typography variant="h6" gutterBottom>Model</Typography>
+                            <Typography>{model}</Typography>
+                        </div>
+
+                        <div className="context-container">
+                            <ConceptualModel
                                 variablesDict={variablesDict}
-                                variable={curVar}
+                                updateVariable={updateVariable}
+                                setVariablesDict={setVariablesDict}
+                                biVariableDict={biVariableDict}
+                                setBiVariableDict={setBiVariableDict}
+                                updateBivariable={updateBivariable}
+                                selectBivariable={selectBivariable}
+                                addAttributeToEntities={addAttributeToEntities}
+                            />
+                        </div>
+
+                        {/* Add Relationship List here */}
+                        <div className="context-container">
+                            <Typography variant="h6" gutterBottom>Relationship List</Typography>
+                            <Box sx={{ overflowY: 'auto', maxHeight: 200 }}>
+                                {Object.entries(biVariableDict).map(([biVarName, biVariable]) => {
+                                    let [varName, relatedVarName] = biVarName.split("-");
+                                    return (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                flexDirection: 'row',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                color: biVariable.specified ? 'green' : 'grey'
+                                            }}
+                                            key={biVarName}
+                                        >
+                                            <p><strong>{varName}&nbsp;&nbsp;&nbsp;-</strong></p>
+                                            <p><strong>&nbsp;&nbsp;&nbsp;{relatedVarName}</strong></p>
+                                            <IconButton sx={{ mx: 1 }} onClick={() => selectBivariable(biVarName)}>
+                                                <BrushIcon fontSize='small' />
+                                            </IconButton>
+                                        </Box>
+                                    );
+                                })}
+                            </Box>
+                        </div>
+                    </Box>
+
+                    {/* Left Panel Toggle Button - shown when left panel is closed */}
+                    {activePanel === 'right' && (
+                        <IconButton 
+                            sx={{ 
+                                position: 'fixed',
+                                left: '0',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: 'white',
+                                '&:hover': { backgroundColor: '#f0f0f0' },
+                                boxShadow: 2,
+                                zIndex: 1000,
+                                width: '24px',
+                                height: '48px',
+                                borderRadius: '0 4px 4px 0'
+                            }}
+                            onClick={() => setActivePanel('left')}
+                        >
+                            <ChevronRightIcon />
+                        </IconButton>
+                    )}
+
+                    {/* Center Panel */}
+                    <Box className="panel center-panel" sx={{ flex: 1 }}>
+                        {/* Univariate and Bivariate Plots */}
+                        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row' }}>
+                            <div className="component-container univariate-container">
+                                <Typography variant="h6" gutterBottom>Univariate Distributions</Typography>
+                                <Box sx={{ display: 'flex', overflowX: 'auto' }}>
+                                    {Object.entries(variablesDict).map(([varName, curVar], i) => (
+                                        <VariablePlot
+                                            key={i}
+                                            variablesDict={variablesDict}
+                                            variable={curVar}
+                                            updateVariable={updateVariable}
+                                            entities={entities}
+                                            addEntities={addEntities}
+                                            updateEntities={updateEntities}
+                                            deleteEntities={deleteEntities}
+                                        />
+                                    ))}
+                                </Box>
+                            </div>
+                            <div className="component-container bivariate-container">
+                                <Typography variant="h6" gutterBottom>Bivariate Relationship</Typography>
+                                {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
+                                    <BiVariablePlot
+                                        ref={bivarRef}
+                                        biVariableDict={biVariableDict}
+                                        biVariable1={variablesDict[bivariateVarName1]}
+                                        biVariable2={variablesDict[bivariateVarName2]}
+                                        updateVariable={updateVariable}
+                                        updateBivariable={updateBivariable}
+                                        entities={entities}
+                                    />
+                                    :
+                                    <></>}
+                            </div>
+                        </Box>
+
+                        {/* Parallel Coordinates Plot */}
+                        <Box className="component-container parallel-plot-container">
+                            <Typography variant="h6" gutterBottom>Parallel Coordinates Plot</Typography>
+                            <ParallelSankeyPlot
+                                activePanel={activePanel}
+                                variablesDict={variablesDict}
                                 updateVariable={updateVariable}
                                 entities={entities}
                                 addEntities={addEntities}
-                                updateEntities={updateEntities}
                                 deleteEntities={deleteEntities}
+                                updateEntities={updateEntities}
+                                synchronizeSankeySelection={synchronizeSankeySelection}
                             />
-                        )
-                    })}
-                </Box>
-            </Box>
-            
-            <Grid2 sx={{ my: 1 }} container spacing={3}>
-                <Grid2 className="module-div" size={8}>
-                    <h3>Parallel Coordinates Plot</h3>
-                    <ParallelSankeyPlot
-                        variablesDict={variablesDict}
-                        updateVariable={updateVariable}
-                        entities={entities}
-                        addEntities={addEntities}
-                        deleteEntities={deleteEntities}
-                        updateEntities={updateEntities}
-                        synchronizeSankeySelection={synchronizeSankeySelection}
-                    />
-                </Grid2>
-                <Grid2 className="module-div" size={4}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <h3>
-                            Bivariate Relationship
-                        </h3>
-
-                        {/* Relation List */}
-                        <Box sx={{ overflowY: 'auto', maxHeight: 150 }}>
-                            {Object.entries(biVariableDict).map(([biVarName, biVariable]) => {
-                                let [varName, relatedVarName] = biVarName.split("-");
-                                return (
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            flexDirection: 'row',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            color: biVariable.specified ? 'green' : 'grey'
-                                        }}
-                                        key={biVarName}
-                                    >
-                                        <p><strong>
-                                            {varName}&nbsp;&nbsp;&nbsp;- 
-                                        </strong></p>
-                                        {/* <FormControl sx={{ minWidth: 120 }}>
-                                            <Select
-                                                value={biVariable.relation}
-                                                onChange={(e) => updateBivariable(biVarName, { "relation": e.target.value })}
-                                                displayEmpty
-                                                inputProps={{ 'aria-label': 'Without label' }}
-                                                sx={{
-                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                        border: 'none',
-                                                    },
-                                                    '& .MuiSelect-select': {
-                                                        padding: '4px 8px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                    },
-                                                }}
-                                            >
-                                                {Object.entries(RELATIONS).map(([relation, label]) => (
-                                                    <MenuItem key={label} value={label}>
-                                                        {label}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl> */}
-                                        <p><strong>
-                                            &nbsp;&nbsp;&nbsp;{relatedVarName}
-                                        </strong></p>
-                                        <IconButton sx={{ mx: 1 }} onClick={() => selectBivariable(biVarName)}>
-                                            <BrushIcon fontSize='small' />
-                                        </IconButton>
-                                    </Box>
-                                );
-                            })}
                         </Box>
-
-                        {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
-                            <BiVariablePlot
-                                ref={bivarRef}
-                                biVariableDict={biVariableDict}
-                                biVariable1={variablesDict[bivariateVarName1]}
-                                biVariable2={variablesDict[bivariateVarName2]}
-                                updateVariable={updateVariable}
-                                updateBivariable={updateBivariable}
-                                entities={entities}
-                            />
-                            :
-                            <></>}
                     </Box>
-                </Grid2>
-            </Grid2>
 
-            <Grid2 sx={{ my: 1 }} container spacing={3}>
-                <Box className="module-div" sx={{ width: "100%", my: 1 }}>
-                    <h3>Results Panel</h3>
-                    <ResultsPanel
-                        entities={entities}
-                        variablesDict={variablesDict}
-                        parametersDict={parametersDict}
-                    />
+                    {/* Right Panel Toggle Button - shown when right panel is closed */}
+                    {activePanel === 'left' && (
+                        <IconButton 
+                            sx={{ 
+                                position: 'fixed',
+                                right: '0',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: 'white',
+                                '&:hover': { backgroundColor: '#f0f0f0' },
+                                boxShadow: 2,
+                                zIndex: 1000,
+                                width: '24px',
+                                height: '48px',
+                                borderRadius: '4px 0 0 4px'
+                            }}
+                            onClick={() => setActivePanel('right')}
+                        >
+                            <ChevronLeftIcon />
+                        </IconButton>
+                    )}
+
+                    {/* Right Panel */}
+                    <Box 
+                        className="panel right-panel"
+                        sx={{ 
+                            display: activePanel === 'right' ? 'block' : 'none',
+                            position: 'relative'
+                        }}
+                    >
+                        <div className="component-container">
+                            <Typography variant="h6" gutterBottom>Results Panel</Typography>
+                            <ResultsPanel
+                                entities={entities}
+                                variablesDict={variablesDict}
+                                parametersDict={parametersDict}
+                            />
+                        </div>
+                    </Box>
                 </Box>
-            </Grid2>
+            )}
         </div>
     );
 };

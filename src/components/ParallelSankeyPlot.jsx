@@ -23,13 +23,12 @@ const INTERACTION_TYPES = {
     CONNECT: "connect"
 }
 
-export default function ParallelSankeyPlot({ variablesDict, updateVariable, entities, addEntities, deleteEntities, updateEntities, synchronizeSankeySelection }) {
+export default function ParallelSankeyPlot({ activePanel, variablesDict, updateVariable, entities, addEntities, deleteEntities, updateEntities, synchronizeSankeySelection }) {
     const marginTop = 20;
-    const marginBottom = 30;
-    const marginRight = 80;
-    const marginLeft = 80;
-    const labelOffset = 25;
-    const chartHeight = 350;
+    const marginBottom = 20;
+    const marginRight = 50;
+    const marginLeft = 50;
+    const labelOffset = 20;
 
     const [brushSelectedRegions, setBrushSelectedRegions] = useState(new Map());
     const selectedEntitiesRef = useRef([]);
@@ -42,7 +41,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
     const [activeInteraction, setActiveInteraction] = useState(INTERACTION_TYPES.EXPLORE);
     const activeInteractionRef = useRef(INTERACTION_TYPES.EXPLORE);
-    const [axesFilterStatus, setAxesFilterStatus] = useState({});
 
     const [isBatchMode, setIsBatchMode] = useState(true);
     const isBatchModeRef = useRef(true);
@@ -52,33 +50,42 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
 
     const [warningMessage, setWarningMessage] = useState("");
 
+    const chartHeightRef = useRef(0);
+
     useEffect(() => {
         setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
-        setAxesFilterStatus(Object.keys(variablesDict).reduce((acc, key) => {
-            acc[key] = false;
-            return acc;
-        }, {}));
         updatePlotLayout();
         populateEntities();
-    }, [variablesDict]);
+    }, [activePanel, variablesDict]);
 
     useEffect(() => {
         populateEntities();
     }, [entities]);
 
     const updatePlotLayout = () => {
-        const divId = "sankey-div";
-        document.getElementById(divId).innerHTML = "";
-        const axisNum = Object.keys(variablesDict).length;
-        const chartWidth = d3.select("#" + divId).node().getBoundingClientRect().width;
+        const container = d3.select("#plot-container");
+        const interactionModeBox = d3.select("#interaction-mode-box");
+        const sortableContainer = d3.select("#sortable-container");
 
-        let svg = d3.select("#" + divId).append("svg")
+        const plotDiv = d3.select("#sankey-div");
+        plotDiv.html("");
+
+        const containerHeight = container.node().clientHeight;
+        const interactionModeBoxHeight = interactionModeBox.node().clientHeight;
+        const sortableContainerHeight = sortableContainer.node().clientHeight;
+        
+        const chartWidth = plotDiv.node().clientWidth;
+        const chartHeight = containerHeight - interactionModeBoxHeight - sortableContainerHeight - marginTop - marginBottom;
+
+        // Store chartHeight in ref
+        chartHeightRef.current = chartHeight;
+
+        let svg = plotDiv.append("svg")
             .attr("id", "sankey-svg")
             .attr("width", chartWidth)
-            .attr("height", chartHeight);
+            .attr("height", chartHeight + marginTop + marginBottom);
 
         const newValueAxes = new Map(Object.entries(variablesDict).map(([varName, variable]) => {
-            // Calculate the range padding (5% of the data range)
             const dataRange = variable.max - variable.min;
             const padding = dataRange * 0.1;
 
@@ -87,7 +94,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 {
                     scale: d3.scaleLinear()
                         .domain([variable.min - padding, variable.max + padding])
-                        .range([chartHeight - marginBottom, marginTop]),
+                        .range([chartHeight, marginTop]),
                     originalDomain: [variable.min, variable.max]
                 }
             ];
@@ -105,10 +112,12 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             .selectAll("g")
             .data(Object.entries(variablesDict).map(([varName, variable]) => varName))
             .join("g")
+            .attr("class", "axis")
             .attr("transform", d => `translate(${newVariableAxes(d)}, 0)`)
             .each(function (d) {
+                const axisGroup = d3.select(this);
                 const axisGenerator = d3.axisLeft(newValueAxes.get(d).scale);
-                const axis = d3.select(this).call(axisGenerator);
+                axisGroup.call(axisGenerator);
                 const [min, max] = newValueAxes.get(d).originalDomain;
 
                 // Get the y positions for the original min and max
@@ -116,16 +125,16 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 const yMax = newValueAxes.get(d).scale(max);
 
                 // Add dashed lines for padding regions
-                axis.append("line")
+                axisGroup.append("line")
                     .attr("class", "axis-padding")
                     .attr("x1", 0)
                     .attr("x2", 0)
-                    .attr("y1", chartHeight - marginBottom)
+                    .attr("y1", chartHeight)
                     .attr("y2", yMin)
                     .style("stroke", "#999")
                     .style("stroke-dasharray", "2,2");
 
-                axis.append("line")
+                axisGroup.append("line")
                     .attr("class", "axis-padding")
                     .attr("x1", 0)
                     .attr("x2", 0)
@@ -135,7 +144,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     .style("stroke-dasharray", "2,2");
 
                 // Add solid line for main region
-                axis.append("line")
+                axisGroup.append("line")
                     .attr("class", "axis-main")
                     .attr("x1", 0)
                     .attr("x2", 0)
@@ -144,7 +153,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     .style("stroke", "black");
 
                 // Style the ticks based on whether they're in the padding region
-                axis.selectAll(".tick")
+                axisGroup.selectAll(".tick")
                     .each(function (tickValue) {
                         if (tickValue < min || tickValue > max) {
                             d3.select(this)
@@ -158,7 +167,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     });
 
                 // Remove the original axis line
-                axis.select(".domain").remove();
+                axisGroup.select(".domain").remove();
 
                 // Add draggable handles at min and max
                 const handleWidth = 20;
@@ -168,7 +177,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                 const drag = d3.drag()
                     .on("drag", function (event, type) {
                         const handle = d3.select(this);
-                        const newY = Math.min(Math.max(marginTop, event.y), chartHeight - marginBottom);
+                        const newY = Math.min(Math.max(marginTop, event.y), chartHeight);
                         handle.attr("transform", `translate(0, ${newY})`);
 
                         // Update the value label
@@ -178,7 +187,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     })
                     .on("end", function (event) {
                         const handle = d3.select(this);
-                        const newY = Math.min(Math.max(marginTop, event.y), chartHeight - marginBottom);
+                        const newY = Math.min(Math.max(marginTop, event.y), chartHeight);
                         const newValue = newValueAxes.get(d).scale.invert(newY);
 
                         // Determine if this is min or max handle based on y position
@@ -201,7 +210,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     });
 
                 // Add min handle
-                const minHandle = axis.append("g")
+                const minHandle = axisGroup.append("g")
                     .attr("class", "axis-handle")
                     .attr("transform", `translate(0, ${yMin})`)
                     .call(drag)
@@ -226,7 +235,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     .attr("height", handleHeight)
 
                 // Add max handle
-                const maxHandle = axis.append("g")
+                const maxHandle = axisGroup.append("g")
                     .attr("class", "axis-handle")
                     .attr("transform", `translate(0, ${yMax})`)
                     .call(drag)
@@ -250,19 +259,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     .attr("width", handleWidth)
                     .attr("height", handleHeight)
             })
-            .attr("class", "axis")
-            .call(g => g.append("text")
-                .attr("x", 0)
-                .attr("y", chartHeight - marginBottom + labelOffset)
-                .attr("text-anchor", "middle")
-                .attr("fill", "black")
-                .text(d => d))
-            .call(g => g.selectAll("text")
-                .clone(true).lower()
-                .attr("fill", "none")
-                .attr("stroke-width", 5)
-                .attr("stroke-linejoin", "round")
-                .attr("stroke", "white"));
 
         // Update references but use only the scale part
         valueAxesRef.current = new Map(Array.from(newValueAxes.entries()).map(([key, value]) => [key, value.scale]));
@@ -322,15 +318,16 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         if (isBatchModeRef.current) {
             // Batch mode: use brush selection
             activateBrushFeature();
-        } else {
-            // Individual mode: use click interactions
-            if (interactionType === INTERACTION_TYPES.EXPLORE) {
-                addAxisRegion();
-                activateAddFeature();
-            } else if (interactionType === INTERACTION_TYPES.CONNECT) {
-                activateConnectFeature();
-            }
         }
+        // else {
+        //     // Individual mode: use click interactions
+        //     if (interactionType === INTERACTION_TYPES.EXPLORE) {
+        //         // addAxisRegion();
+        //         activateAddFeature();
+        //     } else if (interactionType === INTERACTION_TYPES.CONNECT) {
+        //         activateConnectFeature();
+        //     }
+        // }
 
         d3.selectAll(".unselected-entity-dot").raise();
 
@@ -378,7 +375,7 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             .attr("x", -10)
             .attr("y", marginTop)
             .attr("width", 20)
-            .attr("height", chartHeight - marginTop - marginBottom)
+            .attr("height", chartHeightRef.current - marginTop - marginBottom)
             .attr("fill", "transparent")
             .attr("pointer-events", "all")
     }
@@ -579,13 +576,19 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         const brush = d3.brushY()
             .extent([
                 [-(brushWidth / 2), marginTop],
-                [brushWidth / 2, chartHeight - marginBottom]
+                [brushWidth / 2, chartHeightRef.current]
             ])
             .on("start brush end", (event, key) => {
-                // Skip if the event was triggered by a programmatic brush clear
                 if (event.sourceEvent === null) return;
                 brushed(event, key);
             });
+
+        // Apply brush to axis groups
+        svg.selectAll(".axis")
+            .append("g")
+            .attr("class", "brush")
+            .call(brush)
+            .call(brush.move, null);
 
         function brushed(event, key) {
             // Only process brush events in batch mode
@@ -698,12 +701,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
             svg.selectAll(".selection-count").raise();
             setBrushSelectedRegions(selections);
         }
-
-        svg.selectAll(".axis")
-            .call(brush)
-            .call(brush.move, null);
-
-        svg.selectAll(".axis-handle").raise();
     }
 
     const connectRandomEntities = () => {
@@ -841,15 +838,6 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
         setDraggedItem(null);
     };
 
-
-    function toggleAxesFilter(event) {
-        const axisName = event.target.value;
-        setAxesFilterStatus(prevStatus => ({
-            ...prevStatus,
-            [axisName]: !prevStatus[axisName]
-        }));
-    }
-
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -859,40 +847,45 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
     )
 
     return (
-        <Box>
-            <Box sx={{ my: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                    <FormControl
-                        component="fieldset"
-                        sx={{
-                            border: '1px solid',
-                            borderColor: 'grey.500',
-                            borderRadius: 1,
-                            p: 2
-                        }}
+        <Box id="plot-container" sx={{ boxSizing: 'border-box', height: "100%" }}>
+            <Box id="interaction-mode-box" sx={{
+                boxSizing: 'border-box',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <FormControl
+                    component="fieldset"
+                    sx={{
+                        border: '1px solid',
+                        borderColor: 'grey.500',
+                        borderRadius: 1,
+                        p: 1
+                    }}
+                >
+                    <FormLabel component="legend">Interaction Mode</FormLabel>
+                    <RadioGroup
+                        row
+                        aria-label="interactionMode"
+                        name="interactionMode"
+                        value={activeInteraction}
+                        onChange={(event) => changeInteractionMode(event.target.value)}
                     >
-                        <FormLabel component="legend">Interaction Mode</FormLabel>
-                        <RadioGroup
-                            row
-                            aria-label="interactionMode"
-                            name="interactionMode"
-                            value={activeInteraction}
-                            onChange={(event) => changeInteractionMode(event.target.value)}
-                        >
-                            <FormControlLabel
-                                value={INTERACTION_TYPES.EXPLORE}
-                                control={<Radio />}
-                                label="Explore Complete Patterns"
-                            />
-                            <FormControlLabel
-                                value={INTERACTION_TYPES.CONNECT}
-                                control={<Radio />}
-                                label="Connect Incomplete Patterns"
-                            />
-                        </RadioGroup>
-                    </FormControl>
+                        <FormControlLabel
+                            value={INTERACTION_TYPES.EXPLORE}
+                            control={<Radio />}
+                            label="Completed"
+                        />
+                        <FormControlLabel
+                            value={INTERACTION_TYPES.CONNECT}
+                            control={<Radio />}
+                            label="Incompleted"
+                        />
+                    </RadioGroup>
+                </FormControl>
 
-                    {/* <FormControlLabel
+                {/* <FormControlLabel
                         control={
                             <Switch
                                 checked={isBatchMode}
@@ -903,91 +896,93 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                         sx={{ ml: 2 }}
                     /> */}
 
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', ml: 2 }}>
-                        {activeInteraction === INTERACTION_TYPES.EXPLORE && isBatchMode && (
-                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-                                <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <Button
-                                        sx={{ mb: 1 }}
-                                        disabled={
-                                            (isBatchMode && (brushSelectedRegions.size === 0 || activeInteraction !== INTERACTION_TYPES.EXPLORE)) ||
-                                            (!isBatchMode)
-                                        }
-                                        variant='outlined'
-                                        onClick={generateRandomEntities}>
-                                        Generate
-                                    </Button>
-                                    <input
-                                        type="number"
-                                        value={generatedNum}
-                                        onChange={(e) => setGeneratedNum(Number(e.target.value))}
-                                        min="1"
-                                        style={{ width: '60px', textAlign: 'center' }}
-                                    />
-                                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', ml: 2 }}>
+                    {activeInteraction === INTERACTION_TYPES.EXPLORE && isBatchMode && (
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+                            <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <Button
-                                    disabled={selectedEntities.length === 0}
-                                    variant='outlined'
-                                    onClick={deleteSelectedEntities}>
-                                    Delete
-                                </Button>
-                            </Box>
-                        )}
-
-                        {activeInteraction === INTERACTION_TYPES.CONNECT && isBatchMode && (
-                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-                                <Button
+                                    sx={{ mb: 1 }}
                                     disabled={
-                                        (isBatchMode && (selectedEntities.length === 0 || activeInteraction !== INTERACTION_TYPES.CONNECT || brushSelectedRegions.size < 2)) ||
+                                        (isBatchMode && (brushSelectedRegions.size === 0 || activeInteraction !== INTERACTION_TYPES.EXPLORE)) ||
                                         (!isBatchMode)
                                     }
                                     variant='outlined'
-                                    onClick={connectRandomEntities}>
-                                    Link
+                                    onClick={generateRandomEntities}>
+                                    Generate
                                 </Button>
-                                <Button
-                                    sx={{ ml: 1 }}
-                                    disabled={selectedEntities.length === 0}
-                                    variant='outlined'
-                                    onClick={deleteSelectedEntities}>
-                                    Delete
-                                </Button>
+                                <input
+                                    type="number"
+                                    value={generatedNum}
+                                    onChange={(e) => setGeneratedNum(Number(e.target.value))}
+                                    min="1"
+                                    style={{ width: '60px', textAlign: 'center' }}
+                                />
                             </Box>
-                        )}
-                    </Box>
+                            <Button
+                                disabled={selectedEntities.length === 0}
+                                variant='outlined'
+                                onClick={deleteSelectedEntities}>
+                                Delete
+                            </Button>
+                        </Box>
+                    )}
+
+                    {activeInteraction === INTERACTION_TYPES.CONNECT && isBatchMode && (
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+                            <Button
+                                disabled={
+                                    (isBatchMode && (selectedEntities.length === 0 || activeInteraction !== INTERACTION_TYPES.CONNECT || brushSelectedRegions.size < 2)) ||
+                                    (!isBatchMode)
+                                }
+                                variant='outlined'
+                                onClick={connectRandomEntities}>
+                                Link
+                            </Button>
+                            <Button
+                                sx={{ ml: 1 }}
+                                disabled={selectedEntities.length === 0}
+                                variant='outlined'
+                                onClick={deleteSelectedEntities}>
+                                Delete
+                            </Button>
+                        </Box>
+                    )}
                 </Box>
             </Box>
 
-            <Box sx={{ width: "100%", display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                    <SortableContext
-                        items={sortableVariables}
-                        strategy={verticalListSortingStrategy}
-                    >
-                        <Box sx={{ width: '100%', minHeight: '40px', display: 'flex', flexDirection: 'row', position: 'relative' }}>
-                            {sortableVariables.map(item => {
-                                const axisPosition = variableAxesRef.current(item.name) - labelOffset;
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                <SortableContext
+                    items={sortableVariables}
+                    strategy={verticalListSortingStrategy}
+                >
+                    <Box id='sortable-container' sx={{ width: '100%', minHeight: '40px', display: 'flex', flexDirection: 'row', position: 'relative' }}>
+                        {sortableVariables.map(item => {
+                            const axisPosition = variableAxesRef.current(item.name) - labelOffset;
 
-                                return (
-                                    <SortableItem
-                                        key={item.name}
-                                        id={item.name}
-                                        axesFilterStatus={axesFilterStatus}
-                                        toggleAxesFilter={toggleAxesFilter}
-                                        axisPosition={axisPosition}
-                                        activeInteraction={activeInteraction}
-                                    />
-                                )
-                            })}
-                        </Box>
-                    </SortableContext>
-                    <DragOverlay>
-                        {draggedItem ? <Item id={draggedItem} /> : null}
-                    </DragOverlay>
-                </DndContext>
+                            return (
+                                <SortableItem
+                                    key={item.name}
+                                    id={item.name}
+                                    axisPosition={axisPosition}
+                                    activeInteraction={activeInteraction}
+                                />
+                            )
+                        })}
+                    </Box>
+                </SortableContext>
+                <DragOverlay>
+                    {draggedItem ? <Item id={draggedItem} /> : null}
+                </DragOverlay>
+            </DndContext>
 
-                <Box sx={{ width: "100%", mx: 'auto', mt: 1 }} id='sankey-div'></Box>
-            </Box>
+            <Box
+                sx={{
+                    boxSizing: 'content-box',
+                    mx: 'auto',
+                    width: '100%',
+                }}
+                id='sankey-div'
+            />
 
             <Snackbar
                 open={warningMessage !== ""}
@@ -1002,11 +997,11 @@ export default function ParallelSankeyPlot({ variablesDict, updateVariable, enti
                     {warningMessage}
                 </Alert>
             </Snackbar>
-        </Box >
+        </Box>
     )
 }
 
-export const SortableItem = forwardRef(({ id, axesFilterStatus, toggleAxesFilter, axisPosition, activeInteraction }, ref) => {
+export const SortableItem = forwardRef(({ id, axisPosition, activeInteraction }, ref) => {
     const {
         attributes,
         listeners,
@@ -1024,8 +1019,6 @@ export const SortableItem = forwardRef(({ id, axesFilterStatus, toggleAxesFilter
         <Item
             ref={setNodeRef}
             id={id}
-            axesFilterStatus={axesFilterStatus}
-            toggleAxesFilter={toggleAxesFilter}
             axisPosition={axisPosition}
             activeInteraction={activeInteraction}
             style={style}
@@ -1035,7 +1028,7 @@ export const SortableItem = forwardRef(({ id, axesFilterStatus, toggleAxesFilter
     );
 });
 
-export const Item = forwardRef(({ id, axesFilterStatus, toggleAxesFilter, axisPosition, activeInteraction, ...props }, ref) => {
+export const Item = forwardRef(({ id, axisPosition, activeInteraction, ...props }, ref) => {
 
     return (
         <Box {...props}
@@ -1045,16 +1038,8 @@ export const Item = forwardRef(({ id, axesFilterStatus, toggleAxesFilter, axisPo
                 left: axisPosition, position: 'absolute'
             }}
         >
-            <DragHandleIcon />
-            <Typography>{id}</Typography>
-            {/* <Radio
-                size='small'
-                sx={{ padding: "2px" }}
-                disabled={activeInteraction !== INTERACTION_TYPES.PARTIALLY}
-                checked={axesFilterStatus ? axesFilterStatus[id] : false}
-                value={id}
-                onClick={(event) => toggleAxesFilter(event)}
-            /> */}
+            <DragHandleIcon size='small'/>
+            <Typography variant='caption'>{id}</Typography>
         </Box>
     )
 });

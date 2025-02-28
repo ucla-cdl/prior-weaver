@@ -5,9 +5,9 @@ import { logUserBehavior } from '../utils/BehaviorListener';
 import axios from "axios";
 
 const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariable2, updateVariable, updateBivariable, entities }, ref) => {
-    const chartWidth = 350;
-    const chartHeight = 350;
-    const margin = { top: 30, right: 30, bottom: 60, left: 60 };
+    const chartWidth = 300;
+    const chartHeight = 300;
+    const margin = { top: 10, right: 10, bottom: 50, left: 50 };
     const marginalPlotWidth = 0; // y-axis marginal hist
     const marginalPlotHeight = 0; // x-axis marginal hist
     const mainPlotWidth = chartWidth - margin.left - margin.right - marginalPlotWidth;
@@ -16,7 +16,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     const marginDotRadius = 4;
     const toggleHeight = 7;
     const labelOffset = 12;
-    const titleOffset = 40;
+    const titleOffset = 30;
 
     const MODES = { "PREDICT": 0, "POPULATE": 1, "CHIP": 2, "COMBINE": 3 };
     const COLORS = { "PREDICT_DOT": "orange", "POPULATE_DOT": "blue", "CHIP_DOT": "blue" }
@@ -91,7 +91,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
             .attr("text-anchor", "middle")
             .attr("x", mainPlotWidth / 2)
             .attr("y", mainPlotHeight + titleOffset)
-            .style("font-size", "16px")
+            .style("font-size", "14px")
             .text(`${biVariable1.name} (${biVariable1.unitLabel})`);
 
         // Draw Y axis
@@ -111,11 +111,11 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
             .attr("transform", "rotate(-90)")
             .attr("x", -mainPlotHeight / 2)
             .attr("y", -titleOffset)
-            .style("font-size", "16px")
+            .style("font-size", "14px")
             .text(`${biVariable2.name} (${biVariable2.unitLabel})`);
 
         mainPlot.selectAll(".tick text")
-            .style("font-size", 15)
+            .style("font-size", 12)
             .style("font-family", "Times New Roman");
     }
 
@@ -340,7 +340,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
             .attr("id", "bivariate-svg")
             .attr("width", chartWidth)
             .attr("height", chartHeight);
-            
+
         svg.append("g")
             .attr("id", "bivariate-main-plot")
             .attr("transform", `translate(${margin.left}, ${margin.top + marginalPlotHeight})`)
