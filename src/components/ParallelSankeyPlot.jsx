@@ -25,7 +25,7 @@ const INTERACTION_TYPES = {
 
 export default function ParallelSankeyPlot({ activePanel, variablesDict, updateVariable, entities, addEntities, deleteEntities, updateEntities, synchronizeSankeySelection }) {
     const marginTop = 20;
-    const marginBottom = 20;
+    const marginBottom = 10;
     const marginRight = 50;
     const marginLeft = 50;
     const labelOffset = 20;
@@ -54,7 +54,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
 
     useEffect(() => {
         setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
-        updatePlotLayout();
+        drawPlot();
         populateEntities();
     }, [activePanel, variablesDict]);
 
@@ -62,28 +62,29 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
         populateEntities();
     }, [entities]);
 
-    const updatePlotLayout = () => {
+    const drawPlot = () => {
         const container = d3.select("#plot-container");
         const interactionModeBox = d3.select("#interaction-mode-box");
         const sortableContainer = d3.select("#sortable-container");
-
         const plotDiv = d3.select("#sankey-div");
         plotDiv.html("");
 
         const containerHeight = container.node().clientHeight;
         const interactionModeBoxHeight = interactionModeBox.node().clientHeight;
         const sortableContainerHeight = sortableContainer.node().clientHeight;
-        
-        const chartWidth = plotDiv.node().clientWidth;
-        const chartHeight = containerHeight - interactionModeBoxHeight - sortableContainerHeight - marginTop - marginBottom;
 
-        // Store chartHeight in ref
-        chartHeightRef.current = chartHeight;
-
+        const svgWidth = plotDiv.node().clientWidth;
+        const svgHeight = containerHeight - interactionModeBoxHeight - sortableContainerHeight;
         let svg = plotDiv.append("svg")
             .attr("id", "sankey-svg")
-            .attr("width", chartWidth)
-            .attr("height", chartHeight + marginTop + marginBottom);
+            .attr("width", svgWidth)
+            .attr("height", svgHeight);
+        let chart = svg.append("g")
+            .attr("id", "pcp")
+            .attr("transform", `translate(${marginLeft}, ${marginTop})`);
+        let chartWidth = svgWidth - marginLeft - marginRight;
+        let chartHeight = svgHeight - marginTop - marginBottom;
+        chartHeightRef.current = chartHeight;
 
         const newValueAxes = new Map(Object.entries(variablesDict).map(([varName, variable]) => {
             const dataRange = variable.max - variable.min;
@@ -94,7 +95,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                 {
                     scale: d3.scaleLinear()
                         .domain([variable.min - padding, variable.max + padding])
-                        .range([chartHeight, marginTop]),
+                        .range([chartHeight, 0]),
                     originalDomain: [variable.min, variable.max]
                 }
             ];
@@ -105,10 +106,10 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                 Object.values(variablesDict)
                     .sort((a, b) => a.sequenceNum - b.sequenceNum) // Sort by arranged sequence number
                     .map(d => d.name))
-            .range([marginLeft, chartWidth - marginRight]);
+            .range([0, chartWidth]);
 
         // Append the axis for each key.
-        svg.append("g")
+        chart.append("g")
             .selectAll("g")
             .data(Object.entries(variablesDict).map(([varName, variable]) => varName))
             .join("g")
@@ -138,7 +139,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                     .attr("class", "axis-padding")
                     .attr("x1", 0)
                     .attr("x2", 0)
-                    .attr("y1", marginTop)
+                    .attr("y1", 0)
                     .attr("y2", yMax)
                     .style("stroke", "#999")
                     .style("stroke-dasharray", "2,2");
@@ -177,7 +178,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                 const drag = d3.drag()
                     .on("drag", function (event, type) {
                         const handle = d3.select(this);
-                        const newY = Math.min(Math.max(marginTop, event.y), chartHeight);
+                        const newY = Math.min(Math.max(0, event.y), chartHeight);
                         handle.attr("transform", `translate(0, ${newY})`);
 
                         // Update the value label
@@ -187,7 +188,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                     })
                     .on("end", function (event) {
                         const handle = d3.select(this);
-                        const newY = Math.min(Math.max(marginTop, event.y), chartHeight);
+                        const newY = Math.min(Math.max(0, event.y), chartHeight);
                         const newValue = newValueAxes.get(d).scale.invert(newY);
 
                         // Determine if this is min or max handle based on y position
@@ -383,7 +384,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
     const populateEntities = () => {
         console.log("Populate entities in PCP", entities);
 
-        const svg = d3.select("#sankey-svg");
+        const chart = d3.select("#pcp");
 
         // Draw path for the entity
         const line = d3.line()
@@ -391,8 +392,8 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
             .x(([key]) => variableAxesRef.current(key))
             .y(([key, value]) => valueAxesRef.current.get(key)(value));
 
-        svg.selectAll(".entity-path").remove();
-        svg.selectAll(".entity-dot").remove();
+        chart.selectAll(".entity-path").remove();
+        chart.selectAll(".entity-dot").remove();
 
         /**
          * Draw entities
@@ -403,7 +404,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
          */
         Object.values(entities).forEach(entity => {
             Object.entries(entity).filter(([key, value]) => key !== "id" && value !== null).forEach(([key, value]) => {
-                svg.append("circle")
+                chart.append("circle")
                     .attr("class", "entity-dot")
                     .attr("id", `dot_${entity["id"]}_${key}`)
                     .attr("cx", variableAxesRef.current(key))
@@ -412,7 +413,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
 
             });
 
-            svg.append("path")
+            chart.append("path")
                 .datum(entity) // Pass the entity directly
                 .attr("class", "entity-path")
                 .attr("id", `entity_path_${entity["id"]}`)
@@ -423,7 +424,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                 ))
         });
 
-        svg.selectAll(".entity-dot")
+        chart.selectAll(".entity-dot")
             .raise();
 
         changeInteractionMode(activeInteractionRef.current);
@@ -699,8 +700,11 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
 
             svg.selectAll(".entity-dot").raise();
             svg.selectAll(".selection-count").raise();
+            svg.selectAll(".axis-handle").raise();
             setBrushSelectedRegions(selections);
         }
+
+        svg.selectAll(".axis-handle").raise();
     }
 
     const connectRandomEntities = () => {
@@ -853,18 +857,19 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                 display: 'flex',
                 flexDirection: 'row',
                 justifyContent: 'center',
-                alignItems: 'center'
+                alignItems: 'center',
+                p: 2
             }}>
-                <FormControl
-                    component="fieldset"
-                    sx={{
-                        border: '1px solid',
-                        borderColor: 'grey.500',
-                        borderRadius: 1,
-                        p: 1
-                    }}
-                >
-                    <FormLabel component="legend">Interaction Mode</FormLabel>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    border: '1px solid',
+                    borderColor: 'grey.500',
+                    borderRadius: 1,
+                    p: 1
+                }}>
+                    <Typography sx={{ mr: 1.5 }}>Interaction Mode:</Typography>
                     <RadioGroup
                         row
                         aria-label="interactionMode"
@@ -883,18 +888,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                             label="Incompleted"
                         />
                     </RadioGroup>
-                </FormControl>
-
-                {/* <FormControlLabel
-                        control={
-                            <Switch
-                                checked={isBatchMode}
-                                onChange={(e) => changeBatchMode(e.target.checked)}
-                            />
-                        }
-                        label="Batch Mode"
-                        sx={{ ml: 2 }}
-                    /> */}
+                </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', ml: 2 }}>
                     {activeInteraction === INTERACTION_TYPES.EXPLORE && isBatchMode && (
@@ -957,7 +951,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                 >
                     <Box id='sortable-container' sx={{ width: '100%', minHeight: '40px', display: 'flex', flexDirection: 'row', position: 'relative' }}>
                         {sortableVariables.map(item => {
-                            const axisPosition = variableAxesRef.current(item.name) - labelOffset;
+                            const axisPosition = variableAxesRef.current(item.name) + marginLeft;
 
                             return (
                                 <SortableItem
@@ -1034,11 +1028,15 @@ export const Item = forwardRef(({ id, axisPosition, activeInteraction, ...props 
         <Box {...props}
             ref={ref}
             sx={{
-                display: 'block flex', flexDirection: 'column', alignItems: 'center',
-                left: axisPosition, position: 'absolute'
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                position: 'absolute',
+                left: axisPosition,
+                transform: 'translateX(-50%)'
             }}
         >
-            <DragHandleIcon size='small'/>
+            <DragHandleIcon size='small' />
             <Typography variant='caption'>{id}</Typography>
         </Box>
     )

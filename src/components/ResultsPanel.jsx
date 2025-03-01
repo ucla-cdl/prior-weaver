@@ -24,12 +24,9 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     const paramsRangeDelta = 3;
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
-    const width = 320;
-    const height = 250;
-    const margin = { top: 40, right: 40, bottom: 60, left: 40 };
-    const plotWidth = width - margin.left - margin.right;
-    const plotHeight = height - margin.top - margin.bottom;
-    const offset = 180;
+    const svgHeight = 250;
+    const margin = { top: 10, bottom: 40, left: 40, right: 20, };
+    const labelOffset = 35;
 
     const colors = d3.scaleOrdinal(d3.schemeCategory10);
 
@@ -61,7 +58,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         const incompleteEntities = Object.values(entities).some(entity => {
             return Object.values(entity).some(value => value === null);
         });
-        
+
         if (incompleteEntities) {
             setSnackbarMessage('All entities must be completed before translating');
             setSnackbarOpen(true);
@@ -110,15 +107,17 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     const plotPriorsResults = () => {
         Object.entries(priorsDict).forEach(([paramName, priorResult], index) => {
             // Create an SVG element
-            document.getElementById('parameter-div-' + paramName).innerHTML = '';
-            d3.select('#parameter-div-' + paramName)
-                .append('svg')
-                .attr('id', 'parameter-svg-' + paramName)
-                .attr('width', width)
-                .attr('height', height);
+            const container = d3.select(`#parameter-div-${paramName}`);
+            container.html('');
+
+            const svgWidth = d3.select(`#predictive-check-div`).node().clientWidth;
+            container.append('svg')
+                .attr('id', `parameter-svg-${paramName}`)
+                .attr('width', svgWidth)
+                .attr('height', svgHeight);
 
             // Plot the histogram of simulated parametric data for each parameter 
-            plotParameterHistogram(paramName, priorResult);
+            // plotParameterHistogram(paramName, priorResult);
 
             // Set the first distribution as the selected distribution for this parameter
             selectFittedDistribution(paramName, priorResult.distributions[0]);
@@ -126,17 +125,20 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     }
 
     const plotParameterHistogram = (paramName, priorResult) => {
-        const svg = d3.select('#parameter-svg-' + paramName)
+        const svg = d3.select(`#parameter-svg-${paramName}`)
+
+        const chartWidth = svg.node().clientWidth - margin.left - margin.right;
+        const chartHeight = svg.node().clientHeight - margin.top - margin.bottom;
 
         // Append a group element to the SVG to position the chart
-        const g = svg.append('g')
-            .attr('id', 'parameter-histogram-' + paramName)
+        const chart = svg.append('g')
+            .attr('id', `parameter-histogram-${paramName}`)
             .attr('transform', `translate(${margin.left},${margin.top})`);
 
         const x = d3.scaleLinear()
             .domain([priorResult.min, priorResult.max])
             .nice()
-            .range([0, plotWidth]);
+            .range([0, chartWidth]);
 
         const bins = d3.bin()
             .domain(x.domain())
@@ -145,76 +147,89 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         const y = d3.scaleLinear()
             .domain([0, d3.max(bins, d => d.length)])
             .nice()
-            .range([plotHeight, 0]);
+            .range([chartHeight, 0]);
 
         // Create the x-axis
-        g.append('g')
-            .attr('transform', `translate(0,${plotHeight})`)
+        chart.append('g')
+            .attr('transform', `translate(0,${chartHeight})`)
             .call(d3.axisBottom(x));
 
         // Create the y-axis
-        g.append('g')
+        chart.append('g')
             .call(d3.axisLeft(y));
 
         // Add bars for the histogram
-        g.selectAll('.bar')
+        chart.selectAll('.bar')
             .data(bins)
             .enter().append('rect')
             .attr('class', 'bar')
             .attr('x', d => x(d.x0))
             .attr('width', d => d3.max([x(d.x1) - x(d.x0) - 1, 0])) // Adjust width for padding
             .attr('y', d => y(d.length))
-            .attr('height', d => plotHeight - y(d.length))
+            .attr('height', d => chartHeight - y(d.length))
             .attr('fill', 'lightgray')
             .lower();
 
         // Add title to each histogram
-        g.append('text')
-            .attr('x', plotWidth / 2)
-            .attr('y', plotHeight + margin.bottom - 15)
+        chart.append('text')
+            .attr('x', chartWidth / 2)
+            .attr('y', chartHeight + labelOffset)
             .attr('text-anchor', 'middle')
             .text(paramName);
     }
 
     const plotFittedDistribution = (paramName, priorResult, dist) => {
-        const svg = d3.select('#parameter-svg-' + paramName)
-        d3.select('#parameter-distribution-' + paramName)?.remove();
+        const svg = d3.select(`#parameter-svg-${paramName}`)
+        const chartWidth = svg.node().clientWidth - margin.left - margin.right;
+        const chartHeight = svg.node().clientHeight - margin.top - margin.bottom;
+
+        // Append a group element to the SVG for the chart
+        const chart = svg.append('g')
+            .attr('id', `parameter-distribution-${paramName}`)
+            .attr('transform', `translate(${margin.left},${margin.top})`);
 
         const x = d3.scaleLinear()
             .domain([priorResult.min, priorResult.max])
             .nice()
-            .range([0, plotWidth]);
+            .range([0, chartWidth]);
 
         const yMax = d3.max(dist.p);
         const y = d3.scaleLinear()
             .domain([0, yMax])
-            .range([plotHeight, 0]);
+            .range([chartHeight, 0]);
 
         const line = d3.line()
             .x(d => x(d[0]))
             .y(d => y(d[1]));
 
-        // Append a group element to the SVG for the chart
-        const g = svg.append('g')
-            .attr('id', 'parameter-distribution-' + paramName)
-            .attr('transform', `translate(${margin.left},${margin.top})`);
+        // Create the x-axis
+        chart.append('g')
+            .attr('transform', `translate(0,${chartHeight})`)
+            .call(d3.axisBottom(x));
 
         // Create the y-axis
-        g.append('g')
-            .attr('transform', `translate(${plotWidth}, 0)`)
-            .call(d3.axisRight(y));
+        chart.append('g')
+            .attr('transform', `translate(0, 0)`)
+            .call(d3.axisLeft(y));
 
-        g.append('path')
+        chart.append('path')
             .datum(dist.x.map((d, i) => [d, dist.p[i]]))
             .attr('fill', 'none')
             .attr('stroke', 'blue')
             .attr('stroke-width', 1.5)
             .attr('d', line);
 
+        // Add title to each histogram
+        chart.append('text')
+            .attr('x', chartWidth / 2)
+            .attr('y', chartHeight + labelOffset)
+            .attr('text-anchor', 'middle')
+            .text(paramName);
+
         // Add caption below the title
-        g.append('text')
-            .attr('x', plotWidth / 2)
-            .attr('y', plotHeight + margin.bottom - 5)
+        chart.append('text')
+            .attr('x', chartWidth / 2)
+            .attr('y', chartHeight + labelOffset + 5)
             .attr('text-anchor', 'middle')
             .attr('font-size', '11px')
             .attr('fill', 'gray')
@@ -279,44 +294,48 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         const containerDiv = d3.select('#predictive-check-div');
         containerDiv.html('');
 
+        const svgWidth = containerDiv.node().clientWidth;
+        const svg = containerDiv
+            .append('svg')
+            .attr('width', svgWidth)
+            .attr('height', svgHeight);
+
+        const chartWidth = svgWidth - margin.left - margin.right;
+        const chartHeight = svgHeight - margin.top - margin.bottom;
+        const chart = svg.append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+
         const simulatedResults = results["simulated_results"];
         const minX = results["min_response_val"]
         const maxX = results["max_response_val"]
         const maxY = results["max_density_val"]
 
-        const svg = containerDiv
-            .append('svg')
-            .attr('width', width)
-            .attr('height', height);
-
         const x = d3.scaleLinear()
             .domain([minX, maxX])
             .nice()
-            .range([0, plotWidth]);
+            .range([0, chartWidth]);
 
         const yKDE = d3.scaleLinear()
             .domain([0, maxY])
             .nice()
-            .range([plotHeight, 0]);
-
-        const g = svg.append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
+            .range([chartHeight, 0]);
 
         // Create the x-axis
-        g.append('g')
-            .attr('transform', `translate(0,${plotHeight})`)
+        chart.append('g')
+            .attr('transform', `translate(0, ${chartHeight})`)
             .call(d3.axisBottom(x));
 
         // Create the y-axis for the kde
-        g.append('g')
+        chart.append('g')
             .call(d3.axisLeft(yKDE));
 
-        // Add title to the histogram
-        g.append('text')
-            .attr('x', plotWidth / 2)
-            .attr('y', plotHeight + margin.bottom - 15)
+        // Add title
+        const responseVar = Object.values(variablesDict).find(v => v.type === "response");
+        chart.append('text')
+            .attr('x', chartWidth / 2)
+            .attr('y', chartHeight + labelOffset)
             .attr('text-anchor', 'middle')
-            .text('Income');
+            .text(`${responseVar.name} (${responseVar.unitLabel})`);
 
         simulatedResults.forEach((simulatedData, index) => {
             // Plot fitted kde
@@ -324,7 +343,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                 .x(d => x(d.x))
                 .y(d => yKDE(d.density));
 
-            g.append('path')
+            chart.append('path')
                 .datum(simulatedData["kde"])
                 .attr('fill', 'none')
                 .attr('stroke', 'red')
@@ -354,51 +373,58 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     }
 
     return (
-        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Box id='results-panel' sx={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+        }}>
             <Button
-                sx={{ my: 2 }}
+                sx={{ my: 1 }}
                 variant="contained"
                 onClick={translate}
                 disabled={Object.values(entities).length === 0}
             >
                 Translate
             </Button>
-            {isTranslating && <CircularProgress sx={{ my: 3 }} />}
+            {isTranslating && <CircularProgress sx={{ my: 2 }} />}
             {!isTranslating && translated > 0 &&
                 <Box sx={{ width: '100%' }}>
-                    <Box sx={{ borderRight: '1px solid #ccc', pr: 2 }}>
+                    <Box sx={{ width: "100%", borderBottom: '1px solid #ccc', pb: 1 }}>
                         <h4>Prior Predictive Check Result</h4>
-                        <Box sx={{ my: 2 }} id={'predictive-check-div'}></Box>
+                        <Box sx={{ width: '100%' }} id={'predictive-check-div'}></Box>
                     </Box>
-                    <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                    <Box sx={{ width: '100%' }}>
                         <h4>Prior Distributions</h4>
-                        <IconButton color={editParams ? 'primary' : ''} onClick={() => setEditParams(!editParams)}>
-                            <EditIcon />
-                        </IconButton>
                         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', overflowX: 'auto' }}>
                             {Object.values(parametersDict).map((parameter, idx) => (
-                                <Box sx={{ my: 1 }} key={idx}>
+                                <Box key={idx}>
                                     {priorsDict[parameter.name] &&
-                                        <Box>
-                                            <FormControl>
-                                                <InputLabel id={`select-label-${idx}`}>Distribution</InputLabel>
-                                                <Select
-                                                    labelId={`select-label-${idx}`}
-                                                    value={selectedPriorDistributions[parameter.name]?.name || ''}
-                                                    label="Distribution"
-                                                    onChange={(e) => {
-                                                        const selectedDist = priorsDict[parameter.name].distributions.find(dist => dist.name === e.target.value);
-                                                        selectFittedDistribution(parameter.name, selectedDist);
-                                                    }}
-                                                >
-                                                    {priorsDict[parameter.name].distributions.map((dist, distIdx) => (
-                                                        <MenuItem key={distIdx} value={dist.name}>
-                                                            {dist.name}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
-
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                                                <FormControl>
+                                                    <InputLabel id={`select-label-${idx}`}>Distribution</InputLabel>
+                                                    <Select
+                                                        labelId={`select-label-${idx}`}
+                                                        value={selectedPriorDistributions[parameter.name]?.name || ''}
+                                                        label="Distribution"
+                                                        onChange={(e) => {
+                                                            const selectedDist = priorsDict[parameter.name].distributions.find(dist => dist.name === e.target.value);
+                                                            selectFittedDistribution(parameter.name, selectedDist);
+                                                        }}
+                                                    >
+                                                        {priorsDict[parameter.name].distributions.map((dist, distIdx) => (
+                                                            <MenuItem key={distIdx} value={dist.name}>
+                                                                {dist.name}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                                <IconButton size='small' color={editParams ? 'primary' : ''} onClick={() => setEditParams(!editParams)}>
+                                                    <EditIcon />
+                                                </IconButton>
+                                            </Box>
                                             {editParams && Object.keys(selectedPriorDistributions[parameter.name].params).map((paramKey, paramIdx) => {
                                                 return (
                                                     <Box sx={{ my: 1, display: 'flex', flexDirection: 'row' }} key={paramIdx}>
@@ -421,7 +447,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                                             })}
                                         </Box>
                                     }
-                                    <Box sx={{ my: 1 }} key={idx} id={'parameter-div-' + parameter.name}></Box>
+                                    <Box key={idx} sx={{ width: '100%' }} id={'parameter-div-' + parameter.name}></Box>
                                 </Box>
                             ))}
                         </Box>

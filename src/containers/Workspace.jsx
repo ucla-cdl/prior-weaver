@@ -112,86 +112,6 @@ export default function Workspace(props) {
         }));
     }
 
-    // Add an attribute to every entity when adding a variable
-    const addAttributeToEntities = (varName) => {
-        console.log("Add an Attribute To Entities", varName);
-        let newEntities = { ...entities };
-        Object.keys(newEntities).forEach((id) => {
-            newEntities[id][varName] = null;
-        });
-        setEntities(newEntities);
-    }
-
-    /**
-     * Create a new entities using a dictonary contains data as key-value pairs for each variable
-     */
-    const addEntities = (entitiesData) => {
-        console.log("add entities", entitiesData);
-        setEntities((prev) => {
-            let newEntities = { ...prev };
-            entitiesData.forEach((entityData) => {
-                // Create a new entity with a unique ID and key-value pairs for each variable
-                let newEntity = {
-                    id: uuidv4()
-                };
-                Object.keys(variablesDict).forEach((key) => {
-                    newEntity[key] = null;
-                });
-                Object.entries(entityData).forEach(([key, value]) => {
-                    newEntity[key] = value;
-                });
-
-                newEntities[newEntity.id] = newEntity;
-            });
-
-            return newEntities;
-        });
-    }
-
-    const deleteEntities = (entitiesIDs) => {
-        console.log("delete entities", entitiesIDs);
-        let newEntities = { ...entities };
-        entitiesIDs.forEach((entityID) => {
-            delete newEntities[entityID];
-        });
-        setEntities(newEntities);
-    }
-
-    // Update the entities with new data
-    const updateEntities = (entitiesIDs, entitiesData) => {
-        console.log("update entities", entitiesIDs, entitiesData);
-        let newEntities = { ...entities };
-        entitiesIDs.forEach((entityID, i) => {
-            let entityData = entitiesData[i];
-            let newEntity = { ...newEntities[entityID] };
-            Object.entries(entityData).forEach(([key, value]) => {
-                newEntity[key] = value;
-            });
-            newEntities[entityID] = newEntity;
-        });
-
-        newEntities = Object.fromEntries(
-            Object.entries(newEntities).filter(([id, entity]) =>
-                Object.values(entity).some(value => value !== null)
-            )
-        );
-
-        console.log("new", newEntities)
-        setEntities(newEntities);
-    }
-
-    const selectBivariable = (biVarName) => {
-        let [varName, relatedVarName] = biVarName.split("-");
-        setBivariateVarName1(varName);
-        setBivariateVarName2(relatedVarName);
-    }
-
-    // Synchronize the selection of entities in multiple views
-    const synchronizeSankeySelection = (selectedEntities) => {
-        console.log("synchronizeSankeySelection", selectedEntities);
-        bivarRef.current?.synchronizeSelection(selectedEntities);
-    }
-
     const handleStanCode = () => {
         axios.post(window.BACKEND_ADDRESS + '/getStanCodeInfo', {
             code: stanCode
@@ -290,6 +210,86 @@ export default function Workspace(props) {
             });
     }
 
+    // Add an attribute to every entity when adding a variable
+    const addAttributeToEntities = (varName) => {
+        console.log("Add an Attribute To Entities", varName);
+        let newEntities = { ...entities };
+        Object.keys(newEntities).forEach((id) => {
+            newEntities[id][varName] = null;
+        });
+        setEntities(newEntities);
+    }
+
+    /**
+     * Create a new entities using a dictonary contains data as key-value pairs for each variable
+     */
+    const addEntities = (entitiesData) => {
+        console.log("add entities", entitiesData);
+        setEntities((prev) => {
+            let newEntities = { ...prev };
+            entitiesData.forEach((entityData) => {
+                // Create a new entity with a unique ID and key-value pairs for each variable
+                let newEntity = {
+                    id: uuidv4()
+                };
+                Object.keys(variablesDict).forEach((key) => {
+                    newEntity[key] = null;
+                });
+                Object.entries(entityData).forEach(([key, value]) => {
+                    newEntity[key] = value;
+                });
+
+                newEntities[newEntity.id] = newEntity;
+            });
+
+            return newEntities;
+        });
+    }
+
+    const deleteEntities = (entitiesIDs) => {
+        console.log("delete entities", entitiesIDs);
+        let newEntities = { ...entities };
+        entitiesIDs.forEach((entityID) => {
+            delete newEntities[entityID];
+        });
+        setEntities(newEntities);
+    }
+
+    // Update the entities with new data
+    const updateEntities = (entitiesIDs, entitiesData) => {
+        console.log("update entities", entitiesIDs, entitiesData);
+        let newEntities = { ...entities };
+        entitiesIDs.forEach((entityID, i) => {
+            let entityData = entitiesData[i];
+            let newEntity = { ...newEntities[entityID] };
+            Object.entries(entityData).forEach(([key, value]) => {
+                newEntity[key] = value;
+            });
+            newEntities[entityID] = newEntity;
+        });
+
+        newEntities = Object.fromEntries(
+            Object.entries(newEntities).filter(([id, entity]) =>
+                Object.values(entity).some(value => value !== null)
+            )
+        );
+
+        console.log("new", newEntities)
+        setEntities(newEntities);
+    }
+
+    const selectBivariable = (biVarName) => {
+        let [varName, relatedVarName] = biVarName.split("-");
+        setBivariateVarName1(varName);
+        setBivariateVarName2(relatedVarName);
+    }
+
+    // Synchronize the selection of entities in multiple views
+    const synchronizeSankeySelection = (selectedEntities) => {
+        console.log("synchronizeSankeySelection", selectedEntities);
+        bivarRef.current?.synchronizeSelection(selectedEntities);
+    }
+
     return (
         <div className='workspace-div'>
             {!finishParseCode ? (
@@ -334,9 +334,9 @@ export default function Workspace(props) {
             ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', position: 'relative' }}>
                     {/* Left Panel */}
-                    <Box 
-                        className="panel left-panel" 
-                        sx={{ 
+                    <Box
+                        className="panel left-panel"
+                        sx={{
                             display: activePanel === 'left' ? 'block' : 'none',
                             position: 'relative'
                         }}
@@ -395,8 +395,8 @@ export default function Workspace(props) {
 
                     {/* Left Panel Toggle Button - shown when left panel is closed */}
                     {activePanel === 'right' && (
-                        <IconButton 
-                            sx={{ 
+                        <IconButton
+                            sx={{
                                 position: 'fixed',
                                 left: '0',
                                 top: '50%',
@@ -421,8 +421,13 @@ export default function Workspace(props) {
                         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row' }}>
                             <div className="component-container univariate-container">
                                 <Typography variant="h6" gutterBottom>Univariate Distributions</Typography>
-                                <Box sx={{ display: 'flex', overflowX: 'auto' }}>
-                                    {Object.entries(variablesDict).map(([varName, curVar], i) => (
+                                <Box sx={{
+                                    boxSizing: 'border-box',
+                                    height: 'calc(100% - 32px)',
+                                    display: 'flex',
+                                    overflowX: 'auto'
+                                }}>
+                                    {Object.entries(variablesDict).sort((a, b) => a[1].sequenceNum - b[1].sequenceNum).map(([varName, curVar], i) => (
                                         <VariablePlot
                                             key={i}
                                             variablesDict={variablesDict}
@@ -438,41 +443,51 @@ export default function Workspace(props) {
                             </div>
                             <div className="component-container bivariate-container">
                                 <Typography variant="h6" gutterBottom>Bivariate Relationship</Typography>
-                                {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
-                                    <BiVariablePlot
-                                        ref={bivarRef}
-                                        biVariableDict={biVariableDict}
-                                        biVariable1={variablesDict[bivariateVarName1]}
-                                        biVariable2={variablesDict[bivariateVarName2]}
-                                        updateVariable={updateVariable}
-                                        updateBivariable={updateBivariable}
-                                        entities={entities}
-                                    />
-                                    :
-                                    <></>}
+                                <Box sx={{
+                                    boxSizing: 'border-box',
+                                    height: 'calc(100% - 32px)',
+                                }}>
+                                    {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
+                                        <BiVariablePlot
+                                            ref={bivarRef}
+                                            biVariableDict={biVariableDict}
+                                            biVariable1={variablesDict[bivariateVarName1]}
+                                            biVariable2={variablesDict[bivariateVarName2]}
+                                            updateVariable={updateVariable}
+                                            updateBivariable={updateBivariable}
+                                            entities={entities}
+                                        />
+                                        :
+                                        <></>}
+                                </Box>
                             </div>
                         </Box>
 
                         {/* Parallel Coordinates Plot */}
                         <Box className="component-container parallel-plot-container">
                             <Typography variant="h6" gutterBottom>Parallel Coordinates Plot</Typography>
-                            <ParallelSankeyPlot
-                                activePanel={activePanel}
-                                variablesDict={variablesDict}
-                                updateVariable={updateVariable}
-                                entities={entities}
-                                addEntities={addEntities}
-                                deleteEntities={deleteEntities}
-                                updateEntities={updateEntities}
-                                synchronizeSankeySelection={synchronizeSankeySelection}
-                            />
+                            <Box sx={{
+                                boxSizing: 'border-box',
+                                height: 'calc(100% - 32px)'
+                            }}>
+                                <ParallelSankeyPlot
+                                    activePanel={activePanel}
+                                    variablesDict={variablesDict}
+                                    updateVariable={updateVariable}
+                                    entities={entities}
+                                    addEntities={addEntities}
+                                    deleteEntities={deleteEntities}
+                                    updateEntities={updateEntities}
+                                    synchronizeSankeySelection={synchronizeSankeySelection}
+                                />
+                            </Box>
                         </Box>
                     </Box>
 
                     {/* Right Panel Toggle Button - shown when right panel is closed */}
                     {activePanel === 'left' && (
-                        <IconButton 
-                            sx={{ 
+                        <IconButton
+                            sx={{
                                 position: 'fixed',
                                 right: '0',
                                 top: '50%',
@@ -492,20 +507,25 @@ export default function Workspace(props) {
                     )}
 
                     {/* Right Panel */}
-                    <Box 
+                    <Box
                         className="panel right-panel"
-                        sx={{ 
+                        sx={{
                             display: activePanel === 'right' ? 'block' : 'none',
                             position: 'relative'
                         }}
                     >
-                        <div className="component-container">
+                        <div className="component-container results-container">
                             <Typography variant="h6" gutterBottom>Results Panel</Typography>
-                            <ResultsPanel
-                                entities={entities}
-                                variablesDict={variablesDict}
-                                parametersDict={parametersDict}
-                            />
+                            <Box sx={{
+                                boxSizing: 'border-box',
+                                height: 'calc(100% - 32px)'
+                            }}>
+                                <ResultsPanel
+                                    entities={entities}
+                                    variablesDict={variablesDict}
+                                    parametersDict={parametersDict}
+                                />
+                            </Box>
                         </div>
                     </Box>
                 </Box>

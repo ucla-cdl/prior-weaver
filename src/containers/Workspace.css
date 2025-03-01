@@ -36,15 +36,6 @@
 }
 
 /* Common styles for all component containers */
-.component-container {
-    box-sizing: border-box;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
 .context-container {
     box-sizing: border-box;
     background-color: white;
@@ -53,6 +44,15 @@
     padding: 16px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-bottom: 10px;
+}
+
+.component-container {
+    box-sizing: border-box;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Component specific styles */
@@ -71,6 +71,11 @@
 .parallel-plot-container {
     margin-top: 10px;
     height: calc(60vh - 10px);
+}
+
+.results-container {
+    height: 100%;
+    width: 100%;
 }
 
 /* Transitions */
