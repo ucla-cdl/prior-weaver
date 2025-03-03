@@ -1,4 +1,4 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { graphviz } from "d3-graphviz";
@@ -126,15 +126,13 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
         <Grid2 container spacing={3}>
             {/* Variable List */}
             <Grid2 size={12} className="module-div">
-                <h3>Variables</h3>
+                <Typography variant="h6" gutterBottom>Variables</Typography>
                 {Object.entries(variablesDict).map(([varName, variable]) => (
-                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }} key={varName}>
-                        <p><strong>
-                            {varName}
-                        </strong></p>
-                        <IconButton onClick={() => deleteVar(varName)}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={varName}>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{varName}</Typography>
+                        {/* <IconButton onClick={() => deleteVar(varName)}>
                             <DeleteIcon fontSize='small' />
-                        </IconButton>
+                        </IconButton> */}
                         <IconButton onClick={() => {
                             setEditingVariable(variable);
                             setIsEditingVariable(true);
@@ -143,7 +141,7 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
                         </IconButton>
                     </Box>
                 ))}
-                <Button sx={{ m: 2 }} variant="outlined" onClick={addNewVariable}>Add Variable</Button>
+                {/* <Button sx={{ m: 2 }} variant="outlined" onClick={addNewVariable}>Add Variable</Button> */}
 
                 <Dialog open={isAddingVariable}>
                     <DialogTitle>Adding a New Variable</DialogTitle>

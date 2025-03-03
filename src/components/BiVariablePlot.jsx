@@ -4,7 +4,7 @@ import { Box, Button, Grid2 } from '@mui/material';
 import { logUserBehavior } from '../utils/BehaviorListener';
 import axios from "axios";
 
-const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariable2, updateVariable, updateBivariable, entities }, ref) => {
+const BiVariablePlot = React.forwardRef(({ panelStatus, biVariableDict, biVariable1, biVariable2, updateVariable, updateBivariable, entities }, ref) => {
     const chartWidthRef = useRef(0);
     const chartHeightRef = useRef(0);
     const margin = { top: 10, right: 10, bottom: 45, left: 45 };
@@ -20,7 +20,7 @@ const BiVariablePlot = React.forwardRef(({ biVariableDict, biVariable1, biVariab
     useEffect(() => {
         drawPlot();
         populateEntities();
-    }, [biVariable1, biVariable2])
+    }, [panelStatus, biVariable1, biVariable2])
 
     useEffect(() => {
         populateEntities();

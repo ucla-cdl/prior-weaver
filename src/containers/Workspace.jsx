@@ -62,7 +62,9 @@ export default function Workspace(props) {
 
     const [scenario, setScenario] = useState(context["income_education_age"]);
 
-    const [activePanel, setActivePanel] = useState('left');
+    // Update the state to handle both panels independently
+    const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+    const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
     // Update the initial state for entity history and current version
     const [entityHistory, setEntityHistory] = useState([{
@@ -451,7 +453,7 @@ export default function Workspace(props) {
                     <Box
                         className="panel left-panel"
                         sx={{
-                            display: activePanel === 'left' ? 'block' : 'none',
+                            display: leftPanelOpen ? 'block' : 'none',
                             position: 'relative'
                         }}
                     >
@@ -508,7 +510,7 @@ export default function Workspace(props) {
                     </Box>
 
                     {/* Left Panel Toggle Button - shown when left panel is closed */}
-                    {activePanel === 'right' && (
+                    {!leftPanelOpen && (
                         <IconButton
                             sx={{
                                 position: 'fixed',
@@ -523,9 +525,31 @@ export default function Workspace(props) {
                                 height: '48px',
                                 borderRadius: '0 4px 4px 0'
                             }}
-                            onClick={() => setActivePanel('left')}
+                            onClick={() => setLeftPanelOpen(true)}
                         >
                             <ChevronRightIcon />
+                        </IconButton>
+                    )}
+
+                    {/* Left Panel Toggle Button - shown when left panel is open */}
+                    {leftPanelOpen && (
+                        <IconButton
+                            sx={{
+                                position: 'absolute',
+                                left: 'calc(20vw - 10px)', // Adjust based on your left panel width
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: 'white',
+                                '&:hover': { backgroundColor: '#f0f0f0' },
+                                boxShadow: 2,
+                                zIndex: 1000,
+                                width: '24px',
+                                height: '48px',
+                                borderRadius: '0 4px 4px 0'
+                            }}
+                            onClick={() => setLeftPanelOpen(false)}
+                        >
+                            <ChevronLeftIcon />
                         </IconButton>
                     )}
 
@@ -534,8 +558,8 @@ export default function Workspace(props) {
                         {/* Add the undo button near the top of the center panel */}
                         <Box sx={{ 
                             position: 'absolute', 
-                            top: '10px', 
-                            right: '10px', 
+                            top: 'calc(39vh - 10px)', 
+                            right: rightPanelOpen ? 'calc(25vw + 10px)' : '10px',
                             zIndex: 1000 
                         }}>
                             <Tooltip title={getUndoOperationDescription()}>
@@ -545,6 +569,7 @@ export default function Workspace(props) {
                                         disabled={currentVersion <= 0}
                                         size="small"
                                         sx={{
+                                            border: '2px solid',
                                             backgroundColor: 'white',
                                             '&:hover': { backgroundColor: '#f0f0f0' },
                                             boxShadow: 1,
@@ -589,6 +614,7 @@ export default function Workspace(props) {
                                     {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
                                         <BiVariablePlot
                                             ref={bivarRef}
+                                            panelStatus={leftPanelOpen + rightPanelOpen}
                                             biVariableDict={biVariableDict}
                                             biVariable1={variablesDict[bivariateVarName1]}
                                             biVariable2={variablesDict[bivariateVarName2]}
@@ -610,7 +636,7 @@ export default function Workspace(props) {
                                 height: 'calc(100% - 32px)'
                             }}>
                                 <ParallelSankeyPlot
-                                    activePanel={activePanel}
+                                    panelStatus={leftPanelOpen + rightPanelOpen}
                                     variablesDict={variablesDict}
                                     updateVariable={updateVariable}
                                     entities={entities}
@@ -623,8 +649,30 @@ export default function Workspace(props) {
                         </Box>
                     </Box>
 
+                    {/* Right Panel Toggle Button - shown when right panel is open */}
+                    {rightPanelOpen && (
+                        <IconButton
+                            sx={{
+                                position: 'absolute',
+                                right: 'calc(25vw - 10px)', // Adjust based on your right panel width
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: 'white',
+                                '&:hover': { backgroundColor: '#f0f0f0' },
+                                boxShadow: 2,
+                                zIndex: 1000,
+                                width: '24px',
+                                height: '48px',
+                                borderRadius: '4px 0 0 4px'
+                            }}
+                            onClick={() => setRightPanelOpen(false)}
+                        >
+                            <ChevronRightIcon />
+                        </IconButton>
+                    )}
+
                     {/* Right Panel Toggle Button - shown when right panel is closed */}
-                    {activePanel === 'left' && (
+                    {!rightPanelOpen && (
                         <IconButton
                             sx={{
                                 position: 'fixed',
@@ -639,7 +687,7 @@ export default function Workspace(props) {
                                 height: '48px',
                                 borderRadius: '4px 0 0 4px'
                             }}
-                            onClick={() => setActivePanel('right')}
+                            onClick={() => setRightPanelOpen(true)}
                         >
                             <ChevronLeftIcon />
                         </IconButton>
@@ -649,7 +697,7 @@ export default function Workspace(props) {
                     <Box
                         className="panel right-panel"
                         sx={{
-                            display: activePanel === 'right' ? 'block' : 'none',
+                            display: rightPanelOpen ? 'block' : 'none',
                             position: 'relative'
                         }}
                     >
@@ -663,6 +711,7 @@ export default function Workspace(props) {
                                     entities={entities}
                                     variablesDict={variablesDict}
                                     parametersDict={parametersDict}
+                                    currentVersion={currentVersion}
                                 />
                             </Box>
                         </div>

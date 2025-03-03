@@ -23,7 +23,7 @@ const INTERACTION_TYPES = {
     CONNECT: "connect"
 }
 
-export default function ParallelSankeyPlot({ activePanel, variablesDict, updateVariable, entities, addEntities, deleteEntities, combineEntities, synchronizeSankeySelection }) {
+export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateVariable, entities, addEntities, deleteEntities, combineEntities, synchronizeSankeySelection }) {
     const marginTop = 20;
     const marginBottom = 10;
     const marginRight = 50;
@@ -62,7 +62,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
         setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
         drawPlot();
         populateEntities();
-    }, [activePanel, variablesDict]);
+    }, [panelStatus, variablesDict]);
 
     useEffect(() => {
         populateEntities();
@@ -949,7 +949,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                 flexDirection: 'row',
                 justifyContent: 'center',
                 alignItems: 'center',
-                p: 2
+                pb: 2
             }}>
                 <Box sx={{
                     display: 'flex',
@@ -1013,15 +1013,11 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                     )}
 
                     {activeInteraction === INTERACTION_TYPES.CONNECT && isBatchMode && (
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-                            <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Button
-                                    variant='outlined'
-                                    onClick={connectEntities}>
-                                    Link
-                                </Button>
-                                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center' }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                            <Box sx={{ mx: 1, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                                <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                                     <ToggleButton
+                                        size='small'
                                         value="group1"
                                         selected={selectionGroup === "selection-group-1"}
                                         onChange={() => {
@@ -1031,6 +1027,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                                         Group 1
                                     </ToggleButton>
                                     <ToggleButton
+                                        size='small'
                                         value="group2"
                                         selected={selectionGroup === "selection-group-2"}
                                         onChange={() => {
@@ -1040,6 +1037,11 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                                         Group 2
                                     </ToggleButton>
                                 </Box>
+                                <Button
+                                    variant='outlined'
+                                    onClick={connectEntities}>
+                                    Link
+                                </Button>
                             </Box>
                             <Button
                                 sx={{ ml: 1 }}

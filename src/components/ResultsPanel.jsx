@@ -14,7 +14,7 @@ const DISTRIBUTION_TYPES = {
     'Uniform': 'uniform',
 };
 
-export default function ResultsPanel({ entities, variablesDict, parametersDict }) {
+export default function ResultsPanel({ entities, variablesDict, parametersDict, currentVersion }) {
     const [isTranslating, setIsTranslating] = useState(false);
     const [translated, setTranslated] = useState(0);
 

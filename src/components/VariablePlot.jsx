@@ -10,8 +10,8 @@ export default function VariablePlot({ variableDict, variable, updateVariable, e
     const svgWidth = 300;
     const svgHeightRef = useRef(0);
     const marginX = 40;
-    const marginTop = 30;
-    const marginBottom = 40;
+    const marginTop = 25;
+    const marginBottom = 55;
     const labelOffset = 35;
 
     useEffect(() => {
