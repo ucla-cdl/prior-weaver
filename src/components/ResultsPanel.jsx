@@ -24,6 +24,8 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
     const paramsRangeDelta = 3;
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
+    const [previousCheckResult, setPreviousCheckResult] = useState(null);
+
     const svgHeight = 250;
     const margin = { top: 10, bottom: 40, left: 40, right: 20, };
     const labelOffset = 35;
@@ -74,8 +76,6 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         }
 
         setIsTranslating(true);
-        console.log("variablesDict", variablesDict);
-        console.log("parametersDict", parametersDict);
 
         axios
             .post(window.BACKEND_ADDRESS + "/translate", {
@@ -106,7 +106,6 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
 
     const plotPriorsResults = () => {
         Object.entries(priorsDict).forEach(([paramName, priorResult], index) => {
-            // Create an SVG element
             const container = d3.select(`#parameter-div-${paramName}`);
             container.html('');
 
@@ -116,66 +115,9 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
                 .attr('width', svgWidth)
                 .attr('height', svgHeight);
 
-            // Plot the histogram of simulated parametric data for each parameter 
-            // plotParameterHistogram(paramName, priorResult);
-
             // Set the first distribution as the selected distribution for this parameter
             selectFittedDistribution(paramName, priorResult.distributions[0]);
         });
-    }
-
-    const plotParameterHistogram = (paramName, priorResult) => {
-        const svg = d3.select(`#parameter-svg-${paramName}`)
-
-        const chartWidth = svg.node().clientWidth - margin.left - margin.right;
-        const chartHeight = svg.node().clientHeight - margin.top - margin.bottom;
-
-        // Append a group element to the SVG to position the chart
-        const chart = svg.append('g')
-            .attr('id', `parameter-histogram-${paramName}`)
-            .attr('transform', `translate(${margin.left},${margin.top})`);
-
-        const x = d3.scaleLinear()
-            .domain([priorResult.min, priorResult.max])
-            .nice()
-            .range([0, chartWidth]);
-
-        const bins = d3.bin()
-            .domain(x.domain())
-            .thresholds(x.ticks(15))(priorResult.samples);
-
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(bins, d => d.length)])
-            .nice()
-            .range([chartHeight, 0]);
-
-        // Create the x-axis
-        chart.append('g')
-            .attr('transform', `translate(0,${chartHeight})`)
-            .call(d3.axisBottom(x));
-
-        // Create the y-axis
-        chart.append('g')
-            .call(d3.axisLeft(y));
-
-        // Add bars for the histogram
-        chart.selectAll('.bar')
-            .data(bins)
-            .enter().append('rect')
-            .attr('class', 'bar')
-            .attr('x', d => x(d.x0))
-            .attr('width', d => d3.max([x(d.x1) - x(d.x0) - 1, 0])) // Adjust width for padding
-            .attr('y', d => y(d.length))
-            .attr('height', d => chartHeight - y(d.length))
-            .attr('fill', 'lightgray')
-            .lower();
-
-        // Add title to each histogram
-        chart.append('text')
-            .attr('x', chartWidth / 2)
-            .attr('y', chartHeight + labelOffset)
-            .attr('text-anchor', 'middle')
-            .text(paramName);
     }
 
     const plotFittedDistribution = (paramName, priorResult, dist) => {
@@ -213,6 +155,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             .attr('transform', `translate(0, 0)`)
             .call(d3.axisLeft(y));
 
+        // Plot current distribution
         chart.append('path')
             .datum(dist.x.map((d, i) => [d, dist.p[i]]))
             .attr('fill', 'none')
@@ -307,9 +250,9 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             .attr('transform', `translate(${margin.left},${margin.top})`);
 
         const simulatedResults = results["simulated_results"];
-        const minX = results["min_response_val"]
-        const maxX = results["max_response_val"]
-        const maxY = results["max_density_val"]
+        const minX = previousCheckResult ? Math.min(previousCheckResult["min_response_val"], results["min_response_val"]) : results["min_response_val"]
+        const maxX = previousCheckResult ? Math.max(previousCheckResult["max_response_val"], results["max_response_val"]) : results["max_response_val"]
+        const maxY = previousCheckResult ? Math.max(previousCheckResult["max_density_val"], results["max_density_val"]) : results["max_density_val"]
 
         const x = d3.scaleLinear()
             .domain([minX, maxX])
@@ -330,6 +273,32 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
         chart.append('g')
             .call(d3.axisLeft(yKDE));
 
+        // Plot previous KDE if it exists
+        if (previousCheckResult) {
+            previousCheckResult["simulated_results"].forEach((simulatedData, index) => {
+                chart.append('path')
+                    .datum(simulatedData["kde"])
+                    .attr('fill', 'none')
+                    .attr('stroke', 'red')
+                    .attr('stroke-width', 0.5)
+                    .attr('d', d3.line()
+                        .x(d => x(d.x))
+                        .y(d => yKDE(d.density)));
+            });
+        }
+
+        simulatedResults.forEach((simulatedData, index) => {
+            // Plot current KDE
+            chart.append('path')
+                .datum(simulatedData["kde"])
+                .attr('fill', 'none')
+                .attr('stroke', 'blue')
+                .attr('stroke-width', 0.5)
+                .attr('d', d3.line()
+                    .x(d => x(d.x))
+                    .y(d => yKDE(d.density)));
+        });
+
         // Add title
         const responseVar = Object.values(variablesDict).find(v => v.type === "response");
         chart.append('text')
@@ -338,19 +307,8 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
             .attr('text-anchor', 'middle')
             .text(`${responseVar.name} (${responseVar.unitLabel})`);
 
-        simulatedResults.forEach((simulatedData, index) => {
-            // Plot fitted kde
-            const line = d3.line()
-                .x(d => x(d.x))
-                .y(d => yKDE(d.density));
-
-            chart.append('path')
-                .datum(simulatedData["kde"])
-                .attr('fill', 'none')
-                .attr('stroke', 'red')
-                .attr('stroke-width', 1.5)
-                .attr('d', line);
-        });
+        // Store current results 
+        setPreviousCheckResult(results);
     }
 
     const updateSelectedPriorDistribution = (paramName, paramKey, newValue) => {
