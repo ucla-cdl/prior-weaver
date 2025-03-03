@@ -149,42 +149,31 @@ export default function VariablePlot({ variableDict, variable, updateVariable, e
                         else if (deltaHeight < 0) {
                             let updatedEntities = binInfos[index].entities.slice(grid); // remove based on FIFO
 
-                            // Separate entities into those to delete and those to update
-                            let entitiesToDelete = [];
-                            let entitiesToUpdate = [];
-
-                            updatedEntities.forEach(entity => {
-                                // Check if entity would have all null values after update
-                                let wouldBeAllNull = true;
-                                for (let key in entity) {
-                                    if (key !== 'id' && key !== variable.name && entity[key] !== null) {
-                                        wouldBeAllNull = false;
-                                        break;
+                            updateEntities(
+                                updatedEntities.map(entity => entity.id),
+                                updatedEntities.map(entity => {
+                                    // Check if entity would have all null values after update
+                                    let wouldBeAllNull = true;
+                                    for (let key in entity) {
+                                        if (key !== 'id' && key !== variable.name && entity[key] !== null) {
+                                            wouldBeAllNull = false;
+                                            break;
+                                        }
                                     }
-                                }
 
-                                if (wouldBeAllNull) {
-                                    entitiesToDelete.push(entity.id);
-                                } else {
-                                    entitiesToUpdate.push({
-                                        id: entity.id,
-                                        data: { [variable.name]: null }
-                                    });
-                                }
-                            });
-
-                            // Delete entities that would have all null values
-                            if (entitiesToDelete.length > 0) {
-                                deleteEntities(entitiesToDelete);
-                            }
-
-                            // Update remaining entities
-                            if (entitiesToUpdate.length > 0) {
-                                updateEntities(
-                                    entitiesToUpdate.map(e => e.id),
-                                    entitiesToUpdate.map(e => e.data)
-                                );
-                            }
+                                    // If all values would be null, return object with all nulls to trigger deletion
+                                    if (wouldBeAllNull) {
+                                        const nullData = {};
+                                        Object.keys(entity).forEach(key => {
+                                            if (key !== 'id') nullData[key] = null;
+                                        });
+                                        return nullData;
+                                    }
+                                    
+                                    // Otherwise just update the specific variable
+                                    return { [variable.name]: null };
+                                })
+                            );
                         }
                     });
             }

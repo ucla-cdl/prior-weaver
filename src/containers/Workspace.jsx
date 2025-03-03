@@ -11,6 +11,7 @@ import ResultsPanel from '../components/ResultsPanel';
 import axios from 'axios';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import UndoIcon from '@mui/icons-material/Undo';
 
 const context = {
     "human_growth_model": "During the early stages of life the stature of female and male are about the same,\
@@ -62,6 +63,17 @@ export default function Workspace(props) {
     const [scenario, setScenario] = useState(context["income_education_age"]);
 
     const [activePanel, setActivePanel] = useState('left');
+
+    // Update the initial state for entity history and current version
+    const [entityHistory, setEntityHistory] = useState([{
+        timestamp: new Date().toISOString(),
+        operation: 'initial',
+        entitiesAffected: [],
+        data: null,
+        description: "Initial state",
+        previousState: {} // Empty initial state
+    }]);
+    const [currentVersion, setCurrentVersion] = useState(0); // Start at version 0
 
     useEffect(() => {
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
@@ -220,18 +232,38 @@ export default function Workspace(props) {
         setEntities(newEntities);
     }
 
-    /**
-     * Create a new entities using a dictonary contains data as key-value pairs for each variable
-     */
-    const addEntities = (entitiesData) => {
+    // Update recordEntityOperation to accept newEntities parameter
+    const recordEntityOperation = (operation, entitiesAffected, data, description, newEntities) => {
+        const historyEntry = {
+            timestamp: new Date().toISOString(),
+            operation: operation,
+            entitiesAffected: entitiesAffected,
+            data: data,
+            description: description,
+            previousState: newEntities // Use the new entities state
+        };
+
+        // Remove any future history entries if we're not at the latest version
+        const newHistory = [...entityHistory].slice(0, currentVersion + 1);
+        
+        setEntityHistory([...newHistory, historyEntry]);
+        setCurrentVersion((prev) => prev + 1);
+        console.log("recordEntityOperation", historyEntry);
+    };
+
+    // Update the entity operations to pass the new entities state
+    const addEntities = (entitiesData, description = "") => {
         console.log("add entities", entitiesData);
         setEntities((prev) => {
             let newEntities = { ...prev };
+            const newEntityIds = [];
+            
             entitiesData.forEach((entityData) => {
-                // Create a new entity with a unique ID and key-value pairs for each variable
-                let newEntity = {
+                const newEntity = {
                     id: uuidv4()
                 };
+                newEntityIds.push(newEntity.id);
+                
                 Object.keys(variablesDict).forEach((key) => {
                     newEntity[key] = null;
                 });
@@ -242,41 +274,102 @@ export default function Workspace(props) {
                 newEntities[newEntity.id] = newEntity;
             });
 
+            // Record the operation with the new entities state
+            recordEntityOperation('add', newEntityIds, entitiesData, description, newEntities);
+            
             return newEntities;
         });
     }
 
-    const deleteEntities = (entitiesIDs) => {
+    const deleteEntities = (entitiesIDs, description = "") => {
         console.log("delete entities", entitiesIDs);
         let newEntities = { ...entities };
         entitiesIDs.forEach((entityID) => {
             delete newEntities[entityID];
         });
+        
+        // Record the operation with the new entities state
+        recordEntityOperation('delete', entitiesIDs, null, description, newEntities);
+        
         setEntities(newEntities);
     }
 
-    // Update the entities with new data
-    const updateEntities = (entitiesIDs, entitiesData) => {
+    const combineEntities = (entitiesToDelete, entitiesData, description = "") => {
+        // Delete the original entities
+        const newEntities = { ...entities };
+        entitiesToDelete.forEach(entityId => {
+            delete newEntities[entityId];
+        });
+
+        // Add the new combined entities
+        const newEntityIds = [];
+        entitiesData.forEach(entityData => {
+            const newEntityId = uuidv4();
+            newEntities[newEntityId] = {
+                ...entityData,
+                id: newEntityId
+            };
+            newEntityIds.push(newEntityId);
+        });
+
+        setEntities(newEntities);
+        
+        // Record the operation with the new entities state
+        recordEntityOperation('combine', entitiesToDelete, entitiesData, description, newEntities);
+    }
+    
+    const updateEntities = (entitiesIDs, entitiesData, description = "") => {
         console.log("update entities", entitiesIDs, entitiesData);
         let newEntities = { ...entities };
         entitiesIDs.forEach((entityID, i) => {
             let entityData = entitiesData[i];
-            let newEntity = { ...newEntities[entityID] };
-            Object.entries(entityData).forEach(([key, value]) => {
-                newEntity[key] = value;
-            });
-            newEntities[entityID] = newEntity;
+            // If all values in entityData are null, delete the entity
+            if (Object.values(entityData).every(value => value === null)) {
+                delete newEntities[entityID];
+            } else {
+                let newEntity = { ...newEntities[entityID] };
+                Object.entries(entityData).forEach(([key, value]) => {
+                    newEntity[key] = value;
+                });
+                newEntities[entityID] = newEntity;
+            }
         });
 
-        newEntities = Object.fromEntries(
-            Object.entries(newEntities).filter(([id, entity]) =>
-                Object.values(entity).some(value => value !== null)
-            )
-        );
+        // Record the operation with the new entities state
+        recordEntityOperation('update', entitiesIDs, entitiesData, description, newEntities);
 
-        console.log("new", newEntities)
         setEntities(newEntities);
     }
+
+    // Optional: Add undo/redo functionality
+    const undoEntityOperation = () => {
+        if (currentVersion > 0) {
+            const previousVersion = entityHistory[currentVersion - 1];
+            setEntities(previousVersion.previousState);
+            setCurrentVersion(currentVersion - 1);
+        }
+    };
+
+    const redoEntityOperation = () => {
+        if (currentVersion < entityHistory.length - 1) {
+            const nextVersion = entityHistory[currentVersion + 1];
+            // Apply the operation based on the history entry
+            switch (nextVersion.operation) {
+                case 'add':
+                    setEntities(nextVersion.previousState);
+                    break;
+                case 'update':
+                    setEntities(nextVersion.previousState);
+                    break;
+                case 'delete':
+                    setEntities(nextVersion.previousState);
+                    break;
+                default:
+                    break;
+            }
+            setCurrentVersion(currentVersion + 1);
+        }
+    };
 
     const selectBivariable = (biVarName) => {
         let [varName, relatedVarName] = biVarName.split("-");
@@ -286,9 +379,30 @@ export default function Workspace(props) {
 
     // Synchronize the selection of entities in multiple views
     const synchronizeSankeySelection = (selectedEntities) => {
-        console.log("synchronizeSankeySelection", selectedEntities);
         bivarRef.current?.synchronizeSelection(selectedEntities);
     }
+
+    // Update the getUndoOperationDescription to handle initial state
+    const getUndoOperationDescription = () => {
+        if (currentVersion <= 0) return "No operation to undo";
+        
+        const currentOperation = entityHistory[currentVersion];
+        const operation = currentOperation.operation;
+        if (operation === 'initial') return "Cannot undo initial state";
+        
+        const count = currentOperation.entitiesAffected.length;
+        
+        switch (operation) {
+            case 'add':
+                return `${currentVersion}: Undo adding ${count} ${count === 1 ? 'entity' : 'entities'}`;
+            case 'update':
+                return `${currentVersion}: Undo updating ${count} ${count === 1 ? 'entity' : 'entities'}`;
+            case 'delete':
+                return `${currentVersion}: Undo deleting ${count} ${count === 1 ? 'entity' : 'entities'}`;
+            default:
+                return "Unknown operation";
+        }
+    };
 
     return (
         <div className='workspace-div'>
@@ -341,10 +455,10 @@ export default function Workspace(props) {
                             position: 'relative'
                         }}
                     >
-                        {/* <div className="component-container">
+                        <div className="context-container">
                             <Typography variant="h6" gutterBottom>Scenario</Typography>
-                            <Typography>{scenario}</Typography>
-                        </div> */}
+                            <Typography  sx={{ maxHeight: '200px', overflowY: 'auto' }}>{scenario}</Typography>
+                        </div>
 
                         <div className="context-container">
                             <Typography variant="h6" gutterBottom>Model</Typography>
@@ -417,6 +531,31 @@ export default function Workspace(props) {
 
                     {/* Center Panel */}
                     <Box className="panel center-panel" sx={{ flex: 1 }}>
+                        {/* Add the undo button near the top of the center panel */}
+                        <Box sx={{ 
+                            position: 'absolute', 
+                            top: '10px', 
+                            right: '10px', 
+                            zIndex: 1000 
+                        }}>
+                            <Tooltip title={getUndoOperationDescription()}>
+                                <span>
+                                    <IconButton 
+                                        onClick={undoEntityOperation}
+                                        disabled={currentVersion <= 0}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: 'white',
+                                            '&:hover': { backgroundColor: '#f0f0f0' },
+                                            boxShadow: 1,
+                                        }}
+                                    >
+                                        <UndoIcon />
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                        </Box>
+                        
                         {/* Univariate and Bivariate Plots */}
                         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row' }}>
                             <div className="component-container univariate-container">
@@ -477,7 +616,7 @@ export default function Workspace(props) {
                                     entities={entities}
                                     addEntities={addEntities}
                                     deleteEntities={deleteEntities}
-                                    updateEntities={updateEntities}
+                                    combineEntities={combineEntities}
                                     synchronizeSankeySelection={synchronizeSankeySelection}
                                 />
                             </Box>

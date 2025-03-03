@@ -23,7 +23,7 @@ const INTERACTION_TYPES = {
     CONNECT: "connect"
 }
 
-export default function ParallelSankeyPlot({ activePanel, variablesDict, updateVariable, entities, addEntities, deleteEntities, updateEntities, synchronizeSankeySelection }) {
+export default function ParallelSankeyPlot({ activePanel, variablesDict, updateVariable, entities, addEntities, deleteEntities, combineEntities, synchronizeSankeySelection }) {
     const marginTop = 20;
     const marginBottom = 10;
     const marginRight = 50;
@@ -546,8 +546,6 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                     const connectedEntity1 = { ...entities[connectedPoint.entityId] };
                     const connectedEntity2 = { ...entities[clickEntityId] };
 
-                    console.log("entity", connectedEntity1, connectedEntity2);
-
                     let isDuplicate = false;
                     let combinedEntityData = {};
 
@@ -594,7 +592,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
     }
 
     const activateBrushFeature = () => {
-        const svg = d3.select("#sankey-svg");
+        const chart = d3.select("#pcp");
         const brushWidth = 50;
         const selections = new Map();
 
@@ -609,7 +607,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
             });
 
         // Apply brush to axis groups
-        svg.selectAll(".axis")
+        chart.selectAll(".axis")
             .append("g")
             .attr("class", "brush")
             .call(brush)
@@ -623,7 +621,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
 
             if (selection === null) {
                 selections.delete(key);
-                svg.select(`#count-label-${key}`).remove();
+                chart.select(`#count-label-${key}`).remove();
                 return;
             } else {
                 selections.set(key, selection.map(valueAxesRef.current.get(key).invert));
@@ -633,8 +631,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
             const countsByAxis = new Map();
             Array.from(selections.keys()).forEach(axis => countsByAxis.set(axis, 0));
 
-            console.log("selections: ", selections);
-            svg.selectAll(".entity-path").each(function (d) {
+            chart.selectAll(".entity-path").each(function (d) {
                 if (d) {
                     const active = Array.from(selections).every(([key, [max, min]]) => {
                         if (d[key] === null) return false;
@@ -738,7 +735,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
             // Update count labels for each axis
             countsByAxis.forEach((count, axis) => {
                 // Remove existing label
-                svg.select(`#count-label-${axis}`).remove();
+                chart.select(`#count-label-${axis}`).remove();
 
                 // Add new label if there's a selection
                 if (selections.has(axis)) {
@@ -747,23 +744,24 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                     const [selectionY1, selectionY2] = selections.get(axis);
                     const labelY = (selectionY1 + selectionY2) / 2; // Middle of brush selection
 
-                    svg.append("text")
+                    chart.append("text")
                         .attr("id", `count-label-${axis}`)
                         .attr("class", "selection-count-label")
-                        .attr("x", axisX + 15) // Offset from axis
+                        .attr("x", axisX + 15)
                         .attr("y", axisY(labelY))
                         .attr("dy", ".35em") // Vertical alignment
-                        .text(`n = ${count}`);
+                        .text(`n = ${count}`)
+                        .attr('font-size', '12px');
                 }
             });
 
-            svg.selectAll(".entity-dot").raise();
-            svg.selectAll(".selection-count-label").raise();
-            svg.selectAll(".axis-handle").raise();
+            chart.selectAll(".entity-dot").raise();
+            chart.selectAll(".selection-count-label").raise();
+            chart.selectAll(".axis-handle").raise();
             setBrushSelectedRegions(selections);
         }
 
-        svg.selectAll(".axis-handle").raise();
+        chart.selectAll(".axis-handle").raise();
     }
 
     const updateSelectionGroupEntities = () => {
@@ -882,9 +880,8 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
         selectionGroup1EntitiesRef.current = [];
         selectionGroup2EntitiesRef.current = [];
 
-        // Delete the original entities and add all the combined ones
-        deleteEntities(entitiesToDelete);
-        addEntities(newEntities);
+        // Use the new combineEntities function instead of separate delete and add
+        combineEntities(entitiesToDelete, newEntities);
 
         setSelectionGroup("selection-group-1");
         selectionGroupRef.current = "selection-group-1";
@@ -900,7 +897,6 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                 const randomValue = Math.random() * (max - min) + min;
                 entityData[varName] = randomValue;
             });
-            console.log("New entity data: ", entityData);
             newEntitiesData.push(entityData);
         }
 
