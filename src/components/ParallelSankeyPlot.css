@@ -71,3 +71,20 @@
 .axis-handle rect:hover {
     opacity: 1;
 }
+
+
+.selection-group-1 {
+    stroke: orange;
+}
+
+.selection-group-2 {
+    stroke: green;
+}
+
+.selection-group-1-dot {
+    fill: orange;
+}
+
+.selection-group-2-dot {
+    fill: green;
+}

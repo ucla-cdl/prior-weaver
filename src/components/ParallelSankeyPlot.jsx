@@ -52,6 +52,12 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
 
     const chartHeightRef = useRef(0);
 
+    const [selectionGroup, setSelectionGroup] = useState("selection-group-1");
+    const selectionGroupRef = useRef("selection-group-1");
+    const selectionGroup1EntitiesRef = useRef([]);
+    const selectionGroup2EntitiesRef = useRef([]);
+
+
     useEffect(() => {
         setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
         drawPlot();
@@ -279,7 +285,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
         activeInteractionRef.current = interactionType;
         setActiveInteraction(interactionType);
 
-        clearInteractions();
+        clearBrushSelection();
 
         // Filter entities based on interaction type
         Object.entries(entities).forEach(([entityId, entity]) => {
@@ -349,9 +355,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
         svg.selectAll(".entity-dot")
             .on("mouseover", null)
             .on("mouseout", null)
-            .on("click", null)
-            .classed("connect-entity-dot", false)
-            .classed("hovered-entity-dot", false);
+            .on("click", null);
         setConnectedPoint(null);
 
         // Remove brush feature interactions
@@ -362,6 +366,26 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
         svg.selectAll(".overlay").remove();
         svg.on("start brush end", null);
         setBrushSelectedRegions(new Map());
+
+        // Clear selected entities ref
+        selectedEntitiesRef.current = [];
+        setSelectedEntities([]);
+    }
+
+    const clearBrushSelection = () => {
+        const svg = d3.select("#sankey-svg");
+
+        // Clear brush selection by calling brush.move with null
+        svg.selectAll(".axis")
+            .on("mousedown.brush mousemove.brush mouseup.brush", null);
+        svg.selectAll(".selection").remove();
+        svg.selectAll(".handle").remove();
+        svg.selectAll(".overlay").remove();
+        svg.on("start brush end", null);
+        svg.selectAll(".selection-count-label").remove();
+
+        setBrushSelectedRegions(new Map());
+
         // Clear selected entities ref
         selectedEntitiesRef.current = [];
         setSelectedEntities([]);
@@ -609,6 +633,7 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
             const countsByAxis = new Map();
             Array.from(selections.keys()).forEach(axis => countsByAxis.set(axis, 0));
 
+            console.log("selections: ", selections);
             svg.selectAll(".entity-path").each(function (d) {
                 if (d) {
                     const active = Array.from(selections).every(([key, [max, min]]) => {
@@ -620,29 +645,57 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
 
                     let shouldSelect = false;
                     if (activeInteractionRef.current === INTERACTION_TYPES.CONNECT) {
-                        const hasPointInSelection = Array.from(selections).some(([key, [max, min]]) =>
-                            d[key] !== null && d[key] >= min && d[key] <= max
-                        );
-                        shouldSelect = hasPointInSelection && !isComplete;
+                        // const hasPointInSelection = Array.from(selections).some(([key, [max, min]]) =>
+                        //     d[key] !== null && d[key] >= min && d[key] <= max
+                        // );
+                        shouldSelect = active && !isComplete;
                     } else if (activeInteractionRef.current === INTERACTION_TYPES.EXPLORE) {
                         shouldSelect = active && isComplete;
                     }
 
-                    if (shouldSelect) {
-                        d3.select(this).classed("brush-selection", true);
-                        d3.select(this).classed("brush-non-selection", false);
-                        d3.select(this).raise();
-                        newSelectedEntities.push(d);
+                    if (selectionGroup1EntitiesRef.current.includes(d) || selectionGroup2EntitiesRef.current.includes(d)) {
+                        return;
+                    }
 
-                        // Highlight associated dots
-                        Object.entries(d).forEach(([key, value]) => {
-                            if (key !== "id" && value !== null) {
-                                d3.select(`#dot_${d["id"]}_${key}`)
-                                    .classed("selected-entity-dot", true)
-                                    .classed("unselected-entity-dot", false)
-                                    .raise();
-                            }
-                        });
+                    if (shouldSelect) {
+                        if (activeInteractionRef.current === INTERACTION_TYPES.EXPLORE) {
+                            d3.select(this)
+                                .classed("brush-selection", true)
+                                .classed("brush-non-selection", false)
+                                .raise();
+
+                            // Highlight associated dots
+                            Object.entries(d).forEach(([key, value]) => {
+                                if (key !== "id" && value !== null) {
+                                    d3.select(`#dot_${d["id"]}_${key}`)
+                                        .classed("selected-entity-dot", true)
+                                        .classed("unselected-entity-dot", false)
+                                        .raise();
+                                }
+                            });
+                        }
+                        else {
+                            d3.select(this)
+                                .classed("brush-selection", false)
+                                .classed("brush-non-selection", false)
+                                .classed("selection-group-1", selectionGroupRef.current === "selection-group-1")
+                                .classed("selection-group-2", selectionGroupRef.current === "selection-group-2")
+                                .raise();
+
+                            // Highlight associated dots with group classes
+                            Object.entries(d).forEach(([key, value]) => {
+                                if (key !== "id" && value !== null) {
+                                    d3.select(`#dot_${d["id"]}_${key}`)
+                                        .classed("selected-entity-dot", false)
+                                        .classed("unselected-entity-dot", false)
+                                        .classed("selection-group-1-dot", selectionGroupRef.current === "selection-group-1")
+                                        .classed("selection-group-2-dot", selectionGroupRef.current === "selection-group-2")
+                                        .raise();
+                                }
+                            });
+                        }
+
+                        newSelectedEntities.push(d);
 
                         // Count points per axis for selected entities
                         Array.from(selections.keys()).forEach(axis => {
@@ -654,15 +707,21 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
                             }
                         });
                     } else {
-                        d3.select(this).classed("brush-selection", false);
-                        d3.select(this).classed("brush-non-selection", true);
+                        // Reset all highlighting classes
+                        d3.select(this)
+                            .classed("brush-selection", false)
+                            .classed("brush-non-selection", true)
+                            .classed("selection-group-1", false)
+                            .classed("selection-group-2", false);
 
-                        // De-highlight associated dots
+                        // Reset all dot classes
                         Object.entries(d).forEach(([key, value]) => {
                             if (key !== "id" && value !== null) {
                                 d3.select(`#dot_${d["id"]}_${key}`)
                                     .classed("selected-entity-dot", false)
-                                    .classed("unselected-entity-dot", true);
+                                    .classed("unselected-entity-dot", true)
+                                    .classed("selection-group-1-dot", false)
+                                    .classed("selection-group-2-dot", false);
                             }
                         });
                     }
@@ -690,21 +749,38 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
 
                     svg.append("text")
                         .attr("id", `count-label-${axis}`)
+                        .attr("class", "selection-count-label")
                         .attr("x", axisX + 15) // Offset from axis
                         .attr("y", axisY(labelY))
                         .attr("dy", ".35em") // Vertical alignment
-                        .attr("class", "selection-count")
                         .text(`n = ${count}`);
                 }
             });
 
             svg.selectAll(".entity-dot").raise();
-            svg.selectAll(".selection-count").raise();
+            svg.selectAll(".selection-count-label").raise();
             svg.selectAll(".axis-handle").raise();
             setBrushSelectedRegions(selections);
         }
 
         svg.selectAll(".axis-handle").raise();
+    }
+
+    const updateSelectionGroupEntities = () => {
+        if (selectionGroupRef.current === "selection-group-1") {
+            selectionGroup1EntitiesRef.current = selectedEntitiesRef.current;
+        } else {
+            selectionGroup2EntitiesRef.current = selectedEntitiesRef.current;
+        }
+    }
+
+    const changeSelectionGroup = (group) => {
+        updateSelectionGroupEntities();
+
+        setSelectionGroup(group);
+        selectionGroupRef.current = group;
+        clearBrushSelection();
+        activateBrushFeature();
     }
 
     const connectRandomEntities = () => {
@@ -755,44 +831,63 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
         addEntities(newEntities);
     }
 
-    const generateConditionalEntities = () => {
-        // Find axis with selected points
-        const axisWithPoints = Array.from(brushSelectedRegions.keys()).find(axis => {
-            const [max, min] = brushSelectedRegions.get(axis);
-            return selectedEntities.some(entity =>
-                entity[axis] !== null &&
-                entity[axis] >= min &&
-                entity[axis] <= max
-            );
-        });
+    const connectEntities = () => {
+        updateSelectionGroupEntities();
 
-        if (!axisWithPoints) return;
+        const entities1 = [...selectionGroup1EntitiesRef.current];
+        const entities2 = [...selectionGroup2EntitiesRef.current];
 
-        // Get selected points on the axis
-        const [max, min] = brushSelectedRegions.get(axisWithPoints);
-        const selectedPoints = selectedEntities.filter(entity =>
-            entity[axisWithPoints] !== null &&
-            entity[axisWithPoints] >= min &&
-            entity[axisWithPoints] <= max
-        );
+        // Return if either group is empty
+        if (entities1.length === 0 || entities2.length === 0) {
+            return;
+        }
 
-        // Generate connected entities for each selected point
+        // Check if groups have equal length
+        if (entities1.length !== entities2.length) {
+            setWarningMessage("Both selection groups must have the same number of entities");
+            return;
+        }
+
         const newEntities = [];
-        selectedPoints.forEach(point => {
-            const newEntity = { [axisWithPoints]: point[axisWithPoints] };
+        const entitiesToDelete = [];
 
-            // Generate random values for other selected regions
-            Array.from(brushSelectedRegions.keys()).forEach(axis => {
-                if (axis !== axisWithPoints) {
-                    const [max, min] = brushSelectedRegions.get(axis);
-                    newEntity[axis] = Math.random() * (max - min) + min;
+        // Combine all pairs
+        while (entities1.length > 0) {
+            // Randomly select one entity from each group without replacement
+            const randomIndex1 = Math.floor(Math.random() * entities1.length);
+            const randomIndex2 = Math.floor(Math.random() * entities2.length);
+            const randomEntity1 = entities1.splice(randomIndex1, 1)[0];
+            const randomEntity2 = entities2.splice(randomIndex2, 1)[0];
+
+            // Combine the entities
+            let combinedEntityData = {};
+            Object.keys(variablesDict).forEach((varName) => {
+                const value1 = randomEntity1[varName];
+                const value2 = randomEntity2[varName];
+
+                if (value1) {
+                    combinedEntityData[varName] = value1;
+                } else if (value2) {
+                    combinedEntityData[varName] = value2;
+                } else {
+                    combinedEntityData[varName] = null;
                 }
             });
 
-            newEntities.push(newEntity);
-        });
+            newEntities.push(combinedEntityData);
+            entitiesToDelete.push(randomEntity1.id, randomEntity2.id);
+        }
 
+        // Update the refs with empty arrays since all entities are used
+        selectionGroup1EntitiesRef.current = [];
+        selectionGroup2EntitiesRef.current = [];
+
+        // Delete the original entities and add all the combined ones
+        deleteEntities(entitiesToDelete);
         addEntities(newEntities);
+
+        setSelectionGroup("selection-group-1");
+        selectionGroupRef.current = "selection-group-1";
     }
 
     // Randomly populate data points in the selected region
@@ -923,15 +1018,33 @@ export default function ParallelSankeyPlot({ activePanel, variablesDict, updateV
 
                     {activeInteraction === INTERACTION_TYPES.CONNECT && isBatchMode && (
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-                            <Button
-                                disabled={
-                                    (isBatchMode && (selectedEntities.length === 0 || activeInteraction !== INTERACTION_TYPES.CONNECT || brushSelectedRegions.size < 2)) ||
-                                    (!isBatchMode)
-                                }
-                                variant='outlined'
-                                onClick={connectRandomEntities}>
-                                Link
-                            </Button>
+                            <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <Button
+                                    variant='outlined'
+                                    onClick={connectEntities}>
+                                    Link
+                                </Button>
+                                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center' }}>
+                                    <ToggleButton
+                                        value="group1"
+                                        selected={selectionGroup === "selection-group-1"}
+                                        onChange={() => {
+                                            changeSelectionGroup("selection-group-1");
+                                        }}
+                                    >
+                                        Group 1
+                                    </ToggleButton>
+                                    <ToggleButton
+                                        value="group2"
+                                        selected={selectionGroup === "selection-group-2"}
+                                        onChange={() => {
+                                            changeSelectionGroup("selection-group-2");
+                                        }}
+                                    >
+                                        Group 2
+                                    </ToggleButton>
+                                </Box>
+                            </Box>
                             <Button
                                 sx={{ ml: 1 }}
                                 disabled={selectedEntities.length === 0}

@@ -180,6 +180,7 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict }
 
     const plotFittedDistribution = (paramName, priorResult, dist) => {
         const svg = d3.select(`#parameter-svg-${paramName}`)
+        svg.html('');
         const chartWidth = svg.node().clientWidth - margin.left - margin.right;
         const chartHeight = svg.node().clientHeight - margin.top - margin.bottom;
 
