@@ -57,6 +57,9 @@ export default function Workspace(props) {
     const [bivariateVarName2, setBivariateVarName2] = useState('');
     const [biVariableDict, setBiVariableDict] = useState({});
 
+    const [biVariable1, setBiVariable1] = useState(null);
+    const [biVariable2, setBiVariable2] = useState(null);
+
     const [entities, setEntities] = useState({});
     const [selectedEntities, setSelectedEntities] = useState([]);
 
@@ -373,10 +376,13 @@ export default function Workspace(props) {
         }
     };
 
-    const selectBivariable = (biVarName) => {
-        let [varName, relatedVarName] = biVarName.split("-");
-        setBivariateVarName1(varName);
-        setBivariateVarName2(relatedVarName);
+    const addToBiVarPlot = (variable) => {
+        if (biVariable1 === null) {
+            setBiVariable1(variable);
+        }
+        else if (biVariable2 === null) {
+            setBiVariable2(variable);
+        }
     }
 
     // Synchronize the selection of entities in multiple views
@@ -472,16 +478,18 @@ export default function Workspace(props) {
                                 variablesDict={variablesDict}
                                 updateVariable={updateVariable}
                                 setVariablesDict={setVariablesDict}
-                                biVariableDict={biVariableDict}
-                                setBiVariableDict={setBiVariableDict}
+                                biVariable1={biVariable1}
+                                setBiVariable1={setBiVariable1}
+                                biVariable2={biVariable2}
+                                setBiVariable2={setBiVariable2}
+                                addToBiVarPlot={addToBiVarPlot}
                                 updateBivariable={updateBivariable}
-                                selectBivariable={selectBivariable}
                                 addAttributeToEntities={addAttributeToEntities}
                             />
                         </div>
 
                         {/* Add Relationship List here */}
-                        <div className="context-container">
+                        {/* <div className="context-container">
                             <Typography variant="h6" gutterBottom>Relationship List</Typography>
                             <Box sx={{ overflowY: 'auto', maxHeight: 200 }}>
                                 {Object.entries(biVariableDict).map(([biVarName, biVariable]) => {
@@ -506,7 +514,7 @@ export default function Workspace(props) {
                                     );
                                 })}
                             </Box>
-                        </div>
+                        </div> */}
                     </Box>
 
                     {/* Left Panel Toggle Button - shown when left panel is closed */}
@@ -611,13 +619,13 @@ export default function Workspace(props) {
                                     boxSizing: 'border-box',
                                     height: 'calc(100% - 32px)',
                                 }}>
-                                    {bivariateVarName1 !== '' && bivariateVarName2 !== '' ?
+                                    {biVariable1 && biVariable2 ?
                                         <BiVariablePlot
                                             ref={bivarRef}
                                             panelStatus={leftPanelOpen + rightPanelOpen}
                                             biVariableDict={biVariableDict}
-                                            biVariable1={variablesDict[bivariateVarName1]}
-                                            biVariable2={variablesDict[bivariateVarName2]}
+                                            biVariable1={biVariable1}
+                                            biVariable2={biVariable2}
                                             updateVariable={updateVariable}
                                             updateBivariable={updateBivariable}
                                             entities={entities}

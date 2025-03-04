@@ -72,7 +72,7 @@ const BiVariablePlot = React.forwardRef(({ panelStatus, biVariableDict, biVariab
             .attr("y", chartHeight + titleOffset)
             .style("font-size", "14px")
             .text(`${biVariable1.name} (${biVariable1.unitLabel})`);
-
+            
         // Draw Y axis
         chart.append('g')
             .attr("transform", `translate(0, 0)`)

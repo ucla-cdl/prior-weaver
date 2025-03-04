@@ -5,14 +5,16 @@ import { graphviz } from "d3-graphviz";
 import { logUserBehavior } from '../utils/BehaviorListener';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BrushIcon from '@mui/icons-material/Brush';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
 const RELATIONS = {
-    INFLUENCE: "influences", 
-    ASSOCIATE: "associates with", 
+    INFLUENCE: "influences",
+    ASSOCIATE: "associates with",
     NONE: "not related to",
 };
 
-export default function ConceptualModel({ variablesDict, updateVariable, setVariablesDict, biVariableDict, updateBivariable, selectBivariable, addAttributeToEntities }) {
+export default function ConceptualModel({ variablesDict, updateVariable, setVariablesDict, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot, addAttributeToEntities }) {
 
     const [isAddingVariable, setIsAddingVariable] = useState(false);
     const [newVarName, setNewVarName] = useState('');
@@ -23,41 +25,6 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
 
     const [isEditingVariable, setIsEditingVariable] = useState(false);
     const [editingVariable, setEditingVariable] = useState(null);
-
-    useEffect(() => {
-        // drawConceptualModel();
-    }, [variablesDict, biVariableDict]);
-
-    const drawConceptualModel = () => {
-        document.getElementById("conceptual-model-div").innerHTML = "";
-
-        let conceptualModel = "digraph {\n";
-
-        // Add Univariate Variables
-        Object.entries(variablesDict).forEach(([varName, variable]) => {
-            conceptualModel += `${varName};\n`;
-        });
-
-        // Add Bivariate Relationships
-        Object.entries(biVariableDict).forEach(([biVarName, biVariable]) => {
-            const [var1, var2] = biVarName.split("-");
-            switch (biVariable.relation) {
-                case RELATIONS.INFLUENCE:
-                    conceptualModel += `${var1} -> ${var2} [label="influences"];\n`;
-                    break;
-                case RELATIONS.ASSOCIATE:
-                    conceptualModel += `${var1} -> ${var2} [dir="both" label="assoc."];\n`;
-                default:
-                    break;
-            }
-        });
-
-        conceptualModel += "}";
-        console.log("draw conceptual model", conceptualModel);
-        d3.select("#conceptual-model-div")
-            .graphviz()
-            .renderDot(conceptualModel);
-    }
 
     const addNewVariable = () => {
         setIsAddingVariable(true);
@@ -87,20 +54,6 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
             unitLabel: newUnitLabel,
             sequenceNum: Object.keys(variablesDict).length
         };
-
-        // Add a bivariable relationship
-        Object.entries(variablesDict).forEach(([varName, variable]) => {
-            let biVarName = varName + "-" + newVarName;
-            updateBivariable(biVarName, {
-                name: biVarName,
-                relation: RELATIONS.NONE,
-                specified: false,
-                predictionDots: [],
-                populateDots: [],
-                chipDots: [],
-                fittedRelation: {},
-            })
-        })
 
         // Add an attribute to every existing entities
         addAttributeToEntities(newVarName);
@@ -139,6 +92,23 @@ export default function ConceptualModel({ variablesDict, updateVariable, setVari
                         }}>
                             <BrushIcon fontSize='small' />
                         </IconButton>
+                        {biVariable1?.name === variable.name ? (
+                            <IconButton
+                                onClick={() => setBiVariable1(null)}>
+                                <RemoveCircleIcon fontSize='small' />
+                            </IconButton>
+                        ) : biVariable2?.name === variable.name ? (
+                            <IconButton
+                                onClick={() => setBiVariable2(null)}>
+                                <RemoveCircleIcon fontSize='small' />
+                            </IconButton>
+                        ) : (
+                            <IconButton
+                                disabled={biVariable1 !== null && biVariable2 !== null}
+                                onClick={() => addToBiVarPlot(variable)}>
+                                <AddCircleIcon fontSize='small' />
+                            </IconButton>
+                        )}
                     </Box>
                 ))}
                 {/* <Button sx={{ m: 2 }} variant="outlined" onClick={addNewVariable}>Add Variable</Button> */}
