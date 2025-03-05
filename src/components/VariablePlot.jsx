@@ -1,12 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import * as d3 from 'd3';
-import { logUserBehavior } from '../utils/BehaviorListener';
-import axios from "axios";
-import { Box, Paper } from '@mui/material';
 import "./VariablePlot.css";
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import * as d3 from 'd3';
+import { Box, Paper } from '@mui/material';
+import { EntityContext } from "../contexts/EntityContext";
 
 // Define the Variable Component
-export default function VariablePlot({ variableDict, variable, updateVariable, entities, addEntities, updateEntities, deleteEntities }) {
+export default function VariablePlot({ variable }) {
+    const { entities, addEntities, updateEntities } = useContext(EntityContext);
+
     const svgWidth = 300;
     const svgHeightRef = useRef(0);
     const marginX = 40;

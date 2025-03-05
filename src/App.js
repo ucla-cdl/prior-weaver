@@ -6,19 +6,29 @@ import Logger from "./containers/Logger";
 import Home from "./containers/Home";
 import Admin from "./containers/Admin";
 
+import { WorkspaceProvider } from "./contexts/WorkspaceContext";
+import { VariableProvider } from "./contexts/VariableContext";
+import { EntityProvider } from "./contexts/EntityContext";
+
 function App() {
   return (
-    <div className="App">
-      <HashRouter>
-        <Routes>
-          <Route path={routes.default} element={<Workspace />}></Route>
-          <Route path={routes.home} element={<Home />}></Route>
-          <Route path={routes.workspace} element={<Workspace />}></Route>
-          <Route path={routes.logger} element={<Logger />}></Route>
-          <Route path={routes.admin} element={<Admin />}></Route>
-        </Routes>
-      </HashRouter>
-    </div>
+    <WorkspaceProvider>
+      <VariableProvider>
+        <EntityProvider>
+          <div className="App">
+            <HashRouter>
+              <Routes>
+                <Route path={routes.default} element={<Workspace />}></Route>
+                <Route path={routes.home} element={<Home />}></Route>
+                <Route path={routes.workspace} element={<Workspace />}></Route>
+                <Route path={routes.logger} element={<Logger />}></Route>
+                <Route path={routes.admin} element={<Admin />}></Route>
+              </Routes>
+            </HashRouter>
+          </div>
+        </EntityProvider>
+      </VariableProvider>
+    </WorkspaceProvider>
   );
 }
 

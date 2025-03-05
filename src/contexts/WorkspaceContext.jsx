@@ -1,0 +1,43 @@
+import React, { createContext, useState } from 'react';
+
+export const WorkspaceContext = createContext();
+
+const context = {
+    "human_growth_model": "During the early stages of life the stature of female and male are about the same,\
+                but their stature start to clearly to differ during growth and in the later stages of life.\
+                In the early stage man and female are born roughly with the same stature, around 45cm - 55cm.\
+                By the time they are born reaching around 2.5 years old, both male and female present the highest growth rate (centimetres pey year).\
+                It is the time they grow the fastest. During this period, man has higher growth rate compared to female.\
+                For both male and female there is a spurt growth in the pre-adulthood.\
+                For man, this phase shows fast growth rate varying in between 13-17 years old and female varying from 11-15.\
+                Also, male tend to keep growing with roughly constant rate until the age of 17-18, while female with until the age of 15-16.\
+                After this period of life they tend to stablish their statures mostly around 162 - 190cm and 155 - 178cm respectively.",
+
+    "income_education_age": "Imagine you are a social scientist interested in understanding the factors that influence people's income.\
+                Specifically, you want to assess how the number of years of education and a person's age (or employment years) impact their monthly income in the U.S.\
+                You aim to use this information to better understand socioeconomic patterns and inform policy recommendations.",
+}
+
+export const WorkspaceProvider = ({ children }) => {
+    const [finishParseCode, setFinishParseCode] = useState(false);
+    const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+    const [rightPanelOpen, setRightPanelOpen] = useState(true);
+    const [scenario, setScenario] = useState(context["income_education_age"]);
+
+    const contextValue = {
+        finishParseCode,
+        setFinishParseCode,
+        leftPanelOpen,
+        setLeftPanelOpen,
+        rightPanelOpen,
+        setRightPanelOpen,
+        scenario,
+        setScenario
+    };
+
+    return (
+        <WorkspaceContext.Provider value={contextValue}>
+            {children}
+        </WorkspaceContext.Provider>
+    );
+}; 

@@ -1,9 +1,11 @@
 import { Box, Button, CircularProgress, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Alert } from '@mui/material';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
 import "./ResultsPanel.css";
 import EditIcon from '@mui/icons-material/Edit';
+import { VariableContext } from '../contexts/VariableContext';
+import { EntityContext } from '../contexts/EntityContext';
 
 const DISTRIBUTION_TYPES = {
     'Normal': 'norm',
@@ -14,7 +16,10 @@ const DISTRIBUTION_TYPES = {
     'Uniform': 'uniform',
 };
 
-export default function ResultsPanel({ entities, variablesDict, parametersDict, currentVersion }) {
+export default function ResultsPanel() {
+    const { variablesDict, parametersDict } = useContext(VariableContext);
+    const { entities } = useContext(EntityContext);
+
     const [isTranslating, setIsTranslating] = useState(false);
     const [translated, setTranslated] = useState(0);
 
@@ -285,6 +290,21 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict, 
                         .x(d => x(d.x))
                         .y(d => yKDE(d.density)));
             });
+
+            // Add legend for previous results
+            chart.append("rect")
+                .attr("x", chartWidth - 50)
+                .attr("y", 20)
+                .attr("width", 15)
+                .attr("height", 2)
+                .attr("fill", "red");
+
+            chart.append("text")
+                .attr("x", chartWidth - 30)
+                .attr("y", 20)
+                .attr("text-anchor", "start")
+                .style("font-size", "12px")
+                .text("Previous");
         }
 
         simulatedResults.forEach((simulatedData, index) => {
@@ -298,6 +318,21 @@ export default function ResultsPanel({ entities, variablesDict, parametersDict, 
                     .x(d => x(d.x))
                     .y(d => yKDE(d.density)));
         });
+
+        // Add legend for current results
+        chart.append("rect")
+            .attr("x", chartWidth - 50)
+            .attr("y", 10)
+            .attr("width", 15)
+            .attr("height", 2)
+            .attr("fill", "blue");
+
+        chart.append("text")
+            .attr("x", chartWidth - 30)
+            .attr("y", 10)
+            .attr("text-anchor", "start")
+            .style("font-size", "12px")
+            .text("Current");
 
         // Add title
         const responseVar = Object.values(variablesDict).find(v => v.type === "response");

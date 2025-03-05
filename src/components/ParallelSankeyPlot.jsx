@@ -1,14 +1,16 @@
-import React, { useState, useRef, useEffect, forwardRef } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useContext } from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
 import { Alert, Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Radio, RadioGroup, Snackbar, Switch, ToggleButton, Typography } from '@mui/material';
-import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { DndContext, closestCenter, DragOverlay, useSensors, useSensor, PointerSensor } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import "./ParallelSankeyPlot.css";
+import { WorkspaceContext } from '../contexts/WorkspaceContext';
+import { VariableContext } from '../contexts/VariableContext';
+import { EntityContext } from '../contexts/EntityContext';
 
 /**
  * Define interaction types
@@ -23,7 +25,11 @@ const INTERACTION_TYPES = {
     CONNECT: "connect"
 }
 
-export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateVariable, entities, addEntities, deleteEntities, combineEntities, synchronizeSankeySelection }) {
+export default function ParallelSankeyPlot() {
+    const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
+    const { variablesDict, updateVariable, sortableVariables } = useContext(VariableContext);
+    const { entities, addEntities, deleteEntities, combineEntities, selectedEntities, setSelectedEntities } = useContext(EntityContext);
+
     const marginTop = 20;
     const marginBottom = 10;
     const marginRight = 50;
@@ -31,9 +37,6 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
     const labelOffset = 20;
 
     const [brushSelectedRegions, setBrushSelectedRegions] = useState(new Map());
-    const selectedEntitiesRef = useRef([]);
-    const [selectedEntities, setSelectedEntities] = useState([]);
-    const [sortableVariables, setSortableVariables] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
     const [connectedPoint, setConnectedPoint] = useState(null);
 
@@ -45,13 +48,13 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
     const [isBatchMode, setIsBatchMode] = useState(true);
     const isBatchModeRef = useRef(true);
 
-    const valueAxesRef = useRef(new Map());
-    const variableAxesRef = useRef(null);
-
     const [warningMessage, setWarningMessage] = useState("");
 
     const chartHeightRef = useRef(0);
+    const valueAxesRef = useRef(new Map());
+    const variableAxesRef = useRef(null);
 
+    // TODO: selection should be a context variable -> same color encoding for all plots
     const [selectionGroup, setSelectionGroup] = useState("selection-group-1");
     const selectionGroupRef = useRef("selection-group-1");
     const selectionGroup1EntitiesRef = useRef([]);
@@ -59,14 +62,17 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
 
 
     useEffect(() => {
-        setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
         drawPlot();
         populateEntities();
-    }, [panelStatus, variablesDict]);
+    }, [leftPanelOpen, rightPanelOpen, variablesDict]);
 
     useEffect(() => {
         populateEntities();
     }, [entities]);
+
+    useEffect(() => {
+        console.log("Selected entities updated: ", selectedEntities);
+    }, [selectedEntities]);
 
     const drawPlot = () => {
         const container = d3.select("#plot-container");
@@ -367,8 +373,7 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
         svg.on("start brush end", null);
         setBrushSelectedRegions(new Map());
 
-        // Clear selected entities ref
-        selectedEntitiesRef.current = [];
+        // Clear selected entities
         setSelectedEntities([]);
     }
 
@@ -386,8 +391,7 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
 
         setBrushSelectedRegions(new Map());
 
-        // Clear selected entities ref
-        selectedEntitiesRef.current = [];
+        // Clear selected entities
         setSelectedEntities([]);
     }
 
@@ -513,14 +517,6 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
             });
     }
 
-    /**
-     * Connect feature:
-     * 1. Select individual data points
-     * 2. 
-     * 
-     * PROBLEM:
-     * - what if user select non-neighboring data points?
-     */
     const activateConnectFeature = () => {
         const svg = d3.select("#sankey-svg");
         let connectedPoint = null;
@@ -642,9 +638,6 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
 
                     let shouldSelect = false;
                     if (activeInteractionRef.current === INTERACTION_TYPES.CONNECT) {
-                        // const hasPointInSelection = Array.from(selections).some(([key, [max, min]]) =>
-                        //     d[key] !== null && d[key] >= min && d[key] <= max
-                        // );
                         shouldSelect = active && !isComplete;
                     } else if (activeInteractionRef.current === INTERACTION_TYPES.EXPLORE) {
                         shouldSelect = active && isComplete;
@@ -726,11 +719,7 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
             });
 
             // Update both ref and state
-            selectedEntitiesRef.current = newSelectedEntities;
             setSelectedEntities(newSelectedEntities);
-
-            // Synchronize immediately with the new selection
-            synchronizeSankeySelection(newSelectedEntities);
 
             // Update count labels for each axis
             countsByAxis.forEach((count, axis) => {
@@ -766,9 +755,9 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
 
     const updateSelectionGroupEntities = () => {
         if (selectionGroupRef.current === "selection-group-1") {
-            selectionGroup1EntitiesRef.current = selectedEntitiesRef.current;
+            selectionGroup1EntitiesRef.current = selectedEntities;
         } else {
-            selectionGroup2EntitiesRef.current = selectedEntitiesRef.current;
+            selectionGroup2EntitiesRef.current = selectedEntities;
         }
     }
 
@@ -779,54 +768,6 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
         selectionGroupRef.current = group;
         clearBrushSelection();
         activateBrushFeature();
-    }
-
-    const connectRandomEntities = () => {
-        const entitiesInRegions = selectedEntitiesRef.current;
-
-        // Group entities by axis to find points on each axis
-        const pointsByAxis = new Map();
-        Array.from(brushSelectedRegions.keys()).forEach(axis => {
-            const [max, min] = brushSelectedRegions.get(axis);
-            const pointsOnAxis = entitiesInRegions.filter(entity =>
-                entity[axis] !== null &&
-                entity[axis] >= min &&
-                entity[axis] <= max
-            );
-            pointsByAxis.set(axis, pointsOnAxis);
-        });
-
-        // Check if all selected regions have the same number of points
-        const pointCounts = Array.from(pointsByAxis.values()).map(points => points.length);
-        const allSameCount = pointCounts.every(count => count === pointCounts[0]);
-
-        if (!allSameCount) {
-            setWarningMessage("Selected regions must have the same number of available points for 1-to-1 mapping");
-            return;
-        }
-
-        // For 1-to-1 mapping between points
-        const selectedAxes = Array.from(brushSelectedRegions.keys());
-        const pointsPerAxis = pointCounts[0];
-        const newEntities = [];
-        const pointsToDelete = [];
-
-        // For each set of points to connect
-        for (let i = 0; i < pointsPerAxis; i++) {
-            const combinedEntity = {};
-
-            // Get one point from each axis
-            selectedAxes.forEach(axis => {
-                const point = pointsByAxis.get(axis)[i];
-                combinedEntity[axis] = point[axis];
-                pointsToDelete.push(point.id);
-            });
-
-            newEntities.push(combinedEntity);
-        }
-
-        deleteEntities(pointsToDelete);
-        addEntities(newEntities);
     }
 
     const connectEntities = () => {
@@ -904,7 +845,7 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
     }
 
     const deleteSelectedEntities = () => {
-        deleteEntities(selectedEntitiesRef.current.map(entity => entity.id));
+        deleteEntities(selectedEntities.current.map(entity => entity.id));
     }
 
     const handleDragStart = (event) => {
@@ -915,18 +856,14 @@ export default function ParallelSankeyPlot({ panelStatus, variablesDict, updateV
         const { active, over } = event;
 
         if (active.id !== over.id) {
-            setSortableVariables((items) => {
-                const oldIndex = items.findIndex(item => item.name === active.id);
-                const newIndex = items.findIndex(item => item.name === over.id);
+            const oldIndex = sortableVariables.findIndex(item => item.name === active.id);
+            const newIndex = sortableVariables.findIndex(item => item.name === over.id);
 
-                const newItems = arrayMove(items, oldIndex, newIndex);
-                newItems.forEach((item, index) => {
-                    updateVariable(item.name, {
-                        "sequenceNum": index
-                    });
+            const newItems = arrayMove(sortableVariables, oldIndex, newIndex);
+            newItems.forEach((item, index) => {
+                updateVariable(item.name, {
+                    "sequenceNum": index
                 });
-
-                return newItems;
             });
         }
 
