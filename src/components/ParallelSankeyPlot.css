@@ -1,3 +1,4 @@
+/* Entity dots */
 .entity-dot {
     fill: white;
     stroke: black;
@@ -17,6 +18,15 @@
     stroke: #ddd;
 }
 
+.group-1-dot {
+    fill: plum;
+}
+
+.group-2-dot {
+    fill: green;
+}
+
+/* Entity paths */
 .entity-path {
     fill: none;
     stroke-width: 1;
@@ -35,6 +45,15 @@
     stroke: #ddd;
 }
 
+.group-1-selection {
+    stroke: plum;
+}
+
+.group-2-selection {
+    stroke: green;
+}
+
+/* Axis Boundaries */
 .solid{
     stroke:solid;
  }
@@ -62,21 +81,4 @@
 
 .axis-handle rect:hover {
     opacity: 1;
-}
-
-
-.selection-group-1 {
-    stroke: orange;
-}
-
-.selection-group-2 {
-    stroke: green;
-}
-
-.selection-group-1-dot {
-    fill: orange;
-}
-
-.selection-group-2-dot {
-    fill: green;
 }

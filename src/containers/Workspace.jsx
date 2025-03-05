@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import "./Workspace.css";
 
-import { Box, Typography, Tooltip, Button, TextField, IconButton } from '@mui/material';
+import { Box, Typography, Tooltip, Button, TextField, IconButton, Skeleton } from '@mui/material';
 import VariablePlot from '../components/VariablePlot';
 import BiVariablePlot from '../components/BiVariablePlot';
 import ConceptualModel from '../components/ConceptualModel';
@@ -187,7 +187,7 @@ export default function Workspace(props) {
                                     {biVariable1 && biVariable2 ?
                                         <BiVariablePlot />
                                         :
-                                        <></>}
+                                        <Skeleton variant="rectangular" sx={{ mx: 'auto', my: 2, width: '85%', height: '85%' }} />}
                                 </Box>
                             </div>
                         </Box>

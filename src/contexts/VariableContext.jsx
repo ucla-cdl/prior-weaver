@@ -17,7 +17,7 @@ const RELATIONS = {
 };
 
 export const VariableProvider = ({ children }) => {
-    const { setFinishParseCode } = useContext(WorkspaceContext);
+    const { finishParseCode, setFinishParseCode } = useContext(WorkspaceContext);
 
     const [stanCode, setStanCode] = useState('model <- glm(income ~ age + education, family = binomial(link = "logit"))');
     const [model, setModel] = useState('');
@@ -45,6 +45,13 @@ export const VariableProvider = ({ children }) => {
             }
         }));
     };
+
+    useEffect(() => {
+        if (finishParseCode) {
+            setBiVariable1(Object.values(variablesDict)[1]);
+            setBiVariable2(Object.values(variablesDict)[0]);
+        }
+    }, [finishParseCode]);
 
     // Update the variable
     const updateVariable = (name, updates) => {

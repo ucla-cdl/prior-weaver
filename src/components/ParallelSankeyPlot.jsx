@@ -51,11 +51,11 @@ export default function ParallelSankeyPlot() {
     const [draggedItem, setDraggedItem] = useState(null);
 
     // TODO: selection should be a context variable -> same color encoding for all plots
-    const [selectionGroup, setSelectionGroup] = useState("selection-group-1");
-    const selectionGroupRef = useRef("selection-group-1");
-    const selectionGroup1EntitiesRef = useRef([]);
-    const selectionGroup2EntitiesRef = useRef([]);
+    const [selectionGroup1Entities, setSelectionGroup1Entities] = useState([]);
+    const [selectionGroup2Entities, setSelectionGroup2Entities] = useState([]);
 
+    // Add new state for selection steps
+    const [selectionStep, setSelectionStep] = useState(0); // 0: initial, 1: choose g1, 2: confirm g1, 3: choose g2, 4: confirm g2, 5: link
 
     useEffect(() => {
         drawPlot();
@@ -545,6 +545,8 @@ export default function ParallelSankeyPlot() {
         Array.from(selectionsRef.current.keys()).forEach(axis => countsByAxis.set(axis, 0));
 
         Object.entries(entities).forEach(([entityId, entity]) => {
+            if (selectionGroup1Entities.includes(entity) || selectionGroup2Entities.includes(entity)) return;
+
             const active = selectionsRef.current.size !== 0 && Array.from(selectionsRef.current).every(([key, [max, min]]) => {
                 if (entity[key] === null) return false;
                 return entity[key] >= min && entity[key] <= max;
@@ -556,7 +558,9 @@ export default function ParallelSankeyPlot() {
                 d3.select(`#entity_path_${entityId}`)
                     .classed("hidden-selection", true)
                     .classed("brush-non-selection", false)
-                    .classed("brush-selection", false);
+                    .classed("brush-selection", false)
+                    .classed("group-1-selection", false)
+                    .classed("group-2-selection", false);
 
                 Object.entries(entity).forEach(([key, value]) => {
                     if (key !== "id" && value !== null) {
@@ -564,6 +568,8 @@ export default function ParallelSankeyPlot() {
                             .classed("hidden-entity-dot", true)
                             .classed("selected-entity-dot", false)
                             .classed("unselected-entity-dot", false)
+                            .classed("group-1-dot", false)
+                            .classed("group-2-dot", false);
                     }
                 });
             }
@@ -571,7 +577,9 @@ export default function ParallelSankeyPlot() {
                 d3.select(`#entity_path_${entityId}`)
                     .classed("hidden-selection", false)
                     .classed("brush-non-selection", !active)
-                    .classed("brush-selection", active);
+                    .classed("brush-selection", active)
+                    .classed("group-1-selection", active && selectionStep === 1)
+                    .classed("group-2-selection", active && selectionStep === 3);
 
                 if (active) {
                     newSelectedEntities.push(entity);
@@ -582,7 +590,9 @@ export default function ParallelSankeyPlot() {
                         d3.select(`#dot_${entityId}_${key}`)
                             .classed("hidden-entity-dot", false)
                             .classed("selected-entity-dot", active)
-                            .classed("unselected-entity-dot", !active);
+                            .classed("unselected-entity-dot", !active)
+                            .classed("group-1-dot", active && selectionStep === 1)
+                            .classed("group-2-dot", active && selectionStep === 3);
 
                         if (active) {
                             countsByAxis.set(key, countsByAxis.get(key) + 1);
@@ -657,27 +667,9 @@ export default function ParallelSankeyPlot() {
         deleteEntities(selectedEntities.map(entity => entity.id));
     }
 
-    const updateSelectionGroupEntities = () => {
-        if (selectionGroupRef.current === "selection-group-1") {
-            selectionGroup1EntitiesRef.current = selectedEntities;
-        } else {
-            selectionGroup2EntitiesRef.current = selectedEntities;
-        }
-    }
-
-    const changeSelectionGroup = (group) => {
-        updateSelectionGroupEntities();
-        setSelectionGroup(group);
-        selectionGroupRef.current = group;
-        clearBrushSelection();
-        activateBrushFeature();
-    }
-
     const connectEntities = () => {
-        updateSelectionGroupEntities();
-
-        const entities1 = [...selectionGroup1EntitiesRef.current];
-        const entities2 = [...selectionGroup2EntitiesRef.current];
+        const entities1 = [...selectionGroup1Entities];
+        const entities2 = [...selectionGroup2Entities];
 
         // Return if either group is empty
         if (entities1.length === 0 || entities2.length === 0) {
@@ -720,15 +712,13 @@ export default function ParallelSankeyPlot() {
             entitiesToDelete.push(randomEntity1.id, randomEntity2.id);
         }
 
-        // Update the refs with empty arrays since all entities are used
-        selectionGroup1EntitiesRef.current = [];
-        selectionGroup2EntitiesRef.current = [];
-
         // Use the new combineEntities function instead of separate delete and add
         combineEntities(entitiesToDelete, newEntities);
 
-        setSelectionGroup("selection-group-1");
-        selectionGroupRef.current = "selection-group-1";
+        // After connection is complete, reset the step
+        setSelectionGroup1Entities([]);
+        setSelectionGroup2Entities([]);
+        setSelectionStep(0);
     }
 
     const handleDragStart = (event) => {
@@ -823,12 +813,6 @@ export default function ParallelSankeyPlot() {
                                     style={{ width: '60px', textAlign: 'center' }}
                                 />
                             </Box>
-                            <Button
-                                disabled={selectedEntities.length === 0}
-                                variant='outlined'
-                                onClick={deleteSelectedEntities}>
-                                Delete
-                            </Button>
                         </Box>
                     )}
 
@@ -836,42 +820,74 @@ export default function ParallelSankeyPlot() {
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                             <Box sx={{ mx: 1, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                                 <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                    <ToggleButton
+                                    <Button
                                         size='small'
-                                        value="group1"
-                                        selected={selectionGroup === "selection-group-1"}
-                                        onChange={() => {
-                                            changeSelectionGroup("selection-group-1");
+                                        variant={selectionStep < 1 ? 'outlined' : 'contained'}
+                                        color='secondary'
+                                        onClick={() => {
+                                            if (selectionStep === 1) {
+                                                setSelectionGroup1Entities(selectedEntities);
+                                                clearBrushSelection();
+                                            }
+                                            setSelectionStep((prev) => prev + 1);
                                         }}
+                                        disabled={selectionStep > 1}
                                     >
-                                        Group 1
-                                    </ToggleButton>
-                                    <ToggleButton
+                                        {selectionStep === 0 ? 'Select Group 1' : (selectionStep === 1 ? 'Confirm Group 1' : 'Group 1 Selected')}
+                                    </Button>
+                                    <Button
                                         size='small'
-                                        value="group2"
-                                        selected={selectionGroup === "selection-group-2"}
-                                        onChange={() => {
-                                            changeSelectionGroup("selection-group-2");
+                                        variant={selectionStep < 3 ? 'outlined' : 'contained'}
+                                        color='success'
+                                        onClick={() => {
+                                            if (selectionStep === 3) {
+                                                setSelectionGroup2Entities(selectedEntities);
+                                                clearBrushSelection();
+                                            }
+                                            setSelectionStep((prev) => prev + 1);
                                         }}
+                                        disabled={selectionStep < 2 || selectionStep > 3}
                                     >
-                                        Group 2
-                                    </ToggleButton>
+                                        {selectionStep === 2 ? 'Select Group 2' : (selectionStep === 3 ? 'Confirm Group 2' : 'Group 2 Selected')}
+                                    </Button>
                                 </Box>
-                                <Button
-                                    variant='outlined'
-                                    onClick={connectEntities}>
-                                    Link
-                                </Button>
+
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    <Button
+                                        size='small'
+                                        variant='contained'
+                                        color='primary'
+                                        onClick={() => {
+                                            connectEntities();
+                                        }}
+                                        disabled={selectionStep < 4}
+                                    >
+                                        Link
+                                    </Button>
+
+                                    <Button
+                                        size='small'
+                                        variant='outlined'
+                                        onClick={() => {
+                                            setSelectionStep(0);
+                                            setSelectionGroup1Entities([]);
+                                            setSelectionGroup2Entities([]);
+                                            clearBrushSelection();
+                                        }}
+                                    >
+                                        Reset
+                                    </Button>
+                                </Box>
                             </Box>
-                            <Button
-                                sx={{ ml: 1 }}
-                                disabled={selectedEntities.length === 0}
-                                variant='outlined'
-                                onClick={deleteSelectedEntities}>
-                                Delete
-                            </Button>
                         </Box>
                     )}
+
+                    <Button
+                        disabled={selectedEntities.length === 0}
+                        variant='outlined'
+                        onClick={deleteSelectedEntities}>
+                        Delete
+                    </Button>
                 </Box>
             </Box>
 
