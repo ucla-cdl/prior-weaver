@@ -4,16 +4,8 @@
     stroke-width: 1;
 }
 
-.hovered-entity-dot{
-    fill: orange !important;
-}
-
-.connect-entity-dot {
-    fill: steelblue !important;
-}
-
 .selected-entity-dot {
-    fill: blue;
+    fill: steelblue;
 }
 
 .unselected-entity-dot {
@@ -36,7 +28,7 @@
 }
 
 .brush-selection {
-    stroke: blue;
+    stroke: steelblue;
 }
 
 .hidden-selection {

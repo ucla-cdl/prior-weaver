@@ -1,7 +1,18 @@
-.brush-selection {
+.bivar-dot {
+    fill: white;
+    stroke: black;
+    stroke-width: 1;
+}
+
+.selection-dot {
     fill: steelblue;
 }
 
-.brush-non-selection {
+.non-selection-dot {
     fill: white;
+}
+
+.hidden-dot {
+    fill: #ddd;
+    stroke: #ddd;
 }

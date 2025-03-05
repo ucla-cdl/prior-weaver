@@ -11,24 +11,25 @@ import "./ParallelSankeyPlot.css";
 import { WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
+import { SelectionContext, SELECTION_SOURCES } from '../contexts/SelectionContext';
 
 /**
  * Define interaction types
  * 
  * TYPES:
- * - EXPLORE: For exploring complete patterns
- * - CONNECT: For connecting incomplete patterns
- * - ADD: For adding new points
+ * - COMPLETE: For exploring complete entities
+ * - INCOMPLETE: For exploring incomplete entities
  */
-const INTERACTION_TYPES = {
-    EXPLORE: "explore",
-    CONNECT: "connect"
+const FILTER_TYPES = {
+    COMPLETE: "complete",
+    INCOMPLETE: "incomplete"
 }
 
 export default function ParallelSankeyPlot() {
     const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
     const { variablesDict, updateVariable, sortableVariables } = useContext(VariableContext);
-    const { entities, addEntities, deleteEntities, combineEntities, selectedEntities, setSelectedEntities } = useContext(EntityContext);
+    const { entities, addEntities, deleteEntities, combineEntities } = useContext(EntityContext);
+    const { activeFilter, setActiveFilter, selections, selectedEntities, setSelectedEntities, isHidden, selectionsRef, updateSelections, selectionSource } = useContext(SelectionContext);
 
     const marginTop = 20;
     const marginBottom = 10;
@@ -36,14 +37,8 @@ export default function ParallelSankeyPlot() {
     const marginLeft = 50;
     const labelOffset = 20;
 
-    const [brushSelectedRegions, setBrushSelectedRegions] = useState(new Map());
-    const [draggedItem, setDraggedItem] = useState(null);
     const [connectedPoint, setConnectedPoint] = useState(null);
-
     const [generatedNum, setGeneratedNum] = useState(5);
-
-    const [activeInteraction, setActiveInteraction] = useState(INTERACTION_TYPES.EXPLORE);
-    const activeInteractionRef = useRef(INTERACTION_TYPES.EXPLORE);
 
     const [isBatchMode, setIsBatchMode] = useState(true);
     const isBatchModeRef = useRef(true);
@@ -53,6 +48,7 @@ export default function ParallelSankeyPlot() {
     const chartHeightRef = useRef(0);
     const valueAxesRef = useRef(new Map());
     const variableAxesRef = useRef(null);
+    const [draggedItem, setDraggedItem] = useState(null);
 
     // TODO: selection should be a context variable -> same color encoding for all plots
     const [selectionGroup, setSelectionGroup] = useState("selection-group-1");
@@ -71,8 +67,10 @@ export default function ParallelSankeyPlot() {
     }, [entities]);
 
     useEffect(() => {
-        console.log("Selected entities updated: ", selectedEntities);
-    }, [selectedEntities]);
+        const fromExternal = selectionSource === SELECTION_SOURCES.BIVARIATE;
+        const newSelectedEntities = updateHighlightedEntities(fromExternal);
+        setSelectedEntities(newSelectedEntities);
+    }, [activeFilter, selections]);
 
     const drawPlot = () => {
         const container = d3.select("#plot-container");
@@ -283,55 +281,18 @@ export default function ParallelSankeyPlot() {
         isBatchModeRef.current = enabled;
 
         // Reapply the current interaction mode with new batch setting
-        changeInteractionMode(activeInteractionRef.current);
+        changeFilterMode(activeFilter);
     }
 
-    const changeInteractionMode = (interactionType) => {
-        console.log("Change interaction mode to: ", interactionType);
-        activeInteractionRef.current = interactionType;
-        setActiveInteraction(interactionType);
-
+    const changeFilterMode = (filterType) => {
+        console.log("Change interaction mode to: ", filterType);
         clearBrushSelection();
+        setActiveFilter(filterType);
 
-        // Filter entities based on interaction type
-        Object.entries(entities).forEach(([entityId, entity]) => {
-            const isComplete = sortableVariables.every(variable => entity[variable.name] !== null);
-
-            if (interactionType === INTERACTION_TYPES.EXPLORE) {
-                // In Explore mode: show only complete entities
-                d3.select(`#entity_path_${entityId}`)
-                    .classed("brush-non-selection", isComplete)
-                    .classed("hidden-selection", !isComplete);
-
-                // Update associated dots
-                Object.entries(entity).forEach(([key, value]) => {
-                    if (key !== "id" && value !== null) {
-                        d3.select(`#dot_${entity["id"]}_${key}`)
-                            .classed("unselected-entity-dot", isComplete)
-                            .classed("hidden-entity-dot", !isComplete);
-                    }
-                });
-            } else if (interactionType === INTERACTION_TYPES.CONNECT) {
-                // In Connect mode: show only incomplete entities
-                d3.select(`#entity_path_${entityId}`)
-                    .classed("brush-non-selection", !isComplete)
-                    .classed("hidden-selection", isComplete);
-
-                // Update associated dots
-                Object.entries(entity).forEach(([key, value]) => {
-                    if (key !== "id" && value !== null) {
-                        d3.select(`#dot_${entity["id"]}_${key}`)
-                            .classed("unselected-entity-dot", !isComplete)
-                            .classed("hidden-entity-dot", isComplete);
-                    }
-                });
-            }
-        })
-
-        if (isBatchModeRef.current) {
-            // Batch mode: use brush selection
-            activateBrushFeature();
-        }
+        // if (isBatchModeRef.current) {
+        //     // Batch mode: use brush selection
+        //     activateBrushFeature();
+        // }
         // else {
         //     // Individual mode: use click interactions
         //     if (interactionType === INTERACTION_TYPES.EXPLORE) {
@@ -341,55 +302,17 @@ export default function ParallelSankeyPlot() {
         //         activateConnectFeature();
         //     }
         // }
-
-        d3.selectAll(".unselected-entity-dot").raise();
-
-        // Reset selections when changing modes
-        setBrushSelectedRegions(new Map());
-        setSelectedEntities([]);
-    }
-
-    const clearInteractions = () => {
-        const svg = d3.select("#sankey-svg");
-
-        // Remove Add feature interactions
-        svg.selectAll(".axis-region").remove();
-        svg.selectAll(".temp-circle").remove();
-        svg.selectAll(".temp-line").remove();
-
-        // Remove Connect feature interactions
-        svg.selectAll(".entity-dot")
-            .on("mouseover", null)
-            .on("mouseout", null)
-            .on("click", null);
-        setConnectedPoint(null);
-
-        // Remove brush feature interactions
-        svg.selectAll(".axis")
-            .on("mousedown.brush mousemove.brush mouseup.brush", null);
-        svg.selectAll(".selection").remove();
-        svg.selectAll(".handle").remove();
-        svg.selectAll(".overlay").remove();
-        svg.on("start brush end", null);
-        setBrushSelectedRegions(new Map());
-
-        // Clear selected entities
-        setSelectedEntities([]);
     }
 
     const clearBrushSelection = () => {
-        const svg = d3.select("#sankey-svg");
+        const chart = d3.select("#pcp");
 
-        // Clear brush selection by calling brush.move with null
-        svg.selectAll(".axis")
-            .on("mousedown.brush mousemove.brush mouseup.brush", null);
-        svg.selectAll(".selection").remove();
-        svg.selectAll(".handle").remove();
-        svg.selectAll(".overlay").remove();
-        svg.on("start brush end", null);
-        svg.selectAll(".selection-count-label").remove();
-
-        setBrushSelectedRegions(new Map());
+        // Clear brush selection
+        const brush = chart.selectAll(".brush");
+        brush.call(d3.brush().move, null);
+        chart.selectAll(".selection-count-label").remove();
+        selectionsRef.current = new Map();
+        updateSelections(selectionsRef.current, SELECTION_SOURCES.PARALLEL);
 
         // Clear selected entities
         setSelectedEntities([]);
@@ -414,22 +337,13 @@ export default function ParallelSankeyPlot() {
 
         const chart = d3.select("#pcp");
 
-        // Draw path for the entity
         const line = d3.line()
-            // .defined(([, value]) => value != null)
             .x(([key]) => variableAxesRef.current(key))
             .y(([key, value]) => valueAxesRef.current.get(key)(value));
 
         chart.selectAll(".entity-path").remove();
         chart.selectAll(".entity-dot").remove();
 
-        /**
-         * Draw entities
-         * 
-         * Draw circles for values on each axis
-         * Draw path for entities across axes
-         * 
-         */
         Object.values(entities).forEach(entity => {
             Object.entries(entity).filter(([key, value]) => key !== "id" && value !== null).forEach(([key, value]) => {
                 chart.append("circle")
@@ -452,10 +366,8 @@ export default function ParallelSankeyPlot() {
                 ))
         });
 
-        chart.selectAll(".entity-dot")
-            .raise();
-
-        changeInteractionMode(activeInteractionRef.current);
+        activateBrushFeature();
+        updateHighlightedEntities();
     }
 
     const activateAddFeature = () => {
@@ -590,7 +502,6 @@ export default function ParallelSankeyPlot() {
     const activateBrushFeature = () => {
         const chart = d3.select("#pcp");
         const brushWidth = 50;
-        const selections = new Map();
 
         const brush = d3.brushY()
             .extent([
@@ -610,129 +521,101 @@ export default function ParallelSankeyPlot() {
             .call(brush.move, null);
 
         function brushed(event, key) {
-            // Only process brush events in batch mode
             if (!isBatchModeRef.current) return;
 
             const { selection } = event;
+            const currentSelections = new Map(selectionsRef.current);
 
             if (selection === null) {
-                selections.delete(key);
+                currentSelections.delete(key);
                 chart.select(`#count-label-${key}`).remove();
-                return;
             } else {
-                selections.set(key, selection.map(valueAxesRef.current.get(key).invert));
+                currentSelections.set(key, selection.map(valueAxesRef.current.get(key).invert));
             }
 
-            const newSelectedEntities = [];
-            const countsByAxis = new Map();
-            Array.from(selections.keys()).forEach(axis => countsByAxis.set(axis, 0));
+            selectionsRef.current = currentSelections;
+            updateSelections(selectionsRef.current, SELECTION_SOURCES.PARALLEL);
+        }
+    }
 
-            chart.selectAll(".entity-path").each(function (d) {
-                if (d) {
-                    const active = Array.from(selections).every(([key, [max, min]]) => {
-                        if (d[key] === null) return false;
-                        return d[key] >= min && d[key] <= max;
-                    });
+    const updateHighlightedEntities = (fromExternal = false) => {
+        let chart = d3.select("#pcp");
+        const newSelectedEntities = [];
+        const countsByAxis = new Map();
+        Array.from(selectionsRef.current.keys()).forEach(axis => countsByAxis.set(axis, 0));
 
-                    const isComplete = sortableVariables.every(variable => d[variable.name] !== null);
-
-                    let shouldSelect = false;
-                    if (activeInteractionRef.current === INTERACTION_TYPES.CONNECT) {
-                        shouldSelect = active && !isComplete;
-                    } else if (activeInteractionRef.current === INTERACTION_TYPES.EXPLORE) {
-                        shouldSelect = active && isComplete;
-                    }
-
-                    if (selectionGroup1EntitiesRef.current.includes(d) || selectionGroup2EntitiesRef.current.includes(d)) {
-                        return;
-                    }
-
-                    if (shouldSelect) {
-                        if (activeInteractionRef.current === INTERACTION_TYPES.EXPLORE) {
-                            d3.select(this)
-                                .classed("brush-selection", true)
-                                .classed("brush-non-selection", false)
-                                .raise();
-
-                            // Highlight associated dots
-                            Object.entries(d).forEach(([key, value]) => {
-                                if (key !== "id" && value !== null) {
-                                    d3.select(`#dot_${d["id"]}_${key}`)
-                                        .classed("selected-entity-dot", true)
-                                        .classed("unselected-entity-dot", false)
-                                        .raise();
-                                }
-                            });
-                        }
-                        else {
-                            d3.select(this)
-                                .classed("brush-selection", false)
-                                .classed("brush-non-selection", false)
-                                .classed("selection-group-1", selectionGroupRef.current === "selection-group-1")
-                                .classed("selection-group-2", selectionGroupRef.current === "selection-group-2")
-                                .raise();
-
-                            // Highlight associated dots with group classes
-                            Object.entries(d).forEach(([key, value]) => {
-                                if (key !== "id" && value !== null) {
-                                    d3.select(`#dot_${d["id"]}_${key}`)
-                                        .classed("selected-entity-dot", false)
-                                        .classed("unselected-entity-dot", false)
-                                        .classed("selection-group-1-dot", selectionGroupRef.current === "selection-group-1")
-                                        .classed("selection-group-2-dot", selectionGroupRef.current === "selection-group-2")
-                                        .raise();
-                                }
-                            });
-                        }
-
-                        newSelectedEntities.push(d);
-
-                        // Count points per axis for selected entities
-                        Array.from(selections.keys()).forEach(axis => {
-                            if (d[axis] !== null) {
-                                const [max, min] = selections.get(axis);
-                                if (d[axis] >= min && d[axis] <= max) {
-                                    countsByAxis.set(axis, countsByAxis.get(axis) + 1);
-                                }
-                            }
-                        });
-                    } else {
-                        // Reset all highlighting classes
-                        d3.select(this)
-                            .classed("brush-selection", false)
-                            .classed("brush-non-selection", true)
-                            .classed("selection-group-1", false)
-                            .classed("selection-group-2", false);
-
-                        // Reset all dot classes
-                        Object.entries(d).forEach(([key, value]) => {
-                            if (key !== "id" && value !== null) {
-                                d3.select(`#dot_${d["id"]}_${key}`)
-                                    .classed("selected-entity-dot", false)
-                                    .classed("unselected-entity-dot", true)
-                                    .classed("selection-group-1-dot", false)
-                                    .classed("selection-group-2-dot", false);
-                            }
-                        });
-                    }
-                }
+        Object.entries(entities).forEach(([entityId, entity]) => {
+            const active = selectionsRef.current.size !== 0 && Array.from(selectionsRef.current).every(([key, [max, min]]) => {
+                if (entity[key] === null) return false;
+                return entity[key] >= min && entity[key] <= max;
             });
 
-            // Update both ref and state
-            setSelectedEntities(newSelectedEntities);
+            const isEntityHidden = isHidden(entity);
 
-            // Update count labels for each axis
-            countsByAxis.forEach((count, axis) => {
-                // Remove existing label
-                chart.select(`#count-label-${axis}`).remove();
+            if (isEntityHidden) {
+                d3.select(`#entity_path_${entityId}`)
+                    .classed("hidden-selection", true)
+                    .classed("brush-non-selection", false)
+                    .classed("brush-selection", false);
 
-                // Add new label if there's a selection
-                if (selections.has(axis)) {
-                    const axisX = variableAxesRef.current(axis);
-                    const axisY = valueAxesRef.current.get(axis);
-                    const [selectionY1, selectionY2] = selections.get(axis);
+                Object.entries(entity).forEach(([key, value]) => {
+                    if (key !== "id" && value !== null) {
+                        d3.select(`#dot_${entityId}_${key}`)
+                            .classed("hidden-entity-dot", true)
+                            .classed("selected-entity-dot", false)
+                            .classed("unselected-entity-dot", false)
+                    }
+                });
+            }
+            else {
+                d3.select(`#entity_path_${entityId}`)
+                    .classed("hidden-selection", false)
+                    .classed("brush-non-selection", !active)
+                    .classed("brush-selection", active);
+
+                if (active) {
+                    newSelectedEntities.push(entity);
+                }
+
+                Object.entries(entity).forEach(([key, value]) => {
+                    if (key !== "id" && value !== null) {
+                        d3.select(`#dot_${entityId}_${key}`)
+                            .classed("hidden-entity-dot", false)
+                            .classed("selected-entity-dot", active)
+                            .classed("unselected-entity-dot", !active);
+
+                        if (active) {
+                            countsByAxis.set(key, countsByAxis.get(key) + 1);
+                        }
+                    }
+                });
+            }
+        });
+
+        // Update count labels for each axis
+        countsByAxis.forEach((count, axis) => {
+            // Remove existing label
+            chart.select(`#count-label-${axis}`).remove();
+            chart.select(`#brush-selection-overlay-${axis}`).remove();
+            // Add new label if there's a selection
+            if (selectionsRef.current.has(axis)) {
+                const axisX = variableAxesRef.current(axis);
+                const axisY = valueAxesRef.current.get(axis);
+                const [selectionY1, selectionY2] = selectionsRef.current.get(axis);
+
+                // Add overlay rectangle matching corresponding brush selection
+                if (fromExternal) {
+                    chart.append("rect")
+                        .attr("id", `brush-selection-overlay-${axis}`)
+                        .attr("class", "brush-selection-overlay")
+                        .attr("x", axisX - 25)
+                        .attr("y", axisY(Math.max(selectionY1, selectionY2)))
+                        .attr("width", 50)
+                        .attr("height", Math.abs(axisY(selectionY1) - axisY(selectionY2)))
+                        .attr("opacity", 0.2);
+                }
+                else {
                     const labelY = (selectionY1 + selectionY2) / 2; // Middle of brush selection
-
                     chart.append("text")
                         .attr("id", `count-label-${axis}`)
                         .attr("class", "selection-count-label")
@@ -742,15 +625,36 @@ export default function ParallelSankeyPlot() {
                         .text(`n = ${count}`)
                         .attr('font-size', '12px');
                 }
-            });
+            }
+        });
 
-            chart.selectAll(".entity-dot").raise();
-            chart.selectAll(".selection-count-label").raise();
-            chart.selectAll(".axis-handle").raise();
-            setBrushSelectedRegions(selections);
+        chart.selectAll(".unselected-entity-dot").raise();
+        chart.selectAll(".selected-entity-dot").raise();
+        chart.selectAll(".selection-count-label").raise();
+        chart.selectAll(".axis-handle").raise();
+
+        return newSelectedEntities;
+    }
+
+    // Randomly populate data points in the selected region
+    const generateRandomEntities = () => {
+        const newEntitiesData = [];
+        for (let i = 0; i < generatedNum; i++) {
+            let entityData = {};
+            Array.from(selectionsRef.current).forEach(([varName, range]) => {
+                const [min, max] = range;
+                const randomValue = Math.random() * (max - min) + min;
+                entityData[varName] = randomValue;
+            });
+            newEntitiesData.push(entityData);
         }
 
-        chart.selectAll(".axis-handle").raise();
+        clearBrushSelection();
+        addEntities(newEntitiesData);
+    }
+
+    const deleteSelectedEntities = () => {
+        deleteEntities(selectedEntities.map(entity => entity.id));
     }
 
     const updateSelectionGroupEntities = () => {
@@ -763,7 +667,6 @@ export default function ParallelSankeyPlot() {
 
     const changeSelectionGroup = (group) => {
         updateSelectionGroupEntities();
-
         setSelectionGroup(group);
         selectionGroupRef.current = group;
         clearBrushSelection();
@@ -828,26 +731,6 @@ export default function ParallelSankeyPlot() {
         selectionGroupRef.current = "selection-group-1";
     }
 
-    // Randomly populate data points in the selected region
-    const generateRandomEntities = () => {
-        const newEntitiesData = [];
-        for (let i = 0; i < generatedNum; i++) {
-            let entityData = {};
-            Array.from(brushSelectedRegions).forEach(([varName, range]) => {
-                const [min, max] = range;
-                const randomValue = Math.random() * (max - min) + min;
-                entityData[varName] = randomValue;
-            });
-            newEntitiesData.push(entityData);
-        }
-
-        addEntities(newEntitiesData);
-    }
-
-    const deleteSelectedEntities = () => {
-        deleteEntities(selectedEntities.current.map(entity => entity.id));
-    }
-
     const handleDragStart = (event) => {
         setDraggedItem(event.active.id);
     }
@@ -902,16 +785,16 @@ export default function ParallelSankeyPlot() {
                         row
                         aria-label="interactionMode"
                         name="interactionMode"
-                        value={activeInteraction}
-                        onChange={(event) => changeInteractionMode(event.target.value)}
+                        value={activeFilter}
+                        onChange={(event) => changeFilterMode(event.target.value)}
                     >
                         <FormControlLabel
-                            value={INTERACTION_TYPES.EXPLORE}
+                            value={FILTER_TYPES.COMPLETE}
                             control={<Radio />}
                             label="Completed"
                         />
                         <FormControlLabel
-                            value={INTERACTION_TYPES.CONNECT}
+                            value={FILTER_TYPES.INCOMPLETE}
                             control={<Radio />}
                             label="Incompleted"
                         />
@@ -919,13 +802,13 @@ export default function ParallelSankeyPlot() {
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', ml: 2 }}>
-                    {activeInteraction === INTERACTION_TYPES.EXPLORE && isBatchMode && (
+                    {activeFilter === FILTER_TYPES.COMPLETE && isBatchMode && (
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
                             <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <Button
                                     sx={{ mb: 1 }}
                                     disabled={
-                                        (isBatchMode && (brushSelectedRegions.size === 0 || activeInteraction !== INTERACTION_TYPES.EXPLORE)) ||
+                                        (isBatchMode && (selections.size === 0 || activeFilter !== FILTER_TYPES.COMPLETE)) ||
                                         (!isBatchMode)
                                     }
                                     variant='outlined'
@@ -949,7 +832,7 @@ export default function ParallelSankeyPlot() {
                         </Box>
                     )}
 
-                    {activeInteraction === INTERACTION_TYPES.CONNECT && isBatchMode && (
+                    {activeFilter === FILTER_TYPES.INCOMPLETE && isBatchMode && (
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                             <Box sx={{ mx: 1, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                                 <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -1006,7 +889,7 @@ export default function ParallelSankeyPlot() {
                                     key={item.name}
                                     id={item.name}
                                     axisPosition={axisPosition}
-                                    activeInteraction={activeInteraction}
+                                    activeInteraction={activeFilter}
                                 />
                             )
                         })}

@@ -8,8 +8,6 @@ export const EntityProvider = ({ children }) => {
     const { variablesDict } = useContext(VariableContext);
 
     const [entities, setEntities] = useState({});
-    const [selectedEntities, setSelectedEntities] = useState([]);
-
     const [entityHistory, setEntityHistory] = useState([{
         timestamp: new Date().toISOString(),
         operation: 'initial',
@@ -180,9 +178,7 @@ export const EntityProvider = ({ children }) => {
         combineEntities,
         undoEntityOperation,
         redoEntityOperation,
-        getUndoOperationDescription,
-        selectedEntities,
-        setSelectedEntities
+        getUndoOperationDescription
     };
 
     return (

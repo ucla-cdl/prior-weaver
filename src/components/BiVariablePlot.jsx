@@ -5,17 +5,23 @@ import { Box } from '@mui/material';
 import { WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
+import { SelectionContext, SELECTION_SOURCES } from '../contexts/SelectionContext';
 
 export default function BiVariablePlot() {
     const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
     const { biVariable1, biVariable2 } = useContext(VariableContext);
-    const { entities, selectedEntities, setSelectedEntities } = useContext(EntityContext);
+    const { entities } = useContext(EntityContext);
+    const { activeFilter, setSelectedEntities, isHidden, selections, updateSelections, selectionsRef, selectionSource } = useContext(SelectionContext);
+
     const chartWidthRef = useRef(0);
     const chartHeightRef = useRef(0);
     const margin = { top: 10, right: 10, bottom: 40, left: 40 };
-    const dotRadius = 5; // Radius of each dot
+    const dotRadius = 5;
     const titleOffset = 30;
-    
+
+    const xScaleRef = useRef(null);
+    const yScaleRef = useRef(null);
+
     useEffect(() => {
         drawPlot();
         populateEntities();
@@ -24,6 +30,12 @@ export default function BiVariablePlot() {
     useEffect(() => {
         populateEntities();
     }, [entities])
+
+    useEffect(() => {
+        const fromExternal = selectionSource === SELECTION_SOURCES.PARALLEL;
+        const newSelectedEntities = updateHighlightedEntities(fromExternal);
+        setSelectedEntities(newSelectedEntities);
+    }, [activeFilter, selections]);
 
     const drawPlot = () => {
         const container = d3.select("#bivariate-distribution-div");
@@ -71,7 +83,7 @@ export default function BiVariablePlot() {
             .attr("y", chartHeight + titleOffset)
             .style("font-size", "14px")
             .text(`${biVariable1.name} (${biVariable1.unitLabel})`);
-            
+
         // Draw Y axis
         chart.append('g')
             .attr("transform", `translate(0, 0)`)
@@ -99,10 +111,10 @@ export default function BiVariablePlot() {
 
     const populateEntities = () => {
         let chart = d3.select("#bivariate-chart");
-        let xScale = d3.scaleLinear()
+        xScaleRef.current = d3.scaleLinear()
             .domain([biVariable1.min, biVariable1.max])
             .range([0, chartWidthRef.current]);
-        let yScale = d3.scaleLinear()
+        yScaleRef.current = d3.scaleLinear()
             .domain([biVariable2.min, biVariable2.max])
             .range([chartHeightRef.current, 0]);
 
@@ -110,61 +122,112 @@ export default function BiVariablePlot() {
 
         const specifiedEntities = Object.values(entities).filter(d => d[biVariable1.name] !== null && d[biVariable2.name] !== null);
 
-        chart.selectAll(".bivar-entity-dot").remove();
+        chart.selectAll(".bivar-dot").remove();
 
         specifiedEntities.forEach(entity => {
             chart.append("circle")
                 .datum(entity)
-                .attr("class", "bivar-entity-dot")
-                .attr("cx", d => xScale(d[biVariable1.name]))
-                .attr("cy", d => yScale(d[biVariable2.name]))
+                .attr("id", `bivar-dot-${entity.id}`)
+                .attr("class", "bivar-dot")
+                .attr("cx", d => xScaleRef.current(d[biVariable1.name]))
+                .attr("cy", d => yScaleRef.current(d[biVariable2.name]))
                 .attr("r", dotRadius)
-                .attr('stroke', 'black')
-                .attr("fill", "white")
         });
 
         // Add brush selection
         const brush = d3.brush()
             .extent([[0, 0], [chartWidthRef.current, chartHeightRef.current]])
-            .on("start brush end", brushed);
+            .on("start brush end", (event) => {
+                if (event.sourceEvent === null) return;
+                brushed(event);
+            });
 
         chart.append("g")
             .attr("class", "brush")
-            .call(brush);
+            .call(brush)
+            .call(brush.move, null);
 
         function brushed(event) {
-            if (!event.selection) {
-                // If brush is cleared, reset all dots
-                chart.selectAll(".bivar-entity-dot")
-                    .classed("brush-selection", false)
-                    .classed("brush-non-selection", false);
-                setSelectedEntities([]);
+            const { selection } = event;
+            const currentSelections = new Map(selectionsRef.current);
+
+            if (selection === null) {
+                // If brush is cleared, only remove selections for these two variables
+                currentSelections.delete(biVariable1.name);
+                currentSelections.delete(biVariable2.name);
+            }
+            else {
+                // Update selections
+                const [[x0, y0], [x1, y1]] = selection;
+                currentSelections.set(biVariable1.name, [xScaleRef.current.invert(x1), xScaleRef.current.invert(x0)]);
+                currentSelections.set(biVariable2.name, [yScaleRef.current.invert(y0), yScaleRef.current.invert(y1)]);
+            }
+
+            selectionsRef.current = currentSelections;
+            updateSelections(selectionsRef.current, SELECTION_SOURCES.BIVARIATE);
+        }
+
+        updateHighlightedEntities();
+    }
+
+    const updateHighlightedEntities = (fromExternal = false) => {
+        let chart = d3.select("#bivariate-chart");
+        const newSelectedEntities = [];
+
+        // Update dots based on whether they fall within the brush selection
+        Object.entries(entities).forEach(([entityId, entity]) => {
+            if (entity[biVariable1.name] === null || entity[biVariable2.name] === null) {
                 return;
             }
 
-            const [[x0, y0], [x1, y1]] = event.selection;
-            const xScale = d3.scaleLinear()
-                .domain([biVariable1.min, biVariable1.max])
-                .range([0, chartWidthRef.current]);
-            const yScale = d3.scaleLinear()
-                .domain([biVariable2.min, biVariable2.max])
-                .range([chartHeightRef.current, 0]);
+            const active = selectionsRef.current.size !== 0 && Array.from(selectionsRef.current).every(([key, [max, min]]) => {
+                if (entity[key] === null) return false;
+                return entity[key] >= min && entity[key] <= max;
+            });
 
-            // Update dots based on whether they fall within the brush selection
-            chart.selectAll(".bivar-entity-dot")
-                .each(function(d) {
-                    const dot = d3.select(this);
-                    const cx = xScale(d[biVariable1.name]);
-                    const cy = yScale(d[biVariable2.name]);
-                    const selected = x0 <= cx && cx <= x1 && y0 <= cy && cy <= y1;
-                    
-                    dot.classed("brush-selection", selected)
-                        .classed("brush-non-selection", !selected);
-                });
+            const isEntityHidden = isHidden(entity);
+
+            if (isEntityHidden) {
+                d3.select(`#bivar-dot-${entityId}`)
+                    .classed("hidden-dot", true)
+                    .classed("selection-dot", false)
+                    .classed("non-selection-dot", false);
+            }
+            else {
+                d3.select(`#bivar-dot-${entityId}`)
+                    .classed("hidden-dot", false)
+                    .classed("selection-dot", active)
+                    .classed("non-selection-dot", !active);
+
+                if (active) {
+                    newSelectedEntities.push(entity);
+                }
+            }
+        });
+
+        // Add overlay rectangle matching brush selection
+        chart.selectAll(`#brush-selection-overlay-${biVariable1.name}`).remove();
+        if (fromExternal) {
+            if (selectionsRef.current.has(biVariable1.name) && selectionsRef.current.has(biVariable2.name)) {
+                const [xMax, xMin] = selectionsRef.current.get(biVariable1.name);
+                const [yMin, yMax] = selectionsRef.current.get(biVariable2.name);
+
+                chart.append("rect")
+                    .attr("id", `brush-selection-overlay-${biVariable1.name}`)
+                    .attr("class", "brush-selection-overlay")
+                    .attr("x", xScaleRef.current(xMin))
+                    .attr("y", yScaleRef.current(yMin))
+                    .attr("width", xScaleRef.current(xMax) - xScaleRef.current(xMin))
+                    .attr("height", yScaleRef.current(yMax) - yScaleRef.current(yMin))
+                    .attr("opacity", 0.2);
+            }
         }
-    }
 
-    
+        chart.selectAll(".non-selection-dot").raise();
+        chart.selectAll(".selection-dot").raise();
+
+        return newSelectedEntities;
+    }
 
     return (
         <Box sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
