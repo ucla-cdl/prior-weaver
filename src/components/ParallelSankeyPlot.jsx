@@ -615,14 +615,14 @@ export default function ParallelSankeyPlot() {
 
                 // Add overlay rectangle matching corresponding brush selection
                 if (fromExternal) {
-                    chart.append("rect")
-                        .attr("id", `brush-selection-overlay-${axis}`)
-                        .attr("class", "brush-selection-overlay")
-                        .attr("x", axisX - 25)
-                        .attr("y", axisY(Math.max(selectionY1, selectionY2)))
-                        .attr("width", 50)
-                        .attr("height", Math.abs(axisY(selectionY1) - axisY(selectionY2)))
-                        .attr("opacity", 0.2);
+                    // chart.append("rect")
+                    //     .attr("id", `brush-selection-overlay-${axis}`)
+                    //     .attr("class", "brush-selection-overlay")
+                    //     .attr("x", axisX - 25)
+                    //     .attr("y", axisY(Math.max(selectionY1, selectionY2)))
+                    //     .attr("width", 50)
+                    //     .attr("height", Math.abs(axisY(selectionY1) - axisY(selectionY2)))
+                    //     .attr("opacity", 0.2);
                 }
                 else {
                     const labelY = (selectionY1 + selectionY2) / 2; // Middle of brush selection

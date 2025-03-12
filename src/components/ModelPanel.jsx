@@ -4,9 +4,11 @@ import BrushIcon from '@mui/icons-material/Brush';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import { VariableContext } from '../contexts/VariableContext';
+import { WorkspaceContext } from '../contexts/WorkspaceContext';
 
-export default function ConceptualModel() {
-    const { variablesDict, updateVariable, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot } = useContext(VariableContext);
+export default function ModelPanel() {
+    const { scenario } = useContext(WorkspaceContext)
+    const { model, variablesDict, updateVariable, parametersDict, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot } = useContext(VariableContext);
 
     const [isEditingVariable, setIsEditingVariable] = useState(false);
     const [editingVariable, setEditingVariable] = useState(null);
@@ -18,9 +20,21 @@ export default function ConceptualModel() {
     }
 
     return (
-        <Grid2 container spacing={3}>
+        <Box spacing={3}>
+            {/* Scenario info */}
+            <Box className="context-container">
+                <Typography variant="h6" gutterBottom>Scenario</Typography>
+                <Typography sx={{ maxHeight: '200px', overflowY: 'auto' }}>{scenario}</Typography>
+            </Box>
+
+            {/* Model info */}
+            <Box className="context-container">
+                <Typography variant="h6" gutterBottom>Model</Typography>
+                <Typography>{model}</Typography>
+            </Box>
+
             {/* Variable List */}
-            <Grid2 size={12} className="module-div">
+            <Box className="context-container">
                 <Typography variant="h6" gutterBottom>Variables</Typography>
                 {Object.entries(variablesDict).map(([varName, variable]) => (
                     <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={varName}>
@@ -90,7 +104,39 @@ export default function ConceptualModel() {
                         <Button variant="contained" onClick={confirmEditvariable}>Confirm</Button>
                     </DialogActions>
                 </Dialog>
-            </Grid2>
-        </Grid2>
+            </Box>
+
+            <Box className="context-container">
+                <Typography variant='h6' gutterBottom>Parameters</Typography>
+                {Object.entries(parametersDict).map(([paraName, parameter]) => (
+                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={paraName}>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{paraName}</Typography>
+                        {/* <IconButton onClick={() => {
+                            setEditingVariable(parameter);
+                            setIsEditingVariable(true);
+                        }}>
+                            <BrushIcon fontSize='small' />
+                        </IconButton>
+                        {biVariable1?.name === parameter.name ? (
+                            <IconButton
+                                onClick={() => setBiVariable1(null)}>
+                                <RemoveCircleIcon fontSize='small' />
+                            </IconButton>
+                        ) : biVariable2?.name === variable.name ? (
+                            <IconButton
+                                onClick={() => setBiVariable2(null)}>
+                                <RemoveCircleIcon fontSize='small' />
+                            </IconButton>
+                        ) : (
+                            <IconButton
+                                disabled={biVariable1 !== null && biVariable2 !== null}
+                                onClick={() => addToBiVarPlot(variable)}>
+                                <AddCircleIcon fontSize='small' />
+                            </IconButton>
+                        )} */}
+                    </Box>
+                ))}
+            </Box>
+        </Box>
     )
 }

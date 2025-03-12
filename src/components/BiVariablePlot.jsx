@@ -212,14 +212,14 @@ export default function BiVariablePlot() {
                 const [xMax, xMin] = selectionsRef.current.get(biVariable1.name);
                 const [yMin, yMax] = selectionsRef.current.get(biVariable2.name);
 
-                chart.append("rect")
-                    .attr("id", `brush-selection-overlay-${biVariable1.name}`)
-                    .attr("class", "brush-selection-overlay")
-                    .attr("x", xScaleRef.current(xMin))
-                    .attr("y", yScaleRef.current(yMin))
-                    .attr("width", xScaleRef.current(xMax) - xScaleRef.current(xMin))
-                    .attr("height", yScaleRef.current(yMax) - yScaleRef.current(yMin))
-                    .attr("opacity", 0.2);
+                // chart.append("rect")
+                //     .attr("id", `brush-selection-overlay-${biVariable1.name}`)
+                //     .attr("class", "brush-selection-overlay")
+                //     .attr("x", xScaleRef.current(xMin))
+                //     .attr("y", yScaleRef.current(yMin))
+                //     .attr("width", xScaleRef.current(xMax) - xScaleRef.current(xMin))
+                //     .attr("height", yScaleRef.current(yMax) - yScaleRef.current(yMin))
+                //     .attr("opacity", 0.2);
             }
         }
 
