@@ -17,13 +17,9 @@ const RELATIONS = {
 };
 
 export const VariableProvider = ({ children }) => {
-    const { finishParseCode, setFinishParseCode } = useContext(WorkspaceContext);
-
-    const [stanCode, setStanCode] = useState('model <- glm(income ~ age + education, family = binomial(link = "logit"))');
-    const [model, setModel] = useState('');
+    const { model, setModel, finishParseModel, setFinishParseModel } = useContext(WorkspaceContext);
     const [variablesDict, setVariablesDict] = useState({});
     const [sortableVariables, setSortableVariables] = useState([]);
-
     const [parametersDict, setParametersDict] = useState({});
     const [biVariable1, setBiVariable1] = useState(null);
     const [biVariable2, setBiVariable2] = useState(null);
@@ -31,6 +27,13 @@ export const VariableProvider = ({ children }) => {
     useEffect(() => {
         setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
     }, [variablesDict]);
+    
+    useEffect(() => {
+        if (finishParseModel) {
+            setBiVariable1(Object.values(variablesDict)[1]);
+            setBiVariable2(Object.values(variablesDict)[0]);
+        }
+    }, [finishParseModel]);
 
     // Add a new variable
     const addVariable = (data) => {
@@ -45,13 +48,6 @@ export const VariableProvider = ({ children }) => {
             }
         }));
     };
-
-    useEffect(() => {
-        if (finishParseCode) {
-            setBiVariable1(Object.values(variablesDict)[1]);
-            setBiVariable2(Object.values(variablesDict)[0]);
-        }
-    }, [finishParseCode]);
 
     // Update the variable
     const updateVariable = (name, updates) => {
@@ -78,9 +74,9 @@ export const VariableProvider = ({ children }) => {
         }));
     }
 
-    const handleStanCode = () => {
+    const handleParseModel = () => {
         axios.post(window.BACKEND_ADDRESS + '/getStanCodeInfo', {
-            code: stanCode
+            code: model
         })
             .then((response) => {
                 console.log(response.data);
@@ -134,7 +130,7 @@ export const VariableProvider = ({ children }) => {
                 setParametersDict((prev) => ({ ...prev, 'intercept': { name: 'intercept', relatedVar: 'intercept' } }));
             })
             .finally(() => {
-                setFinishParseCode(true);
+                setFinishParseModel(true);
             })
             .catch((error) => {
                 console.log(error);
@@ -162,11 +158,7 @@ export const VariableProvider = ({ children }) => {
         setBiVariable2,
         addVariable,
         updateVariable,
-        handleStanCode,
-        stanCode,
-        setStanCode,
-        model,
-        setModel,
+        handleParseModel,
         DEFAULT_VARIABLE_ATTRIBUTES,
         RELATIONS,
         addToBiVarPlot,

@@ -7,8 +7,8 @@ import { VariableContext } from '../contexts/VariableContext';
 import { WorkspaceContext } from '../contexts/WorkspaceContext';
 
 export default function ModelPanel() {
-    const { scenario } = useContext(WorkspaceContext)
-    const { model, variablesDict, updateVariable, parametersDict, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot } = useContext(VariableContext);
+    const { task, model } = useContext(WorkspaceContext)
+    const { variablesDict, updateVariable, parametersDict, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot } = useContext(VariableContext);
 
     const [isEditingVariable, setIsEditingVariable] = useState(false);
     const [editingVariable, setEditingVariable] = useState(null);
@@ -24,7 +24,7 @@ export default function ModelPanel() {
             {/* Scenario info */}
             <Box className="context-container">
                 <Typography variant="h6" gutterBottom>Scenario</Typography>
-                <Typography sx={{ maxHeight: '200px', overflowY: 'auto' }}>{scenario}</Typography>
+                <Typography sx={{ maxHeight: '200px', overflowY: 'auto' }}>{task?.scenario}</Typography>
             </Box>
 
             {/* Model info */}
