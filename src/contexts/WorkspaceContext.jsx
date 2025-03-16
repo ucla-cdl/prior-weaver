@@ -27,9 +27,14 @@ export const TASK_SETTINGS = {
     }
 }
 
-export const CONDITIONS = {
+export const ELICITATION_SPACE = {
     PARAMETER: "Parameter Space",
     OBSERVABLE: "Observable Space"
+}
+
+export const FEEDBACK_MODE = {
+    FEEDBACK: "With Feedback",
+    NO_FEEDBACK: "Without Feedback"
 }
 
 export const WorkspaceProvider = ({ children }) => {
@@ -38,8 +43,8 @@ export const WorkspaceProvider = ({ children }) => {
 
     const [task, setTask] = useState(TASK_SETTINGS["income"]);
     const [model, setModel] = useState('');
-    const [condition, setCondition] = useState(CONDITIONS.OBSERVABLE);
-
+    const [space, setSpace] = useState(ELICITATION_SPACE.OBSERVABLE);
+    const [feedback, setFeedback] = useState(FEEDBACK_MODE.FEEDBACK);
     const [finishParseModel, setFinishParseModel] = useState(false);
 
     useEffect(() => {
@@ -59,8 +64,10 @@ export const WorkspaceProvider = ({ children }) => {
         setTask,
         model,
         setModel,
-        condition,
-        setCondition
+        space,
+        setSpace,
+        feedback,
+        setFeedback
     };
 
     return (

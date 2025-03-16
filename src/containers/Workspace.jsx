@@ -11,15 +11,13 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UndoIcon from '@mui/icons-material/Undo';
 
-import { CONDITIONS, TASK_SETTINGS, WorkspaceContext } from '../contexts/WorkspaceContext';
+import { ELICITATION_SPACE, FEEDBACK_MODE, TASK_SETTINGS, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { ParameterPlot } from '../components/ParameterPlot';
 
-
-
 export default function Workspace() {
-    const { task, setTask, condition, setCondition, model, setModel, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen } = useContext(WorkspaceContext);
+    const { task, setTask, space, setSpace, feedback, setFeedback, model, setModel, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen } = useContext(WorkspaceContext);
     const { handleParseModel, variablesDict, parametersDict, biVariable1, biVariable2 } = useContext(VariableContext);
     const { currentVersion, getUndoOperationDescription, undoEntityOperation, redoEntityOperation } = useContext(EntityContext);
 
@@ -57,16 +55,30 @@ export default function Workspace() {
                                 onChange={(e) => setUserName(e.target.value)}
                             />
                             <FormControl>
-                                <FormLabel id="demo-row-radio-buttons-group-label">Condition</FormLabel>
+                                <FormLabel id="demo-row-radio-buttons-group-label">Elicitation Space</FormLabel>
                                 <RadioGroup
                                     row
                                     aria-labelledby="demo-row-radio-buttons-group-label"
                                     name="row-radio-buttons-group"
-                                    value={condition}
-                                    onChange={(e) => setCondition(e.target.value)}
+                                    value={space}
+                                    onChange={(e) => setSpace(e.target.value)}
                                 >
-                                    {Object.values(CONDITIONS).map((condition) => (
-                                        <FormControlLabel key={condition} value={condition} control={<Radio />} label={condition} />
+                                    {Object.values(ELICITATION_SPACE).map((space) => (
+                                        <FormControlLabel key={space} value={space} control={<Radio />} label={space} />
+                                    ))}
+                                </RadioGroup>
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel id="demo-row-radio-buttons-group-label">Feedback Mode</FormLabel>
+                                <RadioGroup
+                                    row
+                                    aria-labelledby="demo-row-radio-buttons-group-label"
+                                    name="row-radio-buttons-group"
+                                    value={feedback}
+                                    onChange={(e) => setFeedback(e.target.value)}
+                                >
+                                    {Object.values(FEEDBACK_MODE).map((feedback) => (
+                                        <FormControlLabel key={feedback} value={feedback} control={<Radio />} label={feedback} />
                                     ))}
                                 </RadioGroup>
                             </FormControl>
@@ -178,33 +190,35 @@ export default function Workspace() {
                         )}
 
                         {/* Center Panel */}
-                        {condition === CONDITIONS.OBSERVABLE &&
+                        {space === ELICITATION_SPACE.OBSERVABLE &&
                             <Box className="panel center-panel" sx={{ flex: 1 }}>
                                 {/* Add the undo button near the top of the center panel */}
-                                <Box sx={{
-                                    position: 'absolute',
-                                    top: 'calc(39vh - 10px)',
-                                    right: rightPanelOpen ? 'calc(25vw + 10px)' : '10px',
-                                    zIndex: 1000
-                                }}>
-                                    <Tooltip title={getUndoOperationDescription()}>
-                                        <span>
-                                            <IconButton
-                                                onClick={undoEntityOperation}
-                                                disabled={currentVersion <= 0}
-                                                size="small"
-                                                sx={{
-                                                    border: '2px solid',
-                                                    backgroundColor: 'white',
-                                                    '&:hover': { backgroundColor: '#f0f0f0' },
-                                                    boxShadow: 1,
-                                                }}
-                                            >
-                                                <UndoIcon />
-                                            </IconButton>
-                                        </span>
-                                    </Tooltip>
-                                </Box>
+                                {feedback === FEEDBACK_MODE.FEEDBACK && (
+                                    <Box sx={{
+                                        position: 'absolute',
+                                        top: 'calc(39vh - 10px)',
+                                        right: rightPanelOpen ? 'calc(25vw + 10px)' : '10px',
+                                        zIndex: 1000
+                                    }}>
+                                        <Tooltip title={getUndoOperationDescription()}>
+                                            <span>
+                                                <IconButton
+                                                    onClick={undoEntityOperation}
+                                                    disabled={currentVersion <= 0}
+                                                    size="small"
+                                                    sx={{
+                                                        border: '2px solid',
+                                                        backgroundColor: 'white',
+                                                        '&:hover': { backgroundColor: '#f0f0f0' },
+                                                        boxShadow: 1,
+                                                    }}
+                                                >
+                                                    <UndoIcon />
+                                                </IconButton>
+                                            </span>
+                                        </Tooltip>
+                                    </Box>
+                                )}
 
                                 {/* Univariate and Bivariate Plots */}
                                 <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row' }}>
@@ -248,7 +262,7 @@ export default function Workspace() {
                             </Box>
                         }
 
-                        {condition === CONDITIONS.PARAMETER &&
+                        {space === ELICITATION_SPACE.PARAMETER &&
                             <Box className="panel center-panel">
                                 <Box className="component-container">
                                     <Box sx={{
@@ -267,7 +281,7 @@ export default function Workspace() {
                         }
 
                         {/* Right Panel Toggle Button - shown when right panel is open */}
-                        {rightPanelOpen && (
+                        {rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
                             <IconButton
                                 sx={{
                                     position: 'absolute',
@@ -289,7 +303,7 @@ export default function Workspace() {
                         )}
 
                         {/* Right Panel Toggle Button - shown when right panel is closed */}
-                        {!rightPanelOpen && (
+                        {!rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
                             <IconButton
                                 sx={{
                                     position: 'fixed',
@@ -311,23 +325,25 @@ export default function Workspace() {
                         )}
 
                         {/* Right Panel */}
-                        <Box
-                            className="panel right-panel"
-                            sx={{
-                                display: rightPanelOpen ? 'block' : 'none',
-                                position: 'relative'
-                            }}
-                        >
-                            <div className="component-container results-container">
-                                <Typography variant="h6" gutterBottom>Results Panel</Typography>
-                                <Box sx={{
-                                    boxSizing: 'border-box',
-                                    height: 'calc(100% - 32px)'
-                                }}>
-                                    <ResultsPanel />
-                                </Box>
-                            </div>
-                        </Box>
+                        {feedback === FEEDBACK_MODE.FEEDBACK && (
+                            <Box
+                                className="panel right-panel"
+                                sx={{
+                                    display: rightPanelOpen ? 'block' : 'none',
+                                    position: 'relative'
+                                }}
+                            >
+                                <div className="component-container results-container">
+                                    <Typography variant="h6" gutterBottom>Results Panel</Typography>
+                                    <Box sx={{
+                                        boxSizing: 'border-box',
+                                        height: 'calc(100% - 32px)'
+                                    }}>
+                                        <ResultsPanel />
+                                    </Box>
+                                </div>
+                            </Box>
+                        )}
                     </Box>
                 )}
         </div>

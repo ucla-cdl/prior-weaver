@@ -6,10 +6,10 @@ import "./ResultsPanel.css";
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { PriorContext } from '../contexts/PriorContext';
-import { CONDITIONS, WorkspaceContext } from '../contexts/WorkspaceContext';
+import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 
 export default function ResultsPanel() {
-    const { condition } = useContext(WorkspaceContext);
+    const { space } = useContext(WorkspaceContext);
     const { variablesDict, parametersDict } = useContext(VariableContext);
     const { entities } = useContext(EntityContext);
     const { priorsDict, setPriorsDict } = useContext(PriorContext);
@@ -50,7 +50,7 @@ export default function ResultsPanel() {
     // }, [priorsDict]);
 
     const readyToTranslate = () => {
-        if (condition === CONDITIONS.OBSERVABLE) {
+        if (space === ELICITATION_SPACE.OBSERVABLE) {
             const incompleteEntities = Object.values(entities).some(entity => {
                 return Object.values(entity).some(value => value === null);
             });
@@ -62,7 +62,7 @@ export default function ResultsPanel() {
             }
         }
 
-        if (condition === CONDITIONS.PARAMETER) {
+        if (space === ELICITATION_SPACE.PARAMETER) {
             const incompletePriors = Object.values(priorsDict).length !== Object.values(parametersDict).length;
 
             if (incompletePriors) {
@@ -82,7 +82,7 @@ export default function ResultsPanel() {
 
         setIsTranslating(true);
 
-        if (condition === CONDITIONS.OBSERVABLE) {
+        if (space === ELICITATION_SPACE.OBSERVABLE) {
             axios
                 .post(window.BACKEND_ADDRESS + "/translate", {
                     entities: Object.values(entities),
@@ -95,7 +95,7 @@ export default function ResultsPanel() {
                     predictiveCheck(response.data.priors_results);
                 });
         }
-        else if (condition === CONDITIONS.PARAMETER) {
+        else if (space === ELICITATION_SPACE.PARAMETER) {
             predictiveCheck(priorsDict);
         }
 
@@ -279,8 +279,8 @@ export default function ResultsPanel() {
                 sx={{ my: 1 }}
                 variant="contained"
                 onClick={translate}
-                disabled={(condition === CONDITIONS.PARAMETER && Object.values(priorsDict).length === 0) ||
-                    (condition === CONDITIONS.OBSERVABLE && Object.values(entities).length === 0)}
+                disabled={(space === ELICITATION_SPACE.PARAMETER && Object.values(priorsDict).length === 0) ||
+                    (space === ELICITATION_SPACE.OBSERVABLE && Object.values(entities).length === 0)}
             >
                 Translate
             </Button>

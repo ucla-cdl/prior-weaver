@@ -4,10 +4,10 @@ import BrushIcon from '@mui/icons-material/Brush';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import { VariableContext } from '../contexts/VariableContext';
-import { CONDITIONS, WorkspaceContext } from '../contexts/WorkspaceContext';
+import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 
 export default function ModelPanel() {
-    const { task, model, condition } = useContext(WorkspaceContext)
+    const { task, model, space } = useContext(WorkspaceContext)
     const { variablesDict, updateVariable, parametersDict, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot } = useContext(VariableContext);
 
     const [isEditingVariable, setIsEditingVariable] = useState(false);
@@ -34,10 +34,10 @@ export default function ModelPanel() {
             </Box>
 
             {/* Variable List */}
-            {condition === CONDITIONS.OBSERVABLE &&
-            <Box className="context-container">
-                <Typography variant="h6" gutterBottom>Variables</Typography>
-                {Object.entries(variablesDict).map(([varName, variable]) => (
+            {space === ELICITATION_SPACE.OBSERVABLE &&
+                <Box className="context-container">
+                    <Typography variant="h6" gutterBottom>Variables</Typography>
+                    {Object.entries(variablesDict).map(([varName, variable]) => (
                     <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={varName}>
                         <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{varName}</Typography>
                         <IconButton onClick={() => {
@@ -108,7 +108,7 @@ export default function ModelPanel() {
                 </Box>
             }
 
-            {condition === CONDITIONS.PARAMETER &&
+            {space === ELICITATION_SPACE.PARAMETER &&
                 <Box className="context-container">
                     <Typography variant='h6' gutterBottom>Parameters</Typography>
                     {Object.entries(parametersDict).map(([paraName, parameter]) => (
