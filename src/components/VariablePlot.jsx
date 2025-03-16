@@ -123,20 +123,10 @@ export default function VariablePlot({ variable }) {
                     .attr("transform", `translate(${xScale(variable.binEdges[bin])}, ${yScale(grid)})`)
                     .attr("width", xScale(variable.binEdges[bin + 1]) - xScale(variable.binEdges[bin]))
                     .attr("height", yScale(grid) - yScale(grid + 1))
-                    .on("mouseover", function (event, d) {
-                        d3.select(this)
-                            .classed(binCnt >= grid ? "fill-grid-cell" : "non-fill-grid-cell", false)
-                            .classed("hover-grid-cell", true);
-                    })
-                    .on("mouseout", function () {
-                        d3.select(this)
-                            .classed("hover-grid-cell", false)
-                            .classed(binCnt >= grid ? "fill-grid-cell" : "non-fill-grid-cell", true);
-                    })
                     .on("click", function (event, d) {
                         // Update entities
                         let deltaHeight = grid - binInfos[index].height;
-                        // - if current count is larger than previous, then add new entities (randomly generated in the bin)
+                        // if clicked count is larger than previous, then add new entities (randomly generated in the bin)
                         if (deltaHeight > 0) {
                             let newEntitiesData = [];
                             for (let i = 0; i < deltaHeight; i++) {
@@ -146,9 +136,13 @@ export default function VariablePlot({ variable }) {
                             }
                             addEntities(newEntitiesData);
                         }
-                        // - if current count is smaller than previous, then update values of existing entities
-                        else if (deltaHeight < 0) {
+                        // if clicked count is smaller than or equal to previous, then update values of existing entities
+                        else {
                             let updatedEntities = binInfos[index].entities.slice(grid); // remove based on FIFO
+                            if (deltaHeight === 0) {
+                                // remove current entity
+                                updatedEntities = binInfos[index].entities.slice(-1);
+                            }
 
                             updateEntities(
                                 updatedEntities.map(entity => entity.id),

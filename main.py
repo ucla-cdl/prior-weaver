@@ -181,7 +181,8 @@ def translate(data: TranslationData = Body(...)):
 
     predictors = [var for var in variables if var["type"] == "predictor"]
     response = [var for var in variables if var["type"] == "response"][0]
-    parameters_dict = {param['relatedVar']: param['name'] for param in parameters}
+    parameters_dict = {param['relatedVar']: param['name']
+                       for param in parameters}
 
     # Bootstrapping to fit linear model and get parameter samples
     parameter_samples = bootstrap_fit_linear_model(
@@ -189,67 +190,39 @@ def translate(data: TranslationData = Body(...)):
 
     # Convert parameter samples to distributions
     priors_results = {}
-    prior_distributions = []
     for param_name, samples in parameter_samples.items():
         fitted_dists, param_min, param_max = fit_samples_to_distributions(
             samples)
 
-        priors_results[param_name] = {
-            "samples": samples,
-            "distributions": fitted_dists,
-            "min": param_min,
-            "max": param_max
-        }
-
-        prior_distributions.append(fitted_dists[0])
-
-    # Perform prior predictive check
-    # check_results = prior_predictive_check(
-    #     predictors, response, prior_distributions)
+        priors_results[param_name] = fitted_dists[0]
 
     return {
         "priors_results": priors_results,
-        # "check_results": check_results
     }
-    
+
 
 class PredictiveCheckData(BaseModel):
     variables: List[dict]
     priors: List[dict]
-    
-@app.post('/check')   
+
+
+@app.post('/check')
 def update_check_results(data: PredictiveCheckData = Body(...)):
     variables = data.variables
     priors = data.priors
 
     predictors = [var for var in variables if var["type"] == "predictor"]
     response = [var for var in variables if var["type"] == "response"][0]
-    
+
     prior_distributions = [prior for prior in priors]
     check_results = prior_predictive_check(
         predictors, response, prior_distributions)
-    
+
     return {
         "check_results": check_results
     }
 
-class DistributionData(BaseModel):
-    dist: Dict[str, Any]
-    params: Dict[str, float]
-    
-    
-@app.post('/updateDist')
-def update_dist(data: DistributionData = Body(...)):
-    dist = data.dist
-    params = data.params
-    
-    p = get_fit_var_pdf(dist['x'], dist['name'], params)
-    
-    return {
-        "p": p.tolist()
-    }
 
-    
 def bootstrap_fit_linear_model(entities, predictors, response, parameters_dict):
     sorted_variables = predictors + [response]
 
@@ -263,8 +236,9 @@ def bootstrap_fit_linear_model(entities, predictors, response, parameters_dict):
     num_samples = 100
     n_records = 50
     parameter_samples = {param_name: []
-                         for param_name in parameters_dict.values()}  # Store coefficients
-    
+                         # Store coefficients
+                         for param_name in parameters_dict.values()}
+
     for _ in range(num_samples):
         # Bootstrap sampling
         # Sample n_records from the dataset with replacement
@@ -278,7 +252,8 @@ def bootstrap_fit_linear_model(entities, predictors, response, parameters_dict):
 
         # Store parameter estimates
         for i, var in enumerate(predictors):
-            parameter_samples[parameters_dict[var['name']]].append(model.coef_[i])
+            parameter_samples[parameters_dict[var['name']]].append(model.coef_[
+                                                                   i])
         parameter_samples["intercept"].append(model.intercept_)
 
     return parameter_samples
@@ -477,3 +452,54 @@ def get_r_code_from_dist(dist_name, params):
         return f"dunif(x, min={params['loc']}, max={max_val})"
     else:
         return "Distribution not supported"
+
+
+class FitDistributionData(BaseModel):
+    histogram: List[dict]
+
+
+@app.post('/fitDistribution')
+def fitDistribution(data: FitDistributionData = Body(...)):
+    histogram = data.histogram
+
+    # Convert histogram data to samples
+    samples = []
+    for bin_data in histogram:
+        # Generate samples for each bin based on count
+        bin_start = bin_data['bin_start']
+        bin_end = bin_data['bin_end']
+        count = bin_data['count']
+
+        if count > 0:
+            # Generate 'count' number of uniform samples within this bin
+            bin_samples = np.random.uniform(
+                low=bin_start,
+                high=bin_end,
+                size=count
+            )
+            samples.extend(bin_samples)
+
+    # Convert to numpy array
+    samples = np.array(samples)
+
+    # Fit distributions to the samples
+    fitted_distributions, x_min, x_max = fit_samples_to_distributions(samples)
+
+    # Return the best fitting distribution (first in the list)
+    if fitted_distributions:
+        best_fit = fitted_distributions[0]
+        return {
+            'distribution': {
+                'name': best_fit['name'],
+                'params': best_fit['params'],
+                'x': best_fit['x'],
+                'p': best_fit['p'],
+                'min': x_min,
+                'max': x_max,
+                'metrics': best_fit['metrics']
+            }
+        }
+    else:
+        return {
+            'error': 'Could not fit any distribution to the provided data'
+        }

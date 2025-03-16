@@ -11,24 +11,20 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UndoIcon from '@mui/icons-material/Undo';
 
-import { taskSettingsDict, WorkspaceContext } from '../contexts/WorkspaceContext';
+import { CONDITIONS, TASK_SETTINGS, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { ParameterPlot } from '../components/ParameterPlot';
 
-const CONDITIONS = {
-    PARAMETER: "Parameter Space",
-    OBSERVABLE: "Observable Space"
-}
+
 
 export default function Workspace() {
-    const { task, setTask, model, setModel, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen } = useContext(WorkspaceContext);
+    const { task, setTask, condition, setCondition, model, setModel, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen } = useContext(WorkspaceContext);
     const { handleParseModel, variablesDict, parametersDict, biVariable1, biVariable2 } = useContext(VariableContext);
     const { currentVersion, getUndoOperationDescription, undoEntityOperation, redoEntityOperation } = useContext(EntityContext);
 
     const [userName, setUserName] = useState("");
     const [selectedTaskId, setSelectedTaskId] = useState(task.id);
-    const [selectedCondition, setSelectedCondition] = useState(CONDITIONS.OBSERVABLE);
 
     useEffect(() => {
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
@@ -37,7 +33,7 @@ export default function Workspace() {
     const handleSwitchTask = (event) => {
         const id = event.target.value;
         setSelectedTaskId(id);
-        setTask(taskSettingsDict[id]);
+        setTask(TASK_SETTINGS[id]);
     }
 
     return (
@@ -66,8 +62,8 @@ export default function Workspace() {
                                     row
                                     aria-labelledby="demo-row-radio-buttons-group-label"
                                     name="row-radio-buttons-group"
-                                    value={selectedCondition}
-                                    onChange={(e) => setSelectedCondition(e.target.value)}
+                                    value={condition}
+                                    onChange={(e) => setCondition(e.target.value)}
                                 >
                                     {Object.values(CONDITIONS).map((condition) => (
                                         <FormControlLabel key={condition} value={condition} control={<Radio />} label={condition} />
@@ -83,7 +79,7 @@ export default function Workspace() {
                                     value={selectedTaskId}
                                     onChange={handleSwitchTask}
                                 >
-                                    {Object.values(taskSettingsDict).map((t) => (
+                                    {Object.values(TASK_SETTINGS).map((t) => (
                                         <FormControlLabel key={t.name} value={t.id} control={<Radio />} label={t.name} />
                                     ))}
                                 </RadioGroup>
@@ -182,7 +178,7 @@ export default function Workspace() {
                         )}
 
                         {/* Center Panel */}
-                        {selectedCondition === CONDITIONS.OBSERVABLE &&
+                        {condition === CONDITIONS.OBSERVABLE &&
                             <Box className="panel center-panel" sx={{ flex: 1 }}>
                                 {/* Add the undo button near the top of the center panel */}
                                 <Box sx={{
@@ -251,14 +247,22 @@ export default function Workspace() {
                                 </Box>
                             </Box>
                         }
-                        {selectedCondition === CONDITIONS.PARAMETER &&
-                            <Box className="panel center-panel" sx={{ flex: 1 }}>
-                                {Object.entries(parametersDict).map(([paraName, curPara]) => (
-                                    <Box>
-                                        <Typography variant='h6'>{paraName}</Typography>
-                                        <ParameterPlot parameter={curPara} />
+
+                        {condition === CONDITIONS.PARAMETER &&
+                            <Box className="panel center-panel">
+                                <Box className="component-container">
+                                    <Box sx={{
+                                        boxSizing: 'border-box',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        overflowY: 'auto',
+                                        width: '100%'
+                                    }}>
+                                        {Object.entries(parametersDict).map(([paraName, parameter]) => (
+                                            <ParameterPlot key={paraName} parameter={parameter} />
+                                        ))}
                                     </Box>
-                                ))}
+                                </Box>
                             </Box>
                         }
 

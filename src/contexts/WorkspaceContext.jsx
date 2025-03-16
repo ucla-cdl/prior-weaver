@@ -2,7 +2,7 @@ import React, { createContext, useEffect, useState } from 'react';
 
 export const WorkspaceContext = createContext();
 
-export const taskSettingsDict = {
+export const TASK_SETTINGS = {
     "growth": {
         id: "growth",
         name: "Human Growth Prediction",
@@ -27,12 +27,19 @@ export const taskSettingsDict = {
     }
 }
 
+export const CONDITIONS = {
+    PARAMETER: "Parameter Space",
+    OBSERVABLE: "Observable Space"
+}
+
 export const WorkspaceProvider = ({ children }) => {
     const [leftPanelOpen, setLeftPanelOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
-    const [task, setTask] = useState(taskSettingsDict["income"]);
+    const [task, setTask] = useState(TASK_SETTINGS["income"]);
     const [model, setModel] = useState('');
+    const [condition, setCondition] = useState(CONDITIONS.OBSERVABLE);
+
     const [finishParseModel, setFinishParseModel] = useState(false);
 
     useEffect(() => {
@@ -52,6 +59,8 @@ export const WorkspaceProvider = ({ children }) => {
         setTask,
         model,
         setModel,
+        condition,
+        setCondition
     };
 
     return (

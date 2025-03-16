@@ -10,6 +10,11 @@ const DEFAULT_VARIABLE_ATTRIBUTES = {
     unitLabel: "",
 };
 
+const DEFAULT_PARAMETER_ATTRIBUTES = {
+    min: 0,
+    max: 10,
+};
+
 const RELATIONS = {
     INFLUENCE: "influences",
     ASSOCIATE: "associates with",
@@ -27,7 +32,7 @@ export const VariableProvider = ({ children }) => {
     useEffect(() => {
         setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
     }, [variablesDict]);
-    
+
     useEffect(() => {
         if (finishParseModel) {
             setBiVariable1(Object.values(variablesDict)[1]);
@@ -40,13 +45,11 @@ export const VariableProvider = ({ children }) => {
         updateVariable(data.name, data);
 
         const paramName = `p_${data.name}`;
-        setParametersDict((prev) => ({
-            ...prev,
-            [paramName]: {
-                name: paramName,
-                relatedVar: data.name,
-            }
-        }));
+        updateParameter(paramName, {
+            name: paramName,
+            relatedVar: data.name,
+            ...DEFAULT_PARAMETER_ATTRIBUTES
+        });
     };
 
     // Update the variable
@@ -74,12 +77,37 @@ export const VariableProvider = ({ children }) => {
         }));
     }
 
+    // Update the parameter
+    const updateParameter = (name, updates) => {
+        let finalUpdates = { ...updates };
+
+        // If min or max is updated, recalculate bin edges
+        if ('min' in updates || 'max' in updates) {
+            const currentParameter = parametersDict[name] || {};
+            const newMin = updates.min ?? currentParameter.min;
+            const newMax = updates.max ?? currentParameter.max;
+
+            // Create 10 equally spaced bins
+            const binCount = 10;
+            const step = (newMax - newMin) / binCount;
+            const binEdges = Array.from({ length: binCount + 1 }, (_, i) => newMin + step * i);
+
+            finalUpdates.binEdges = binEdges;
+        }
+
+        console.log("update parameter", name, finalUpdates);
+        setParametersDict(prev => ({
+            ...prev,
+            [name]: { ...prev[name], ...finalUpdates }
+        }));
+    }
+
+    // Parse the model in R code
     const handleParseModel = () => {
         axios.post(window.BACKEND_ADDRESS + '/getStanCodeInfo', {
             code: model
         })
             .then((response) => {
-                console.log(response.data);
                 const codeInfo = response.data.code_info;
                 /**
                  * Parse GLM code
@@ -100,10 +128,8 @@ export const VariableProvider = ({ children }) => {
                             updateVariable(sectionInfo, {
                                 name: sectionInfo,
                                 type: "response",
-                                min: DEFAULT_VARIABLE_ATTRIBUTES.min,
-                                max: DEFAULT_VARIABLE_ATTRIBUTES.max,
-                                unitLabel: DEFAULT_VARIABLE_ATTRIBUTES.unitLabel,
-                                sequenceNum: 0
+                                sequenceNum: 0,
+                                ...DEFAULT_VARIABLE_ATTRIBUTES
                             });
                             break;
                         case "predictors":
@@ -111,10 +137,8 @@ export const VariableProvider = ({ children }) => {
                                 addVariable({
                                     name: predictor,
                                     type: "predictor",
-                                    min: DEFAULT_VARIABLE_ATTRIBUTES.min,
-                                    max: DEFAULT_VARIABLE_ATTRIBUTES.max,
-                                    unitLabel: DEFAULT_VARIABLE_ATTRIBUTES.unitLabel,
-                                    sequenceNum: index + 1
+                                    sequenceNum: index + 1,
+                                    ...DEFAULT_VARIABLE_ATTRIBUTES
                                 });
                             });
                             break;
@@ -127,7 +151,11 @@ export const VariableProvider = ({ children }) => {
                 });
 
                 // Add Extra parameters
-                setParametersDict((prev) => ({ ...prev, 'intercept': { name: 'intercept', relatedVar: 'intercept' } }));
+                updateParameter('intercept', {
+                    name: 'intercept',
+                    relatedVar: 'intercept',
+                    ...DEFAULT_PARAMETER_ATTRIBUTES
+                });
             })
             .finally(() => {
                 setFinishParseModel(true);
@@ -145,6 +173,13 @@ export const VariableProvider = ({ children }) => {
         else if (biVariable2 === null) {
             setBiVariable2(variable);
         }
+    }
+
+    const updateParameterPoints = (name, points) => {
+        setParametersDict(prev => ({
+            ...prev,
+            [name]: { ...prev[name], points }
+        }));
     }
 
     const contextValue = {

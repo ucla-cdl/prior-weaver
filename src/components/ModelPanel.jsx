@@ -4,10 +4,10 @@ import BrushIcon from '@mui/icons-material/Brush';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import { VariableContext } from '../contexts/VariableContext';
-import { WorkspaceContext } from '../contexts/WorkspaceContext';
+import { CONDITIONS, WorkspaceContext } from '../contexts/WorkspaceContext';
 
 export default function ModelPanel() {
-    const { task, model } = useContext(WorkspaceContext)
+    const { task, model, condition } = useContext(WorkspaceContext)
     const { variablesDict, updateVariable, parametersDict, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot } = useContext(VariableContext);
 
     const [isEditingVariable, setIsEditingVariable] = useState(false);
@@ -34,6 +34,7 @@ export default function ModelPanel() {
             </Box>
 
             {/* Variable List */}
+            {condition === CONDITIONS.OBSERVABLE &&
             <Box className="context-container">
                 <Typography variant="h6" gutterBottom>Variables</Typography>
                 {Object.entries(variablesDict).map(([varName, variable]) => (
@@ -103,15 +104,17 @@ export default function ModelPanel() {
                         <Button color='danger' onClick={() => setIsEditingVariable(false)}>Cancel</Button>
                         <Button variant="contained" onClick={confirmEditvariable}>Confirm</Button>
                     </DialogActions>
-                </Dialog>
-            </Box>
+                    </Dialog>
+                </Box>
+            }
 
-            <Box className="context-container">
-                <Typography variant='h6' gutterBottom>Parameters</Typography>
-                {Object.entries(parametersDict).map(([paraName, parameter]) => (
-                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={paraName}>
-                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{paraName}</Typography>
-                        {/* <IconButton onClick={() => {
+            {condition === CONDITIONS.PARAMETER &&
+                <Box className="context-container">
+                    <Typography variant='h6' gutterBottom>Parameters</Typography>
+                    {Object.entries(parametersDict).map(([paraName, parameter]) => (
+                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={paraName}>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{paraName}</Typography>
+                            {/* <IconButton onClick={() => {
                             setEditingVariable(parameter);
                             setIsEditingVariable(true);
                         }}>
@@ -134,9 +137,10 @@ export default function ModelPanel() {
                                 <AddCircleIcon fontSize='small' />
                             </IconButton>
                         )} */}
-                    </Box>
-                ))}
-            </Box>
+                        </Box>
+                    ))}
+                </Box>
+            }
         </Box>
     )
 }

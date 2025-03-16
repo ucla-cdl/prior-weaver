@@ -10,24 +10,26 @@ import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { VariableProvider } from "./contexts/VariableContext";
 import { EntityProvider } from "./contexts/EntityContext";
 import { SelectionProvider } from "./contexts/SelectionContext";
-
+import { PriorProvider } from "./contexts/PriorContext";
 function App() {
   return (
     <WorkspaceProvider>
       <VariableProvider>
         <EntityProvider>
           <SelectionProvider>
-            <div className="App">
-              <HashRouter>
-                <Routes>
-                  <Route path={routes.default} element={<Workspace />}></Route>
-                  <Route path={routes.home} element={<Home />}></Route>
-                  <Route path={routes.workspace} element={<Workspace />}></Route>
-                  <Route path={routes.logger} element={<Logger />}></Route>
-                  <Route path={routes.admin} element={<Admin />}></Route>
-                </Routes>
-              </HashRouter>
-            </div>
+            <PriorProvider>
+              <div className="App">
+                <HashRouter>
+                  <Routes>
+                    <Route path={routes.default} element={<Workspace />}></Route>
+                    <Route path={routes.home} element={<Home />}></Route>
+                    <Route path={routes.workspace} element={<Workspace />}></Route>
+                    <Route path={routes.logger} element={<Logger />}></Route>
+                    <Route path={routes.admin} element={<Admin />}></Route>
+                  </Routes>
+                </HashRouter>
+              </div>
+            </PriorProvider>
           </SelectionProvider>
         </EntityProvider>
       </VariableProvider>
