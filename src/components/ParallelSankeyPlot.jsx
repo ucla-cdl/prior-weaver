@@ -55,7 +55,13 @@ export default function ParallelSankeyPlot() {
     const [selectionGroup2Entities, setSelectionGroup2Entities] = useState([]);
 
     // Add new state for selection steps
-    const [selectionStep, setSelectionStep] = useState(0); // 0: initial, 1: choose g1, 2: confirm g1, 3: choose g2, 4: confirm g2, 5: link
+    const SELECTION_STEPS = {
+        INITIAL: 0,
+        SELECT_G1: 1,
+        SELECT_G2: 2,
+        LINK: 3
+    }
+    const [selectionStep, setSelectionStep] = useState(SELECTION_STEPS.INITIAL);
 
     useEffect(() => {
         drawPlot();
@@ -578,8 +584,8 @@ export default function ParallelSankeyPlot() {
                     .classed("hidden-selection", false)
                     .classed("brush-non-selection", !active)
                     .classed("brush-selection", active)
-                    .classed("group-1-selection", active && selectionStep === 1)
-                    .classed("group-2-selection", active && selectionStep === 3);
+                    .classed("group-1-selection", active && selectionStep === SELECTION_STEPS.SELECT_G1)
+                    .classed("group-2-selection", active && selectionStep === SELECTION_STEPS.SELECT_G2);
 
                 if (active) {
                     newSelectedEntities.push(entity);
@@ -591,8 +597,8 @@ export default function ParallelSankeyPlot() {
                             .classed("hidden-entity-dot", false)
                             .classed("selected-entity-dot", active)
                             .classed("unselected-entity-dot", !active)
-                            .classed("group-1-dot", active && selectionStep === 1)
-                            .classed("group-2-dot", active && selectionStep === 3);
+                            .classed("group-1-dot", active && selectionStep === SELECTION_STEPS.SELECT_G1)
+                            .classed("group-2-dot", active && selectionStep === SELECTION_STEPS.SELECT_G2);
 
                         if (active) {
                             countsByAxis.set(key, countsByAxis.get(key) + 1);
@@ -665,6 +671,26 @@ export default function ParallelSankeyPlot() {
 
     const deleteSelectedEntities = () => {
         deleteEntities(selectedEntities.map(entity => entity.id));
+    }
+
+    const confirmSelection = () => {
+        if (selectionStep === SELECTION_STEPS.SELECT_G1) {
+            if (selectedEntities.length === 0) {
+                setWarningMessage("Please select entities for Group 1");
+                return;
+            }
+            setSelectionGroup1Entities(selectedEntities);
+            clearBrushSelection();
+        } else if (selectionStep === SELECTION_STEPS.SELECT_G2) {
+            if (selectedEntities.length === 0) {
+                setWarningMessage("Please select entities for Group 2");
+                return;
+            }
+            setSelectionGroup2Entities(selectedEntities);
+            clearBrushSelection();
+        }
+
+        setSelectionStep((prev) => prev + 1);
     }
 
     const connectEntities = () => {
@@ -791,98 +817,73 @@ export default function ParallelSankeyPlot() {
                     </RadioGroup>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', ml: 2 }}>
-                    {activeFilter === FILTER_TYPES.COMPLETE && isBatchMode && (
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-                            <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mx: 1, gap: 1 }}>
+                    {activeFilter === FILTER_TYPES.INCOMPLETE && (
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                 <Button
-                                    sx={{ mb: 1 }}
-                                    disabled={
-                                        (isBatchMode && (selections.size === 0 || activeFilter !== FILTER_TYPES.COMPLETE)) ||
-                                        (!isBatchMode)
-                                    }
-                                    variant='outlined'
-                                    onClick={generateRandomEntities}>
-                                    Generate
+                                    size='small'
+                                    variant={selectionStep === SELECTION_STEPS.INITIAL ? 'outlined' : 'contained'}
+                                    color={selectionStep === SELECTION_STEPS.INITIAL ? 'primary' : selectionStep < SELECTION_STEPS.SELECT_G2 ? 'secondary' : 'success'}
+                                    onClick={confirmSelection}
+                                    disabled={selectionStep > SELECTION_STEPS.SELECT_G2}
+                                >
+                                    {selectionStep === SELECTION_STEPS.INITIAL ? 'Start Selection' :
+                                        selectionStep === SELECTION_STEPS.SELECT_G1 ? 'Confirm Group 1' :
+                                            selectionStep === SELECTION_STEPS.SELECT_G2 ? 'Confirm Group 2' :
+                                                "Selection Finished"}
                                 </Button>
-                                <input
-                                    type="number"
-                                    value={generatedNum}
-                                    onChange={(e) => setGeneratedNum(Number(e.target.value))}
-                                    min="1"
-                                    style={{ width: '60px', textAlign: 'center' }}
-                                />
+                                <Button
+                                    size='small'
+                                    variant='outlined'
+                                    onClick={() => {
+                                        setSelectionStep(SELECTION_STEPS.INITIAL);
+                                        setSelectionGroup1Entities([]);
+                                        setSelectionGroup2Entities([]);
+                                        clearBrushSelection();
+                                    }}
+                                >
+                                    Reset
+                                </Button>
                             </Box>
                         </Box>
                     )}
 
-                    {activeFilter === FILTER_TYPES.INCOMPLETE && isBatchMode && (
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                            <Box sx={{ mx: 1, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                                <Box sx={{ mx: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                    <Button
-                                        size='small'
-                                        variant={selectionStep < 1 ? 'outlined' : 'contained'}
-                                        color='secondary'
-                                        onClick={() => {
-                                            if (selectionStep === 1) {
-                                                setSelectionGroup1Entities(selectedEntities);
-                                                clearBrushSelection();
-                                            }
-                                            setSelectionStep((prev) => prev + 1);
-                                        }}
-                                        disabled={selectionStep > 1}
-                                    >
-                                        {selectionStep === 0 ? 'Select Group 1' : (selectionStep === 1 ? 'Confirm Group 1' : 'Group 1 Selected')}
-                                    </Button>
-                                    <Button
-                                        size='small'
-                                        variant={selectionStep < 3 ? 'outlined' : 'contained'}
-                                        color='success'
-                                        onClick={() => {
-                                            if (selectionStep === 3) {
-                                                setSelectionGroup2Entities(selectedEntities);
-                                                clearBrushSelection();
-                                            }
-                                            setSelectionStep((prev) => prev + 1);
-                                        }}
-                                        disabled={selectionStep < 2 || selectionStep > 3}
-                                    >
-                                        {selectionStep === 2 ? 'Select Group 2' : (selectionStep === 3 ? 'Confirm Group 2' : 'Group 2 Selected')}
-                                    </Button>
-                                </Box>
-
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                    <Button
-                                        size='small'
-                                        variant='contained'
-                                        color='primary'
-                                        onClick={() => {
-                                            connectEntities();
-                                        }}
-                                        disabled={selectionStep < 4}
-                                    >
-                                        Link
-                                    </Button>
-
-                                    <Button
-                                        size='small'
-                                        variant='outlined'
-                                        onClick={() => {
-                                            setSelectionStep(0);
-                                            setSelectionGroup1Entities([]);
-                                            setSelectionGroup2Entities([]);
-                                            clearBrushSelection();
-                                        }}
-                                    >
-                                        Reset
-                                    </Button>
-                                </Box>
-                            </Box>
+                    {activeFilter === FILTER_TYPES.COMPLETE && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Button
+                                size='small'
+                                sx={{ mb: 1 }}
+                                variant='outlined'
+                                onClick={generateRandomEntities}>
+                                Generate
+                            </Button>
+                            <input
+                                type="number"
+                                value={generatedNum}
+                                onChange={(e) => setGeneratedNum(Number(e.target.value))}
+                                min="1"
+                                style={{ width: '60px', textAlign: 'center' }}
+                            />
                         </Box>
+                    )}
+
+                    {activeFilter === FILTER_TYPES.INCOMPLETE && (
+                        <Button
+                            size='small'
+                            variant='contained'
+                            color='primary'
+                            onClick={() => {
+                                connectEntities();
+                            }}
+                            disabled={selectionStep < SELECTION_STEPS.LINK}
+                        >
+                            Link
+                        </Button>
                     )}
 
                     <Button
+                        size='small'
                         disabled={selectedEntities.length === 0}
                         variant='outlined'
                         onClick={deleteSelectedEntities}>
