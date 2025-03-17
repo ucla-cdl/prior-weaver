@@ -28,10 +28,10 @@ export default function Workspace() {
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
     }, []);
 
-    const handleSwitchTask = (event) => {
-        const id = event.target.value;
-        setSelectedTaskId(id);
-        setTask(TASK_SETTINGS[id]);
+
+    const handleSwitchTask = (taskId) => {
+        setSelectedTaskId(taskId);
+        setTask(TASK_SETTINGS[taskId]);
     }
 
     return (
@@ -54,8 +54,22 @@ export default function Workspace() {
                                 label="User Name"
                                 onChange={(e) => setUserName(e.target.value)}
                             />
-                            <FormControl>
-                                <FormLabel id="demo-row-radio-buttons-group-label">Elicitation Space</FormLabel>
+                        </Box>
+                        <Box sx={{ my: 2, display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: 2 }}>
+                            {/* Elicitation Space */}
+                            <FormControl
+                                sx={{
+                                    position: 'relative',
+                                    border: '1px solid rgba(0, 0, 0, 0.23)',
+                                    borderRadius: '2px',
+                                    p: 2
+                                }}
+                            >
+                                <FormLabel
+                                    id="demo-row-radio-buttons-group-label"
+                                >
+                                    Elicitation Space
+                                </FormLabel>
                                 <RadioGroup
                                     row
                                     aria-labelledby="demo-row-radio-buttons-group-label"
@@ -68,7 +82,14 @@ export default function Workspace() {
                                     ))}
                                 </RadioGroup>
                             </FormControl>
-                            <FormControl>
+                            {/* Feedback Mode */}
+                            <FormControl
+                                sx={{
+                                    position: 'relative',
+                                    border: '1px solid rgba(0, 0, 0, 0.23)',
+                                    borderRadius: '2px',
+                                    p: 2
+                                }}>
                                 <FormLabel id="demo-row-radio-buttons-group-label">Feedback Mode</FormLabel>
                                 <RadioGroup
                                     row
@@ -82,17 +103,24 @@ export default function Workspace() {
                                     ))}
                                 </RadioGroup>
                             </FormControl>
-                            <FormControl>
+                            {/* Task */}
+                            <FormControl
+                                sx={{
+                                    position: 'relative',
+                                    border: '1px solid rgba(0, 0, 0, 0.23)',
+                                    borderRadius: '2px',
+                                    p: 2
+                                }}>
                                 <FormLabel id="demo-row-radio-buttons-group-label">Task</FormLabel>
                                 <RadioGroup
                                     row
                                     aria-labelledby="demo-row-radio-buttons-group-label"
                                     name="row-radio-buttons-group"
                                     value={selectedTaskId}
-                                    onChange={handleSwitchTask}
+                                    onChange={(e) => handleSwitchTask(e.target.value)}
                                 >
                                     {Object.values(TASK_SETTINGS).map((t) => (
-                                        <FormControlLabel key={t.name} value={t.id} control={<Radio />} label={t.name} />
+                                        <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} />
                                     ))}
                                 </RadioGroup>
                             </FormControl>

@@ -11,6 +11,7 @@ import { VariableProvider } from "./contexts/VariableContext";
 import { EntityProvider } from "./contexts/EntityContext";
 import { SelectionProvider } from "./contexts/SelectionContext";
 import { PriorProvider } from "./contexts/PriorContext";
+
 function App() {
   return (
     <WorkspaceProvider>

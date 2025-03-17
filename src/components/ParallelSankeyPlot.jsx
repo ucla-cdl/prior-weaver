@@ -40,9 +40,6 @@ export default function ParallelSankeyPlot() {
     const [connectedPoint, setConnectedPoint] = useState(null);
     const [generatedNum, setGeneratedNum] = useState(5);
 
-    const [isBatchMode, setIsBatchMode] = useState(true);
-    const isBatchModeRef = useRef(true);
-
     const [warningMessage, setWarningMessage] = useState("");
 
     const chartHeightRef = useRef(0);
@@ -54,7 +51,6 @@ export default function ParallelSankeyPlot() {
     const [selectionGroup1Entities, setSelectionGroup1Entities] = useState([]);
     const [selectionGroup2Entities, setSelectionGroup2Entities] = useState([]);
 
-    // Add new state for selection steps
     const SELECTION_STEPS = {
         INITIAL: 0,
         SELECT_G1: 1,
@@ -282,32 +278,10 @@ export default function ParallelSankeyPlot() {
         variableAxesRef.current = newVariableAxes;
     }
 
-    const changeBatchMode = (enabled) => {
-        setIsBatchMode(enabled);
-        isBatchModeRef.current = enabled;
-
-        // Reapply the current interaction mode with new batch setting
-        changeFilterMode(activeFilter);
-    }
-
     const changeFilterMode = (filterType) => {
         console.log("Change interaction mode to: ", filterType);
         clearBrushSelection();
         setActiveFilter(filterType);
-
-        // if (isBatchModeRef.current) {
-        //     // Batch mode: use brush selection
-        //     activateBrushFeature();
-        // }
-        // else {
-        //     // Individual mode: use click interactions
-        //     if (interactionType === INTERACTION_TYPES.EXPLORE) {
-        //         // addAxisRegion();
-        //         activateAddFeature();
-        //     } else if (interactionType === INTERACTION_TYPES.CONNECT) {
-        //         activateConnectFeature();
-        //     }
-        // }
     }
 
     const clearBrushSelection = () => {
@@ -322,20 +296,6 @@ export default function ParallelSankeyPlot() {
 
         // Clear selected entities
         setSelectedEntities([]);
-    }
-
-    const addAxisRegion = () => {
-        const svg = d3.select("#sankey-svg");
-
-        svg.selectAll(".axis")
-            .append("rect")
-            .attr("class", "axis-region")
-            .attr("x", -10)
-            .attr("y", marginTop)
-            .attr("width", 20)
-            .attr("height", chartHeightRef.current - marginTop - marginBottom)
-            .attr("fill", "transparent")
-            .attr("pointer-events", "all")
     }
 
     const populateEntities = () => {
@@ -376,135 +336,6 @@ export default function ParallelSankeyPlot() {
         updateHighlightedEntities();
     }
 
-    const activateAddFeature = () => {
-        const svg = d3.select("#sankey-svg");
-        const axisNum = Object.keys(variablesDict).length;
-        let selectedPoints = new Array(axisNum).fill(null);
-
-        svg.selectAll(".axis-region")
-            .on("click", function (event, d) {
-                svg.selectAll(".temp-circle").remove();
-                svg.selectAll(".temp-line").remove();
-
-                const [x, y] = d3.pointer(event);
-                const axisValue = d;
-
-                const varValue = valueAxesRef.current.get(axisValue).invert(y);
-                const axisIndex = variableAxesRef.current.domain().indexOf(axisValue);
-
-                selectedPoints[axisIndex] = { val: varValue, axis: axisValue };
-                let submitEntity = true;
-                for (let i = 0; i < selectedPoints.length; i++) {
-                    if (selectedPoints[i] !== null) {
-                        svg.append("circle")
-                            .attr("class", "temp-circle")
-                            .attr("cx", variableAxesRef.current(selectedPoints[i].axis))
-                            .attr("cy", valueAxesRef.current.get(selectedPoints[i].axis)(selectedPoints[i].val))
-                            .attr("r", 4)
-                            .attr("fill", "blue")
-
-                        if (i < selectedPoints.length - 1 && selectedPoints[i + 1] !== null) {
-                            svg.append("line")
-                                .attr("class", "temp-line")
-                                .attr("x1", variableAxesRef.current(selectedPoints[i].axis))
-                                .attr("y1", valueAxesRef.current.get(selectedPoints[i].axis)(selectedPoints[i].val))
-                                .attr("x2", variableAxesRef.current(selectedPoints[i + 1].axis))
-                                .attr("y2", valueAxesRef.current.get(selectedPoints[i + 1].axis)(selectedPoints[i + 1].val))
-                                .attr("stroke", "black")
-                                .attr("stroke-width", 1);
-                        }
-                    }
-                    else {
-                        submitEntity = false;
-                    }
-                }
-
-                if (submitEntity) {
-                    let entityData = {};
-                    for (let i = 0; i < selectedPoints.length; i++) {
-                        entityData[selectedPoints[i].axis] = selectedPoints[i].val;
-                    }
-
-                    addEntities([entityData]);
-                    selectedPoints = new Array(axisNum).fill(null);
-
-                    // Remove all circles and lines
-                    svg.selectAll(".temp-circle").remove();
-                    svg.selectAll(".temp-line").remove();
-                }
-            });
-    }
-
-    const activateConnectFeature = () => {
-        const svg = d3.select("#sankey-svg");
-        let connectedPoint = null;
-
-        svg.selectAll(".unselected-entity-dot")
-            .on("mouseover", function () {
-                d3.select(this).classed("hovered-entity-dot", true);
-            })
-            .on("mouseout", function () {
-                d3.select(this).classed("hovered-entity-dot", false);
-            })
-            .on("click", function (event) {
-                d3.select(this).classed("connect-entity-dot", true);
-                const [_, clickEntityId, clickAxis] = d3.select(this).attr("id").split("_");
-
-                /**
-                 * If there is already a connnected point,
-                 * - If these two points are on neighboring axes, draw a line between them
-                 * - If these two points are not on neighboring axes, notify the user
-                 * - If these two points are on the same axis, notify the user
-                 */
-                if (connectedPoint) {
-                    const connectedEntity1 = { ...entities[connectedPoint.entityId] };
-                    const connectedEntity2 = { ...entities[clickEntityId] };
-
-                    let isDuplicate = false;
-                    let combinedEntityData = {};
-
-                    Object.keys(variablesDict).forEach((varName) => {
-                        const value1 = connectedEntity1[varName];
-                        const value2 = connectedEntity2[varName];
-
-                        if (value1 !== null && value2 !== null) {
-                            isDuplicate = true;
-                        } else if (value1) {
-                            combinedEntityData[varName] = value1;
-                        } else if (value2) {
-                            combinedEntityData[varName] = value2;
-                        } else {
-                            combinedEntityData[varName] = null;
-                        }
-                    });
-
-                    if (isDuplicate) {
-                        console.warn("Duplicate values detected on the same axis!");
-                    }
-                    else {
-                        deleteEntities([
-                            connectedEntity1["id"],
-                            connectedEntity2["id"],
-                        ]);
-                        addEntities([combinedEntityData]);
-                        console.log("Combined entity: ", combinedEntityData);
-                    }
-
-                    // Reset connectedPoint after combining
-                    d3.selectAll(".entity-dot").classed("connect-entity-dot", false);
-
-                    connectedPoint = null;
-                }
-                else {
-                    connectedPoint = {
-                        entityId: clickEntityId,
-                        axis: clickAxis,
-                    };
-                    console.log("Set connected point: ", connectedPoint);
-                }
-            })
-    }
-
     const activateBrushFeature = () => {
         const chart = d3.select("#pcp");
         const brushWidth = 50;
@@ -527,8 +358,6 @@ export default function ParallelSankeyPlot() {
             .call(brush.move, null);
 
         function brushed(event, key) {
-            if (!isBatchModeRef.current) return;
-
             const { selection } = event;
             const currentSelections = new Map(selectionsRef.current);
 

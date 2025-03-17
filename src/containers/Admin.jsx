@@ -1,35 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import './Admin.css';
+import React, { useContext, useState } from 'react';
+import { Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio } from '@mui/material';
+import { WorkspaceContext, TASK_SETTINGS, ELICITATION_SPACE, FEEDBACK_MODE } from '../contexts/WorkspaceContext';
 
 const Admin = () => {
-    const [workspaces, setWorkspaces] = useState([]);
+    const { task, setTask, space, setSpace, feedback, setFeedback } = useContext(WorkspaceContext);
 
-    useEffect(() => {
-        // Fetch workspaces from the server
-        axios.get('/api/workspaces')
-            .then(response => {
-                setWorkspaces(response.data);
-            })
-            .catch(error => {
-                console.error('There was an error fetching the workspaces!', error);
-            });
-    }, []);
+    const [selectedTaskId, setSelectedTaskId] = useState(task.id);
+
+    const handleSwitchTask = (taskId) => {
+        setSelectedTaskId(taskId);
+        setTask(TASK_SETTINGS[taskId]);
+    }
 
     return (
-        <div className="admin-container">
-            <h1>Admin Page</h1>
-            <div className="gallery">
-                {workspaces.map(workspace => (
-                    <div key={workspace.id} className="workspace-card">
-                        <h2>{workspace.name}</h2>
-                        <p>{workspace.description}</p>
-                        <Link to={`/workspace/${workspace.id}`}>Go to Workspace</Link>
-                    </div>
-                ))}
-            </div>
-        </div>
+        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', gap: 2 }}>
+            {/* Elicitation Space */}
+            <FormControl>
+                <FormLabel id="demo-row-radio-buttons-group-label">Elicitation Space</FormLabel>
+                <RadioGroup
+                    row
+                    aria-labelledby="demo-row-radio-buttons-group-label"
+                    name="row-radio-buttons-group"
+                    value={space}
+                    onChange={(e) => setSpace(e.target.value)}
+                >
+                    {Object.values(ELICITATION_SPACE).map((space) => (
+                        <FormControlLabel key={space} value={space} control={<Radio />} label={space} />
+                    ))}
+                </RadioGroup>
+            </FormControl>
+            {/* Feedback Mode */}
+            <FormControl>
+                <FormLabel id="demo-row-radio-buttons-group-label">Feedback Mode</FormLabel>
+                <RadioGroup
+                    row
+                    aria-labelledby="demo-row-radio-buttons-group-label"
+                    name="row-radio-buttons-group"
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                >
+                    {Object.values(FEEDBACK_MODE).map((feedback) => (
+                        <FormControlLabel key={feedback} value={feedback} control={<Radio />} label={feedback} />
+                    ))}
+                </RadioGroup>
+            </FormControl>
+            {/* Task */}
+            <FormControl>
+                <FormLabel id="demo-row-radio-buttons-group-label">Task</FormLabel>
+                <RadioGroup
+                    row
+                    aria-labelledby="demo-row-radio-buttons-group-label"
+                    name="row-radio-buttons-group"
+                    value={selectedTaskId}
+                    onChange={(e) => handleSwitchTask(e.target.value)}
+                >
+                    {Object.values(TASK_SETTINGS).map((t) => (
+                        <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} />
+                    ))}
+                </RadioGroup>
+            </FormControl>
+        </Box>
     );
 };
 

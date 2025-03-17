@@ -3,7 +3,7 @@ import React, { createContext, useEffect, useState } from 'react';
 export const WorkspaceContext = createContext();
 
 export const TASK_SETTINGS = {
-    "growth": {
+    "growth":{
         id: "growth",
         name: "Human Growth Prediction",
         scenario: "During the early stages of life the stature of female and male are about the same,\
