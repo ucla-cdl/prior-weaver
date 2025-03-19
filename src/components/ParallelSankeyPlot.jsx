@@ -72,7 +72,9 @@ export default function ParallelSankeyPlot() {
     useEffect(() => {
         const fromExternal = selectionSource === SELECTION_SOURCES.BIVARIATE;
         const newSelectedEntities = updateHighlightedEntities(fromExternal);
-        setSelectedEntities(newSelectedEntities);
+        if (!fromExternal) {
+            setSelectedEntities(newSelectedEntities);
+        }
     }, [activeFilter, selections]);
 
     const drawPlot = () => {

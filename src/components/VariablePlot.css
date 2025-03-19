@@ -1,5 +1,5 @@
 .fill-grid-cell {
-    fill: hsla(0, 100%, 84%, 0.983);
+    fill: #ccc;
     stroke: black;
 }
 
@@ -10,4 +10,8 @@
 
 .non-fill-grid-cell:hover {
     fill: #dd4d37;
+}
+
+.highlight-grid-cell {
+    fill: steelblue !important;
 }

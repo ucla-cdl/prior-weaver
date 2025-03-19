@@ -33,8 +33,10 @@ export default function BiVariablePlot() {
 
     useEffect(() => {
         const fromExternal = selectionSource === SELECTION_SOURCES.PARALLEL;
-        const newSelectedEntities = updateHighlightedEntities(fromExternal);
-        setSelectedEntities(newSelectedEntities);
+        const newSelectedEntities = updateHighlightedEntities();
+        if (!fromExternal) {
+            setSelectedEntities(newSelectedEntities);
+        }
     }, [activeFilter, selections]);
 
     const drawPlot = () => {
@@ -170,7 +172,7 @@ export default function BiVariablePlot() {
         updateHighlightedEntities();
     }
 
-    const updateHighlightedEntities = (fromExternal = false) => {
+    const updateHighlightedEntities = () => {
         let chart = d3.select("#bivariate-chart");
         const newSelectedEntities = [];
 
@@ -204,24 +206,6 @@ export default function BiVariablePlot() {
                 }
             }
         });
-
-        // Add overlay rectangle matching brush selection
-        chart.selectAll(`#brush-selection-overlay-${biVariable1.name}`).remove();
-        if (fromExternal) {
-            if (selectionsRef.current.has(biVariable1.name) && selectionsRef.current.has(biVariable2.name)) {
-                const [xMax, xMin] = selectionsRef.current.get(biVariable1.name);
-                const [yMin, yMax] = selectionsRef.current.get(biVariable2.name);
-
-                // chart.append("rect")
-                //     .attr("id", `brush-selection-overlay-${biVariable1.name}`)
-                //     .attr("class", "brush-selection-overlay")
-                //     .attr("x", xScaleRef.current(xMin))
-                //     .attr("y", yScaleRef.current(yMin))
-                //     .attr("width", xScaleRef.current(xMax) - xScaleRef.current(xMin))
-                //     .attr("height", yScaleRef.current(yMax) - yScaleRef.current(yMin))
-                //     .attr("opacity", 0.2);
-            }
-        }
 
         chart.selectAll(".non-selection-dot").raise();
         chart.selectAll(".selection-dot").raise();

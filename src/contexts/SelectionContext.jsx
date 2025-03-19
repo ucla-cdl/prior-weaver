@@ -1,16 +1,22 @@
 import React, { createContext, useContext, useRef, useState } from "react";
 import { VariableContext } from "./VariableContext";
 
+export const SelectionContext = createContext();
+
 export const SELECTION_SOURCES = {
     PARALLEL: "parallel",
     BIVARIATE: "bivariate"
 };
 
-export const SelectionContext = createContext();
-
 const FILTER_TYPES = {
     COMPLETE: "complete",
     INCOMPLETE: "incomplete"
+}
+
+const SELECTION_TYPE = {
+    NORMAL: "normal",
+    GROUP_1: "group_1",
+    GROUP_2: "group_2"
 }
 
 export const SelectionProvider = ({ children }) => {    

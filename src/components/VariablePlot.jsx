@@ -1,13 +1,14 @@
-import "./VariablePlot.css";
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import * as d3 from 'd3';
 import { Box, Paper } from '@mui/material';
 import { EntityContext } from "../contexts/EntityContext";
+import { SelectionContext } from "../contexts/SelectionContext";
+import "./VariablePlot.css";
 
 // Define the Variable Component
 export default function VariablePlot({ variable }) {
     const { entities, addEntities, updateEntities } = useContext(EntityContext);
-
+    const { selectedEntities } = useContext(SelectionContext);
     const svgWidth = 300;
     const svgHeightRef = useRef(0);
     const marginX = 40;
@@ -22,6 +23,10 @@ export default function VariablePlot({ variable }) {
     useEffect(() => {
         drawRoulette();
     }, [variable, entities]);
+
+    useEffect(() => {
+        updateHighlightedEntities();
+    }, [selectedEntities]);
 
     const drawPlot = () => {
         const container = d3.select(`#univariate-container-${variable.name}`);
@@ -118,7 +123,7 @@ export default function VariablePlot({ variable }) {
                 const binCnt = binInfos[bin].height;
                 chart.append("rect")
                     .attr("class", binCnt >= grid ? "fill-grid-cell" : "non-fill-grid-cell")
-                    .attr("id", `${variable.name}-${grid}-${bin}`)
+                    .attr("id", `${variable.name}-${bin}-${grid}`)
                     .attr("transform", `translate(${xScale(variable.binEdges[bin])}, ${yScale(grid)})`)
                     .attr("width", xScale(variable.binEdges[bin + 1]) - xScale(variable.binEdges[bin]))
                     .attr("height", yScale(grid) - yScale(grid + 1))
@@ -170,6 +175,35 @@ export default function VariablePlot({ variable }) {
                             );
                         }
                     });
+            }
+        }
+    }
+
+    const updateHighlightedEntities = () => {
+        let chart = d3.select(`#univariate-svg-${variable.name}`);
+
+        // Clear any existing highlights
+        chart.selectAll("rect").classed("highlight-grid-cell", false);
+
+        // Group selected entities by bin
+        let binCounts = new Array(variable.binEdges.length - 1).fill(0);
+        selectedEntities.forEach(entity => {
+            if (entity[variable.name] !== null) {
+                for (let i = 0; i < variable.binEdges.length - 1; i++) {
+                    if (entity[variable.name] >= variable.binEdges[i] && 
+                        entity[variable.name] < variable.binEdges[i + 1]) {
+                        binCounts[i]++;
+                        break;
+                    }
+                }
+            }
+        });
+
+        // Add highlights for selected entities
+        for (let bin = 0; bin < variable.binEdges.length - 1; bin++) {
+            for (let grid = 1; grid <= binCounts[bin]; grid++) {
+                chart.select(`#${variable.name}-${bin}-${grid}`)
+                    .classed("highlight-grid-cell", true);
             }
         }
     }
