@@ -6,7 +6,7 @@ export const EntityContext = createContext();
 
 export const EntityProvider = ({ children }) => {
     const { variablesDict } = useContext(VariableContext);
-
+    
     const [entities, setEntities] = useState({});
     const [entityHistory, setEntityHistory] = useState([{
         timestamp: new Date().toISOString(),

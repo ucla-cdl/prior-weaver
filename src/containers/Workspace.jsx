@@ -21,56 +21,42 @@ export default function Workspace() {
     const { handleParseModel, variablesDict, parametersDict, biVariable1, biVariable2 } = useContext(VariableContext);
     const { entityHistory, currentVersion, undoEntityOperation, redoEntityOperation, getUndoOperationDescription, getRedoOperationDescription } = useContext(EntityContext);
 
-    const [userName, setUserName] = useState("");
-
     useEffect(() => {
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
     }, []);
-
 
     return (
         <div className='workspace-div'>
             {!finishParseModel ?
                 (
                     // Stage 1: Setup
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        maxWidth: '75vw',
-                        margin: '0 auto',
-                        padding: '20px'
-                    }}>
-                        <Box>
-                            <TextField
-                                id='user-name'
-                                label="User Name"
-                                onChange={(e) => setUserName(e.target.value)}
-                            />
-                        </Box>
-
-                        {/* Scenario and Code Input */}
-                        <Box>
-                            <Typography variant="h4" gutterBottom>
-                                Scenario
-                            </Typography>
-                            <Typography paragraph sx={{ mb: 4 }}>
-                                {TASK_SETTINGS[taskId]?.scenario}
-                            </Typography>
-                            <Typography paragraph>
-                                Please input your model in R code.
-                            </Typography>
-                            <TextField
-                                id="stan-code"
-                                label="R Code"
-                                multiline
-                                rows={3}
-                                variant="outlined"
-                                fullWidth
-                                sx={{ my: 2 }}
-                                value={model}
-                                onChange={(e) => setModel(e.target.value)}
-                            />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <Box className='panel setup-panel'>
+                            {/* Scenario and Code Input */}
+                            <Box sx={{ my: 2, borderBottom: '1px solid #ddd', p: 4 }}>
+                                <Typography variant="h4" gutterBottom>
+                                    Scenario
+                                </Typography>
+                                <Typography variant='body1'>
+                                    {TASK_SETTINGS[taskId]?.scenario}
+                                </Typography>
+                            </Box>
+                            <Box sx={{ my: 2, p: 4 }}>
+                                <Typography variant='h6'>
+                                    Please input your model in R code.
+                                </Typography>
+                                <TextField
+                                    id="stan-code"
+                                    label="R Code"
+                                    multiline
+                                    rows={3}
+                                    variant="outlined"
+                                    fullWidth
+                                    sx={{ my: 2 }}
+                                    value={model}
+                                    onChange={(e) => setModel(e.target.value)}
+                                />
+                            </Box>
                             <Button
                                 disabled={!model}
                                 onClick={handleParseModel}

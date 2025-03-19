@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Alert } from '@mui/material';
+import { Box, Button, CircularProgress, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
@@ -8,9 +8,9 @@ import { EntityContext } from '../contexts/EntityContext';
 import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 
 export default function ResultsPanel() {
-    const { space } = useContext(WorkspaceContext);
+    const { taskId, space, feedback, model } = useContext(WorkspaceContext);
     const { variablesDict, parametersDict, updateParameter } = useContext(VariableContext);
-    const { entities } = useContext(EntityContext);
+    const { entities, entityHistory } = useContext(EntityContext);
 
     const [isTranslating, setIsTranslating] = useState(false);
     const [translated, setTranslated] = useState(0);
@@ -18,6 +18,8 @@ export default function ResultsPanel() {
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
     const [previousCheckResult, setPreviousCheckResult] = useState(null);
+
+    const [finishSpecificationDialogOpen, setFinishSpecificationDialogOpen] = useState(false);
 
     const svgHeight = 250;
     const margin = { top: 10, bottom: 40, left: 40, right: 20, };
@@ -239,6 +241,34 @@ export default function ResultsPanel() {
             });
     }
 
+    const finishSpecification = () => {
+        const data = {
+            finishTimeStamp: new Date().toISOString(),
+            taskId: taskId,
+            space: space,
+            feedback: feedback,
+            model: model,
+            variables: Object.values(variablesDict),
+            parameters: Object.values(parametersDict),
+            entities: Object.values(entities),
+            entityHistory: entityHistory,
+            translationTimes: translated,
+        };
+
+        // Create blob and download
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'elicitation_results.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        setFinishSpecificationDialogOpen(false);
+    }
+
     return (
         <Box id='results-panel' sx={{
             width: '100%',
@@ -258,6 +288,30 @@ export default function ResultsPanel() {
             </Button>
             {isTranslating && <CircularProgress sx={{ my: 2 }} />}
             <Box sx={{ width: '100%' }} id={'predictive-check-div'}></Box>
+
+            <Dialog open={finishSpecificationDialogOpen} onClose={() => setFinishSpecificationDialogOpen(false)}>
+                <DialogTitle>Ready to Finish Prior Specification?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Please review your specifications. If you are satisfied with the results, click "Finish" to complete the specification.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button color="error" onClick={() => setFinishSpecificationDialogOpen(false)}>Cancel</Button>
+                    <Button color="primary" onClick={finishSpecification}>Finish</Button>
+                </DialogActions>
+            </Dialog>
+
+            {translated > 0 &&
+                <Button
+                    sx={{ my: 3, mt: 'auto' }}
+                    variant="outlined"
+                    color="success"
+                    onClick={() => setFinishSpecificationDialogOpen(true)}
+                >
+                    Finish
+                </Button>
+            }
 
             <Snackbar
                 open={snackbarOpen}
