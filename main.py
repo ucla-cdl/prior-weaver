@@ -4,12 +4,13 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from concurrent.futures.process import ProcessPoolExecutor
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from enum import Enum
 
 import numpy as np
 import re
 import scipy.stats as stats
-from fitter import Fitter
+from fitter import Fitter, get_distributions, get_common_distributions
 
 import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures
@@ -41,6 +42,61 @@ def root():
     return {"message": "Hello World!"}
 
 
+# ================================ ADMIN ENDPOINTS =================================
+class ElicitationSpace(str, Enum):
+    PARAMETER = "Parameter Space"
+    OBSERVABLE = "Observable Space"
+
+
+class FeedbackMode(str, Enum):
+    FEEDBACK = "With Feedback"
+    NO_FEEDBACK = "Without Feedback"
+
+
+class TaskIDs(str, Enum):
+    GROWTH = "growth"
+    INCOME = "income"
+    LOAN = "loan"
+    INSURANCE = "insurance"
+    PRESSURE = "pressure"
+
+
+# Store current study settings
+current_study_settings = {
+    "task_id": TaskIDs.INCOME,
+    "elicitation_space": ElicitationSpace.OBSERVABLE,
+    "feedback_mode": FeedbackMode.FEEDBACK
+}
+
+
+class AdminUpdateSettings(BaseModel):
+    task_id: Optional[str]
+    elicitation_space: Optional[ElicitationSpace]
+    feedback_mode: Optional[FeedbackMode]
+
+
+@app.get('/study-settings')
+def get_study_settings():
+    return current_study_settings
+
+
+@app.post('/admin/study-settings')
+def update_study_settings(settings: AdminUpdateSettings):
+    # Simple API key validation - you should implement proper authentication
+
+    if settings.task_id is not None:
+        current_study_settings["task_id"] = settings.task_id
+
+    if settings.elicitation_space is not None:
+        current_study_settings["elicitation_space"] = settings.elicitation_space
+
+    if settings.feedback_mode is not None:
+        current_study_settings["feedback_mode"] = settings.feedback_mode
+
+    return current_study_settings
+
+
+# ================================ USER ENDPOINTS =================================
 class StanCodeRequest(BaseModel):
     code: str
 
@@ -129,43 +185,6 @@ def parse_stan_code(code):
     return result
 
 
-class BiVariableData(BaseModel):
-    populateDots: List[dict]
-    chipDots: List[dict]
-
-
-@app.post('/fitBiVarRelation')
-def fit_bi_var_relation(data: BiVariableData = Body(...)):
-    dots = data.populateDots + data.chipDots
-    df = pd.DataFrame(dots)
-
-    X = df[['x']]
-    y = df['y']
-
-    # Polynomial Regression
-    degree = 2  # Set degree for non-linearity
-    poly = PolynomialFeatures(degree=degree)
-    X_poly = poly.fit_transform(X)
-
-    model = LinearRegression()
-    model.fit(X_poly, y)
-
-    # Predict values for the given range of x (for smooth plotting)
-    x_range = pd.DataFrame(
-        {'x': range(int(min(df['x'])), int(max(df['x'])) + 1)})
-    X_poly_range = poly.fit_transform(x_range)
-    predictions = model.predict(X_poly_range)
-
-    # Prepare the response
-    response_data = {
-        'fittedLine': [{'x': x_val, 'y': y_pred} for x_val, y_pred in zip(x_range['x'], predictions)],
-        'equation': f'y = {model.coef_[1]:.2f} * x^1 + {model.coef_[2]:.2f} * x^2 + {model.intercept_:.2f}'
-    }
-
-    print("bivariate relation fitted", response_data['equation'])
-    return response_data
-
-
 class TranslationData(BaseModel):
     entities: List[dict]
     variables: List[dict]
@@ -194,10 +213,10 @@ def translate(data: TranslationData = Body(...)):
         fitted_dists, param_min, param_max = fit_samples_to_distributions(
             samples)
 
-        priors_results[param_name] = fitted_dists[0]
+        priors_results[param_name] = fitted_dists
 
     return {
-        "priors_results": priors_results,
+        "priors_results": priors_results
     }
 
 
@@ -262,8 +281,10 @@ def bootstrap_fit_linear_model(entities, predictors, response, parameters_dict):
 def fit_samples_to_distributions(samples):
     fit_dists = []
 
-    f = Fitter(samples, distributions=[
-        'norm', 'expon', 'lognorm', 'gamma', 'beta', 'uniform'])
+    # unifrom, normal, student-t, gamma, beta, skew-normal, log-normal, log-student-t, mirror gamma, mirror log-normal, mirror log student-t
+    distributions = ['uniform', 'norm', 't', 'gamma',
+                     'beta', 'skewnorm', 'lognorm', 'loggamma', 'expon']
+    f = Fitter(samples, distributions=distributions)
     f.fit()
 
     # Generate x values for plotting the PDF of the fitted distributions
@@ -278,12 +299,10 @@ def fit_samples_to_distributions(samples):
 
     x = np.linspace(x_min, x_max, 1000)
 
-    sum = f.summary(plot=False)
+    sum = f.summary(Nbest=len(distributions), plot=False)
 
-    dist_cnt = 0
-    idx = 0
-    while dist_cnt < 3:
-        fit_name = sum.iloc[idx].name
+    for dist in sum.iloc:
+        fit_name = dist.name
         fit_params = f.fitted_param[fit_name]
         fit_distribution = getattr(stats, fit_name)
         param_names = (fit_distribution.shapes + ", loc, scale").split(
@@ -306,7 +325,6 @@ def fit_samples_to_distributions(samples):
 
         if np.isnan(p).any() or np.isinf(p).any() or np.isnan(x).any() or np.isinf(x).any():
             print("invalid distribution: ", fit_name)
-            idx += 1
             continue
 
         fit_dists.append({
@@ -317,8 +335,6 @@ def fit_samples_to_distributions(samples):
             'metrics': metrics
         })
 
-        dist_cnt += 1
-        idx += 1
         print("distribution fitted: ", fit_name)
 
     return fit_dists, x_min, x_max
@@ -455,49 +471,20 @@ def get_r_code_from_dist(dist_name, params):
 
 
 class FitDistributionData(BaseModel):
-    histogram: List[dict]
+    samples: List[float]
 
 
 @app.post('/fitDistribution')
 def fitDistribution(data: FitDistributionData = Body(...)):
-    histogram = data.histogram
-
-    # Convert histogram data to samples
-    samples = []
-    for bin_data in histogram:
-        # Generate samples for each bin based on count
-        bin_start = bin_data['bin_start']
-        bin_end = bin_data['bin_end']
-        count = bin_data['count']
-
-        if count > 0:
-            # Generate 'count' number of uniform samples within this bin
-            bin_samples = np.random.uniform(
-                low=bin_start,
-                high=bin_end,
-                size=count
-            )
-            samples.extend(bin_samples)
-
-    # Convert to numpy array
-    samples = np.array(samples)
+    samples = np.array(data.samples)
 
     # Fit distributions to the samples
     fitted_distributions, x_min, x_max = fit_samples_to_distributions(samples)
 
     # Return the best fitting distribution (first in the list)
     if fitted_distributions:
-        best_fit = fitted_distributions[0]
         return {
-            'distribution': {
-                'name': best_fit['name'],
-                'params': best_fit['params'],
-                'x': best_fit['x'],
-                'p': best_fit['p'],
-                'min': x_min,
-                'max': x_max,
-                'metrics': best_fit['metrics']
-            }
+            'distributions': fitted_distributions
         }
     else:
         return {

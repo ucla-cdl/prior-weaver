@@ -115,8 +115,7 @@ export default function VariablePlot({ variable }) {
         // Draw Interactive Grid
         for (let grid = 1; grid <= maxY; grid++) {
             for (let bin = 0; bin < variable.binEdges.length - 1; bin++) {
-                const index = bin;
-                const binCnt = binInfos[index].height;
+                const binCnt = binInfos[bin].height;
                 chart.append("rect")
                     .attr("class", binCnt >= grid ? "fill-grid-cell" : "non-fill-grid-cell")
                     .attr("id", `${variable.name}-${grid}-${bin}`)
@@ -125,23 +124,23 @@ export default function VariablePlot({ variable }) {
                     .attr("height", yScale(grid) - yScale(grid + 1))
                     .on("click", function (event, d) {
                         // Update entities
-                        let deltaHeight = grid - binInfos[index].height;
+                        let deltaHeight = grid - binInfos[bin].height;
                         // if clicked count is larger than previous, then add new entities (randomly generated in the bin)
                         if (deltaHeight > 0) {
                             let newEntitiesData = [];
                             for (let i = 0; i < deltaHeight; i++) {
                                 newEntitiesData.push({
-                                    [variable.name]: Math.random() * (variable.binEdges[index + 1] - variable.binEdges[index]) + variable.binEdges[index]
+                                    [variable.name]: Math.random() * (variable.binEdges[bin + 1] - variable.binEdges[bin]) + variable.binEdges[bin]
                                 });
                             }
                             addEntities(newEntitiesData);
                         }
                         // if clicked count is smaller than or equal to previous, then update values of existing entities
                         else {
-                            let updatedEntities = binInfos[index].entities.slice(grid); // remove based on FIFO
+                            let updatedEntities = binInfos[bin].entities.slice(grid); // remove based on FIFO
                             if (deltaHeight === 0) {
                                 // remove current entity
-                                updatedEntities = binInfos[index].entities.slice(-1);
+                                updatedEntities = binInfos[bin].entities.slice(-1);
                             }
 
                             updateEntities(

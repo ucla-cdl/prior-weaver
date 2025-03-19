@@ -5,14 +5,12 @@ import * as d3 from 'd3';
 import "./ResultsPanel.css";
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
-import { PriorContext } from '../contexts/PriorContext';
 import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 
 export default function ResultsPanel() {
     const { space } = useContext(WorkspaceContext);
-    const { variablesDict, parametersDict } = useContext(VariableContext);
+    const { variablesDict, parametersDict, updateParameter } = useContext(VariableContext);
     const { entities } = useContext(EntityContext);
-    const { priorsDict, setPriorsDict } = useContext(PriorContext);
 
     const [isTranslating, setIsTranslating] = useState(false);
     const [translated, setTranslated] = useState(0);
@@ -28,27 +26,6 @@ export default function ResultsPanel() {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
-    // useEffect(() => {
-    //     if (translated > 0) {
-    //         plotPriorsResults(priorsDict);
-    //     }
-    // }, [translated]);
-
-    /**
-     * Update the plot and prior distriburions when the selected distribution changes
-     */
-    // useEffect(() => {
-    //     if (translated > 0) {
-    //         // Update the appearance of the selected distribution
-    //         // Object.entries(priorsDict).forEach(([priorName, prior]) => {
-    //         //     plotFittedDistribution(priorName, prior);
-    //         // });
-
-    //         // Perform prior predictive check
-    //         predictiveCheck();
-    //     }
-    // }, [priorsDict]);
-
     const readyToTranslate = () => {
         if (space === ELICITATION_SPACE.OBSERVABLE) {
             const incompleteEntities = Object.values(entities).some(entity => {
@@ -63,7 +40,7 @@ export default function ResultsPanel() {
         }
 
         if (space === ELICITATION_SPACE.PARAMETER) {
-            const incompletePriors = Object.values(priorsDict).length !== Object.values(parametersDict).length;
+            const incompletePriors = Object.values(parametersDict).some(param => param.selectedDistributionIdx === null);
 
             if (incompletePriors) {
                 setSnackbarMessage('All priors must be completed before translating');
@@ -91,12 +68,19 @@ export default function ResultsPanel() {
                 })
                 .then((response) => {
                     console.log("translated", response.data);
-                    setPriorsDict(response.data.priors_results);
-                    predictiveCheck(response.data.priors_results);
+                    const priorsResults = response.data.priors_results;
+                    Object.entries(priorsResults).forEach(([paramName, distributions]) => {
+                        updateParameter(paramName, { 
+                            distributions: distributions,
+                            selectedDistributionIdx: 0
+                        });
+                    });
+
+                    predictiveCheck(Object.values(priorsResults).map(dists => dists[0]));
                 });
         }
         else if (space === ELICITATION_SPACE.PARAMETER) {
-            predictiveCheck(priorsDict);
+            predictiveCheck(Object.values(parametersDict).map(param => param.distributions[param.selectedDistributionIdx]));
         }
 
         setIsTranslating(false);
@@ -113,19 +97,6 @@ export default function ResultsPanel() {
                 console.log("predictive check", response.data);
                 plotCheckResults(response.data.check_results);
             });
-    }
-
-    const plotPriorsResults = () => {
-        Object.entries(priorsDict).forEach(([paramName, priorResult], index) => {
-            const container = d3.select(`#parameter-div-${paramName}`);
-            container.html('');
-
-            const svgWidth = d3.select(`#predictive-check-div`).node().clientWidth;
-            container.append('svg')
-                .attr('id', `parameter-svg-${paramName}`)
-                .attr('width', svgWidth)
-                .attr('height', svgHeight);
-        });
     }
 
     const plotCheckResults = (results) => {
@@ -279,8 +250,8 @@ export default function ResultsPanel() {
                 sx={{ my: 1 }}
                 variant="contained"
                 onClick={translate}
-                disabled={(space === ELICITATION_SPACE.PARAMETER && Object.values(priorsDict).length === 0) ||
-                    (space === ELICITATION_SPACE.OBSERVABLE && Object.values(entities).length === 0)}
+                disabled={(space === ELICITATION_SPACE.PARAMETER && Object.values(parametersDict).some(param => param.selectedDistributionIdx === null)) ||
+                    (space === ELICITATION_SPACE.OBSERVABLE && Object.values(entities).some(entity => Object.values(entity).some(value => value === null)))}
             >
                 Translate
             </Button>

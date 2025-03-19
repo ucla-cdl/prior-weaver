@@ -17,22 +17,16 @@ import { EntityContext } from '../contexts/EntityContext';
 import { ParameterPlot } from '../components/ParameterPlot';
 
 export default function Workspace() {
-    const { task, setTask, space, setSpace, feedback, setFeedback, model, setModel, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen } = useContext(WorkspaceContext);
+    const { taskId, space, feedback, model, setModel, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen } = useContext(WorkspaceContext);
     const { handleParseModel, variablesDict, parametersDict, biVariable1, biVariable2 } = useContext(VariableContext);
     const { currentVersion, getUndoOperationDescription, undoEntityOperation, redoEntityOperation } = useContext(EntityContext);
 
     const [userName, setUserName] = useState("");
-    const [selectedTaskId, setSelectedTaskId] = useState(task.id);
 
     useEffect(() => {
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
     }, []);
 
-
-    const handleSwitchTask = (taskId) => {
-        setSelectedTaskId(taskId);
-        setTask(TASK_SETTINGS[taskId]);
-    }
 
     return (
         <div className='workspace-div'>
@@ -47,83 +41,12 @@ export default function Workspace() {
                         margin: '0 auto',
                         padding: '20px'
                     }}>
-                        {/* Study Setting */}
                         <Box>
                             <TextField
                                 id='user-name'
                                 label="User Name"
                                 onChange={(e) => setUserName(e.target.value)}
                             />
-                        </Box>
-                        <Box sx={{ my: 2, display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: 2 }}>
-                            {/* Elicitation Space */}
-                            <FormControl
-                                sx={{
-                                    position: 'relative',
-                                    border: '1px solid rgba(0, 0, 0, 0.23)',
-                                    borderRadius: '2px',
-                                    p: 2
-                                }}
-                            >
-                                <FormLabel
-                                    id="demo-row-radio-buttons-group-label"
-                                >
-                                    Elicitation Space
-                                </FormLabel>
-                                <RadioGroup
-                                    row
-                                    aria-labelledby="demo-row-radio-buttons-group-label"
-                                    name="row-radio-buttons-group"
-                                    value={space}
-                                    onChange={(e) => setSpace(e.target.value)}
-                                >
-                                    {Object.values(ELICITATION_SPACE).map((space) => (
-                                        <FormControlLabel key={space} value={space} control={<Radio />} label={space} />
-                                    ))}
-                                </RadioGroup>
-                            </FormControl>
-                            {/* Feedback Mode */}
-                            <FormControl
-                                sx={{
-                                    position: 'relative',
-                                    border: '1px solid rgba(0, 0, 0, 0.23)',
-                                    borderRadius: '2px',
-                                    p: 2
-                                }}>
-                                <FormLabel id="demo-row-radio-buttons-group-label">Feedback Mode</FormLabel>
-                                <RadioGroup
-                                    row
-                                    aria-labelledby="demo-row-radio-buttons-group-label"
-                                    name="row-radio-buttons-group"
-                                    value={feedback}
-                                    onChange={(e) => setFeedback(e.target.value)}
-                                >
-                                    {Object.values(FEEDBACK_MODE).map((feedback) => (
-                                        <FormControlLabel key={feedback} value={feedback} control={<Radio />} label={feedback} />
-                                    ))}
-                                </RadioGroup>
-                            </FormControl>
-                            {/* Task */}
-                            <FormControl
-                                sx={{
-                                    position: 'relative',
-                                    border: '1px solid rgba(0, 0, 0, 0.23)',
-                                    borderRadius: '2px',
-                                    p: 2
-                                }}>
-                                <FormLabel id="demo-row-radio-buttons-group-label">Task</FormLabel>
-                                <RadioGroup
-                                    row
-                                    aria-labelledby="demo-row-radio-buttons-group-label"
-                                    name="row-radio-buttons-group"
-                                    value={selectedTaskId}
-                                    onChange={(e) => handleSwitchTask(e.target.value)}
-                                >
-                                    {Object.values(TASK_SETTINGS).map((t) => (
-                                        <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} />
-                                    ))}
-                                </RadioGroup>
-                            </FormControl>
                         </Box>
 
                         {/* Scenario and Code Input */}
@@ -132,7 +55,7 @@ export default function Workspace() {
                                 Scenario
                             </Typography>
                             <Typography paragraph sx={{ mb: 4 }}>
-                                {task?.scenario}
+                                {TASK_SETTINGS[taskId]?.scenario}
                             </Typography>
                             <Typography paragraph>
                                 Please input your model in R code.

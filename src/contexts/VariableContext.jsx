@@ -13,6 +13,9 @@ const DEFAULT_VARIABLE_ATTRIBUTES = {
 const DEFAULT_PARAMETER_ATTRIBUTES = {
     min: 0,
     max: 10,
+    roulettePoints: [],
+    distributions: [],
+    selectedDistributionIdx: null,
 };
 
 const RELATIONS = {
@@ -175,18 +178,12 @@ export const VariableProvider = ({ children }) => {
         }
     }
 
-    const updateParameterPoints = (name, points) => {
-        setParametersDict(prev => ({
-            ...prev,
-            [name]: { ...prev[name], points }
-        }));
-    }
-
     const contextValue = {
         variablesDict,
         setVariablesDict,
         parametersDict,
         setParametersDict,
+        updateParameter,
         biVariable1,
         setBiVariable1,
         biVariable2,

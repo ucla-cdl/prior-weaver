@@ -1,64 +1,112 @@
 import React, { useContext, useState } from 'react';
-import { Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio } from '@mui/material';
-import { WorkspaceContext, TASK_SETTINGS, ELICITATION_SPACE, FEEDBACK_MODE } from '../contexts/WorkspaceContext';
+import { Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button, Typography, Snackbar, Alert } from '@mui/material';
+import { TASK_SETTINGS, ELICITATION_SPACE, FEEDBACK_MODE, WorkspaceContext } from '../contexts/WorkspaceContext';
+import axios from 'axios';
 
 const Admin = () => {
-    const { task, setTask, space, setSpace, feedback, setFeedback } = useContext(WorkspaceContext);
+    const { taskId, space, feedback, setTaskId, setSpace, setFeedback } = useContext(WorkspaceContext);
+    const [notification, setNotification] = useState(null);
 
-    const [selectedTaskId, setSelectedTaskId] = useState(task.id);
-
-    const handleSwitchTask = (taskId) => {
-        setSelectedTaskId(taskId);
-        setTask(TASK_SETTINGS[taskId]);
+    const handleSaveSettings = () => {
+        axios
+            .post(window.BACKEND_ADDRESS + '/admin/study-settings', {
+                task_id: taskId,
+                elicitation_space: space,
+                feedback_mode: feedback
+            })
+            .then(() => {
+                setNotification("Settings saved successfully!");
+            })
+            .catch((error) => {
+                setNotification("Error saving settings: " + error.response.data.detail);
+            });
     }
 
     return (
-        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', gap: 2 }}>
-            {/* Elicitation Space */}
-            <FormControl>
-                <FormLabel id="demo-row-radio-buttons-group-label">Elicitation Space</FormLabel>
-                <RadioGroup
-                    row
-                    aria-labelledby="demo-row-radio-buttons-group-label"
-                    name="row-radio-buttons-group"
-                    value={space}
-                    onChange={(e) => setSpace(e.target.value)}
+        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, p: 3 }}>
+            <Typography variant="h4">Study Settings</Typography>
+            <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: 2 }}>
+                {/* Elicitation Space */}
+                <FormControl
+                    sx={{
+                        position: 'relative',
+                        border: '1px solid rgba(0, 0, 0, 0.23)',
+                        borderRadius: '2px',
+                        p: 2
+                    }}
                 >
-                    {Object.values(ELICITATION_SPACE).map((space) => (
-                        <FormControlLabel key={space} value={space} control={<Radio />} label={space} />
-                    ))}
-                </RadioGroup>
-            </FormControl>
-            {/* Feedback Mode */}
-            <FormControl>
-                <FormLabel id="demo-row-radio-buttons-group-label">Feedback Mode</FormLabel>
-                <RadioGroup
-                    row
-                    aria-labelledby="demo-row-radio-buttons-group-label"
-                    name="row-radio-buttons-group"
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
+                    <FormLabel id="demo-row-radio-buttons-group-label">Elicitation Space</FormLabel>
+                    <RadioGroup
+                        row
+                        aria-labelledby="demo-row-radio-buttons-group-label"
+                        name="row-radio-buttons-group"
+                        value={space}
+                        onChange={(e) => setSpace(e.target.value)}
+                    >
+                        {Object.values(ELICITATION_SPACE).map((space) => (
+                            <FormControlLabel key={space} value={space} control={<Radio />} label={space} />
+                        ))}
+                    </RadioGroup>
+                </FormControl>
+                {/* Feedback Mode */}
+                <FormControl
+                    sx={{
+                        position: 'relative',
+                        border: '1px solid rgba(0, 0, 0, 0.23)',
+                        borderRadius: '2px',
+                        p: 2
+                    }}
                 >
-                    {Object.values(FEEDBACK_MODE).map((feedback) => (
-                        <FormControlLabel key={feedback} value={feedback} control={<Radio />} label={feedback} />
-                    ))}
-                </RadioGroup>
-            </FormControl>
+                    <FormLabel id="demo-row-radio-buttons-group-label">Feedback Mode</FormLabel>
+                    <RadioGroup
+                        row
+                        aria-labelledby="demo-row-radio-buttons-group-label"
+                        name="row-radio-buttons-group"
+                        value={feedback}
+                        onChange={(e) => setFeedback(e.target.value)}
+                    >
+                        {Object.values(FEEDBACK_MODE).map((feedback) => (
+                            <FormControlLabel key={feedback} value={feedback} control={<Radio />} label={feedback} />
+                        ))}
+                    </RadioGroup>
+                </FormControl>
+            </Box>
+
             {/* Task */}
-            <FormControl>
+            <FormControl
+                sx={{
+                    position: 'relative',
+                    border: '1px solid rgba(0, 0, 0, 0.23)',
+                    borderRadius: '2px',
+                    p: 2
+                }}
+            >
                 <FormLabel id="demo-row-radio-buttons-group-label">Task</FormLabel>
                 <RadioGroup
                     row
                     aria-labelledby="demo-row-radio-buttons-group-label"
                     name="row-radio-buttons-group"
-                    value={selectedTaskId}
-                    onChange={(e) => handleSwitchTask(e.target.value)}
+                    value={taskId}
+                    onChange={(e) => setTaskId(e.target.value)}
                 >
                     {Object.values(TASK_SETTINGS).map((t) => (
                         <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} />
                     ))}
                 </RadioGroup>
             </FormControl>
+
+            <Button variant="contained" color="primary" onClick={handleSaveSettings}>Save Settings</Button>
+
+            <Snackbar
+                open={Boolean(notification)}
+                autoHideDuration={3000}
+                onClose={() => setNotification(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setNotification(null)} severity="success">
+                    Settings saved successfully!
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

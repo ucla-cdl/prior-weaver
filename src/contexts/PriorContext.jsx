@@ -5,8 +5,14 @@ export const PriorContext = createContext();
 export const PriorProvider = ({ children }) => {
     const [priorsDict, setPriorsDict] = useState({});
 
-    const updatePrior = (name, distribution) => {
-        setPriorsDict({ ...priorsDict, [name]: distribution });
+    const updatePrior = (name, updates) => {
+        setPriorsDict({ 
+            ...priorsDict, 
+            [name]: {
+                ...priorsDict[name],
+                ...updates
+            }
+        });
     }
 
     const contextValue = {
