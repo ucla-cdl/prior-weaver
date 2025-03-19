@@ -4,10 +4,10 @@ import BrushIcon from '@mui/icons-material/Brush';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import { VariableContext } from '../contexts/VariableContext';
-import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
+import { TASK_SETTINGS, ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 
 export default function ModelPanel() {
-    const { task, model, space } = useContext(WorkspaceContext)
+    const { taskId, model, space } = useContext(WorkspaceContext)
     const { variablesDict, updateVariable, parametersDict, updateParameter, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot } = useContext(VariableContext);
 
     const [isEditingVariable, setIsEditingVariable] = useState(false);
@@ -33,7 +33,7 @@ export default function ModelPanel() {
             {/* Scenario info */}
             <Box className="context-container">
                 <Typography variant="h6" gutterBottom>Scenario</Typography>
-                <Typography sx={{ maxHeight: '200px', overflowY: 'auto' }}>{task?.scenario}</Typography>
+                <Typography sx={{ maxHeight: '200px', overflowY: 'auto' }}>{TASK_SETTINGS[taskId]?.scenario}</Typography>
             </Box>
 
             {/* Model info */}

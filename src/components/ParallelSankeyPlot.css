@@ -53,6 +53,22 @@
     stroke: green;
 }
 
+/* Axis */
+.frozen-axis {
+    text {
+        fill: #999 !important;
+    }
+
+    line, path {
+        stroke: #999 !important;
+    }
+
+    .selection, .overlay, .handle {
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+}
+
 /* Axis Boundaries */
 .solid{
     stroke:solid;

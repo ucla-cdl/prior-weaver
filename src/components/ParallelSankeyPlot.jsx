@@ -50,6 +50,7 @@ export default function ParallelSankeyPlot() {
     // TODO: selection should be a context variable -> same color encoding for all plots
     const [selectionGroup1Entities, setSelectionGroup1Entities] = useState([]);
     const [selectionGroup2Entities, setSelectionGroup2Entities] = useState([]);
+    const frozenAxesRef = useRef(new Set());
 
     const SELECTION_STEPS = {
         INITIAL: 0,
@@ -126,6 +127,7 @@ export default function ParallelSankeyPlot() {
             .data(Object.entries(variablesDict).map(([varName, variable]) => varName))
             .join("g")
             .attr("class", "axis")
+            .attr("id", d => `axis-${d}`)
             .attr("transform", d => `translate(${newVariableAxes(d)}, 0)`)
             .each(function (d) {
                 const axisGroup = d3.select(this);
@@ -284,13 +286,44 @@ export default function ParallelSankeyPlot() {
         setActiveFilter(filterType);
     }
 
-    const clearBrushSelection = () => {
+    const clearBrushSelection = (reset = false) => {
+        console.log("Clear brush selection", reset);
         const chart = d3.select("#pcp");
 
         // Clear brush selection
-        const brush = chart.selectAll(".brush");
-        brush.call(d3.brush().move, null);
-        chart.selectAll(".selection-count-label").remove();
+        const brushes = chart.selectAll(".brush");
+        if (!reset && selectionStep === SELECTION_STEPS.SELECT_G1) {
+            const selectedAxes = Object.keys(selectedEntities[0]).filter(key => key !== "id" && selectedEntities[0][key] !== null);
+
+            brushes.each(function (d) {
+                if (selectedAxes.includes(d)) {
+                    // Change the axis color to indicate it's frozen
+                    d3.selectAll(`#axis-${d}`)
+                        .classed("frozen-axis", true);
+
+                    const axisX = variableAxesRef.current(d);
+                    chart.append("text")
+                        .attr("class", "frozen-indicator")
+                        .attr("x", axisX + 15)
+                        .attr("y", marginTop - 5)
+                        .attr("dy", ".35em")
+                        .text("🔒")
+                        .style("font-size", "12px");
+
+                    frozenAxesRef.current.add(d);
+                }
+                else {
+                    d3.select(this).call(d3.brush().move, null);
+                }
+            });
+        } else {
+            brushes.call(d3.brush().move, null);
+            chart.selectAll(".selection-count-label").remove();
+            chart.selectAll(".frozen-indicator").remove();
+            chart.selectAll(".axis").classed("frozen-axis", false);
+            frozenAxesRef.current.clear();
+        }
+
         selectionsRef.current = new Map();
         updateSelections(selectionsRef.current, SELECTION_SOURCES.PARALLEL);
 
@@ -346,7 +379,7 @@ export default function ParallelSankeyPlot() {
                 [brushWidth / 2, chartHeightRef.current]
             ])
             .on("start brush end", (event, key) => {
-                if (event.sourceEvent === null) return;
+                if (event.sourceEvent === null || frozenAxesRef.current.has(key)) return false;
                 brushed(event, key);
             });
 
@@ -354,6 +387,7 @@ export default function ParallelSankeyPlot() {
         chart.selectAll(".axis")
             .append("g")
             .attr("class", "brush")
+            .attr("id", d => `brush-${d}`)
             .call(brush)
             .call(brush.move, null);
 
@@ -379,15 +413,43 @@ export default function ParallelSankeyPlot() {
         const countsByAxis = new Map();
         Array.from(selectionsRef.current.keys()).forEach(axis => countsByAxis.set(axis, 0));
 
-        Object.entries(entities).forEach(([entityId, entity]) => {
-            if (selectionGroup1Entities.includes(entity) || selectionGroup2Entities.includes(entity)) return;
+        // First get all entities that would be selected based on current brush
+        const potentialSelectedEntities = Object.entries(entities).filter(([entityId, entity]) => {
+            if (selectionGroup1Entities.includes(entity) || selectionGroup2Entities.includes(entity)) return false;
+            if (isHidden(entity)) return false;
 
-            const active = selectionsRef.current.size !== 0 && Array.from(selectionsRef.current).every(([key, [max, min]]) => {
+            return selectionsRef.current.size !== 0 && Array.from(selectionsRef.current).every(([key, [max, min]]) => {
                 if (entity[key] === null) return false;
                 return entity[key] >= min && entity[key] <= max;
             });
+        }).map(([id, entity]) => ({ id, entity }));
+
+        let selectedEntitiesForHighlight = potentialSelectedEntities;
+        // When group 1 have partial connected entities, select entities with more non-null values
+        if (selectionStep === SELECTION_STEPS.SELECT_G1) {
+            const mostNonNullCnt = Math.max(...potentialSelectedEntities.map(d => Object.values(d.entity).filter(value => value !== null).length));
+            selectedEntitiesForHighlight = potentialSelectedEntities.filter(d => Object.values(d.entity).filter(value => value !== null).length === mostNonNullCnt);
+        }
+        // When group 2 have more entities than group 1, randomly select subset
+        else if (selectionStep === SELECTION_STEPS.SELECT_G2 &&
+            potentialSelectedEntities.length > selectionGroup1Entities.length) {
+            // Randomly select entities to match group 1 size
+            const shuffled = [...potentialSelectedEntities];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            selectedEntitiesForHighlight = shuffled.slice(0, selectionGroup1Entities.length);
+        }
+
+        // Create a Set of selected entity IDs for quick lookup
+        const selectedEntityIds = new Set(selectedEntitiesForHighlight.map(item => item.id));
+
+        Object.entries(entities).forEach(([entityId, entity]) => {
+            if (selectionGroup1Entities.includes(entity) || selectionGroup2Entities.includes(entity)) return;
 
             const isEntityHidden = isHidden(entity);
+            const isSelected = selectedEntityIds.has(entityId);
 
             if (isEntityHidden) {
                 d3.select(`#entity_path_${entityId}`)
@@ -407,16 +469,15 @@ export default function ParallelSankeyPlot() {
                             .classed("group-2-dot", false);
                     }
                 });
-            }
-            else {
+            } else {
                 d3.select(`#entity_path_${entityId}`)
                     .classed("hidden-selection", false)
-                    .classed("brush-non-selection", !active)
-                    .classed("brush-selection", active)
-                    .classed("group-1-selection", active && selectionStep === SELECTION_STEPS.SELECT_G1)
-                    .classed("group-2-selection", active && selectionStep === SELECTION_STEPS.SELECT_G2);
+                    .classed("brush-non-selection", !isSelected)
+                    .classed("brush-selection", isSelected)
+                    .classed("group-1-selection", isSelected && selectionStep === SELECTION_STEPS.SELECT_G1)
+                    .classed("group-2-selection", isSelected && selectionStep === SELECTION_STEPS.SELECT_G2);
 
-                if (active) {
+                if (isSelected) {
                     newSelectedEntities.push(entity);
                 }
 
@@ -424,12 +485,12 @@ export default function ParallelSankeyPlot() {
                     if (key !== "id" && value !== null) {
                         d3.select(`#dot_${entityId}_${key}`)
                             .classed("hidden-entity-dot", false)
-                            .classed("selected-entity-dot", active)
-                            .classed("unselected-entity-dot", !active)
-                            .classed("group-1-dot", active && selectionStep === SELECTION_STEPS.SELECT_G1)
-                            .classed("group-2-dot", active && selectionStep === SELECTION_STEPS.SELECT_G2);
+                            .classed("selected-entity-dot", isSelected)
+                            .classed("unselected-entity-dot", !isSelected)
+                            .classed("group-1-dot", isSelected && selectionStep === SELECTION_STEPS.SELECT_G1)
+                            .classed("group-2-dot", isSelected && selectionStep === SELECTION_STEPS.SELECT_G2);
 
-                        if (active) {
+                        if (isSelected) {
                             countsByAxis.set(key, countsByAxis.get(key) + 1);
                         }
                     }
@@ -520,6 +581,13 @@ export default function ParallelSankeyPlot() {
         }
 
         setSelectionStep((prev) => prev + 1);
+    }
+
+    const resetSelection = () => {
+        setSelectionStep(SELECTION_STEPS.INITIAL);
+        setSelectionGroup1Entities([]);
+        setSelectionGroup2Entities([]);
+        clearBrushSelection(true);
     }
 
     const connectEntities = () => {
@@ -665,12 +733,7 @@ export default function ParallelSankeyPlot() {
                                 <Button
                                     size='small'
                                     variant='outlined'
-                                    onClick={() => {
-                                        setSelectionStep(SELECTION_STEPS.INITIAL);
-                                        setSelectionGroup1Entities([]);
-                                        setSelectionGroup2Entities([]);
-                                        clearBrushSelection();
-                                    }}
+                                    onClick={resetSelection}
                                 >
                                     Reset
                                 </Button>
