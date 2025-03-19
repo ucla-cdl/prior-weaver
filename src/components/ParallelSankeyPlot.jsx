@@ -11,7 +11,7 @@ import "./ParallelSankeyPlot.css";
 import { WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
-import { SelectionContext, SELECTION_SOURCES } from '../contexts/SelectionContext';
+import { SelectionContext, SELECTION_SOURCES, SELECTION_TYPE } from '../contexts/SelectionContext';
 
 /**
  * Define interaction types
@@ -29,7 +29,7 @@ export default function ParallelSankeyPlot() {
     const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
     const { variablesDict, updateVariable, sortableVariables } = useContext(VariableContext);
     const { entities, addEntities, deleteEntities, combineEntities } = useContext(EntityContext);
-    const { activeFilter, setActiveFilter, selections, selectedEntities, setSelectedEntities, isHidden, selectionsRef, updateSelections, selectionSource } = useContext(SelectionContext);
+    const { activeFilter, setActiveFilter, selections, selectedEntities, setSelectedEntities, isHidden, selectionsRef, updateSelections, selectionSource, selectionGroup1Entities, selectionGroup2Entities, setSelectionGroup1Entities, setSelectionGroup2Entities, selectionType, setSelectionType } = useContext(SelectionContext);
 
     const marginTop = 20;
     const marginBottom = 10;
@@ -48,8 +48,6 @@ export default function ParallelSankeyPlot() {
     const [draggedItem, setDraggedItem] = useState(null);
 
     // TODO: selection should be a context variable -> same color encoding for all plots
-    const [selectionGroup1Entities, setSelectionGroup1Entities] = useState([]);
-    const [selectionGroup2Entities, setSelectionGroup2Entities] = useState([]);
     const frozenAxesRef = useRef(new Set());
 
     const SELECTION_STEPS = {
@@ -566,20 +564,31 @@ export default function ParallelSankeyPlot() {
     }
 
     const confirmSelection = () => {
-        if (selectionStep === SELECTION_STEPS.SELECT_G1) {
-            if (selectedEntities.length === 0) {
-                setWarningMessage("Please select entities for Group 1");
-                return;
-            }
-            setSelectionGroup1Entities(selectedEntities);
-            clearBrushSelection();
-        } else if (selectionStep === SELECTION_STEPS.SELECT_G2) {
-            if (selectedEntities.length === 0) {
-                setWarningMessage("Please select entities for Group 2");
-                return;
-            }
-            setSelectionGroup2Entities(selectedEntities);
-            clearBrushSelection();
+        switch (selectionStep) {
+            case SELECTION_STEPS.INITIAL:
+                setSelectionType(SELECTION_TYPE.GROUP_1);
+                break;
+            case SELECTION_STEPS.SELECT_G1:
+                if (selectedEntities.length === 0) {
+                    setWarningMessage("Please select entities for Group 1");
+                    return;
+                }
+                setSelectionGroup1Entities(selectedEntities);
+                setSelectionType(SELECTION_TYPE.GROUP_2);
+                clearBrushSelection();
+                break;
+            case SELECTION_STEPS.SELECT_G2:
+                if (selectedEntities.length === 0) {
+                    setWarningMessage("Please select entities for Group 2");
+                    return;
+                }
+                setSelectionGroup2Entities(selectedEntities);
+                setSelectionType(SELECTION_TYPE.NORMAL);
+                clearBrushSelection();
+                break;
+            default:
+                setSelectionType(SELECTION_TYPE.NORMAL);
+                break;
         }
 
         setSelectionStep((prev) => prev + 1);
@@ -590,6 +599,7 @@ export default function ParallelSankeyPlot() {
         setSelectionGroup1Entities([]);
         setSelectionGroup2Entities([]);
         clearBrushSelection(true);
+        setSelectionType(SELECTION_TYPE.NORMAL);
     }
 
     const connectEntities = () => {
@@ -641,9 +651,7 @@ export default function ParallelSankeyPlot() {
         combineEntities(entitiesToDelete, newEntities);
 
         // After connection is complete, reset the step
-        setSelectionGroup1Entities([]);
-        setSelectionGroup2Entities([]);
-        setSelectionStep(0);
+        resetSelection();
     }
 
     const handleDragStart = (event) => {

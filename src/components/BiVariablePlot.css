@@ -8,6 +8,14 @@
     fill: steelblue;
 }
 
+.group-1-dot {
+    fill: plum !important;
+}
+
+.group-2-dot {
+    fill: green !important;
+}
+
 .non-selection-dot {
     fill: white;
 }

@@ -5,13 +5,13 @@ import { Box } from '@mui/material';
 import { WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
-import { SelectionContext, SELECTION_SOURCES } from '../contexts/SelectionContext';
+import { SelectionContext, SELECTION_SOURCES, SELECTION_TYPE } from '../contexts/SelectionContext';
 
 export default function BiVariablePlot() {
     const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
     const { biVariable1, biVariable2 } = useContext(VariableContext);
     const { entities } = useContext(EntityContext);
-    const { activeFilter, setSelectedEntities, isHidden, selections, updateSelections, selectionsRef, selectionSource } = useContext(SelectionContext);
+    const { activeFilter, setSelectedEntities, isHidden, selections, updateSelections, selectionsRef, selectionSource, selectionGroup1Entities, selectionGroup2Entities, selectionType } = useContext(SelectionContext);
 
     const chartWidthRef = useRef(0);
     const chartHeightRef = useRef(0);
@@ -182,6 +182,10 @@ export default function BiVariablePlot() {
                 return;
             }
 
+            if (selectionGroup1Entities.includes(entity) || selectionGroup2Entities.includes(entity)) {
+                return;
+            }
+
             const active = selectionsRef.current.size !== 0 && Array.from(selectionsRef.current).every(([key, [max, min]]) => {
                 if (entity[key] === null) return false;
                 return entity[key] >= min && entity[key] <= max;
@@ -193,13 +197,17 @@ export default function BiVariablePlot() {
                 d3.select(`#bivar-dot-${entityId}`)
                     .classed("hidden-dot", true)
                     .classed("selection-dot", false)
-                    .classed("non-selection-dot", false);
+                    .classed("non-selection-dot", false)
+                    .classed("group-1-dot", false)
+                    .classed("group-2-dot", false);
             }
             else {
                 d3.select(`#bivar-dot-${entityId}`)
                     .classed("hidden-dot", false)
                     .classed("selection-dot", active)
-                    .classed("non-selection-dot", !active);
+                    .classed("non-selection-dot", !active)
+                    .classed("group-1-dot", active && selectionType === SELECTION_TYPE.GROUP_1)
+                    .classed("group-2-dot", active && selectionType === SELECTION_TYPE.GROUP_2);
 
                 if (active) {
                     newSelectedEntities.push(entity);

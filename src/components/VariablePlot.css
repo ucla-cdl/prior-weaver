@@ -15,3 +15,11 @@
 .highlight-grid-cell {
     fill: steelblue !important;
 }
+
+.group-1-cell {
+    fill: plum !important;
+}
+
+.group-2-cell {
+    fill: green !important;
+}

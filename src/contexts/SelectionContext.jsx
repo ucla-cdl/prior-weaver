@@ -13,7 +13,7 @@ const FILTER_TYPES = {
     INCOMPLETE: "incomplete"
 }
 
-const SELECTION_TYPE = {
+export const SELECTION_TYPE = {
     NORMAL: "normal",
     GROUP_1: "group_1",
     GROUP_2: "group_2"
@@ -27,6 +27,9 @@ export const SelectionProvider = ({ children }) => {
     const [selectionSource, setSelectionSource] = useState(null);
     const selectionsRef = useRef(new Map());
     const [selectedEntities, setSelectedEntities] = useState([]);
+    const [selectionGroup1Entities, setSelectionGroup1Entities] = useState([]);
+    const [selectionGroup2Entities, setSelectionGroup2Entities] = useState([]);
+    const [selectionType, setSelectionType] = useState(SELECTION_TYPE.NORMAL);
 
     const updateSelections = (newSelections, source) => {
         setSelectionSource(source);
@@ -57,7 +60,13 @@ export const SelectionProvider = ({ children }) => {
         updateSelections,
         selectionSource,
         isHidden,
-        selectionsRef
+        selectionsRef,
+        selectionGroup1Entities,
+        selectionGroup2Entities,
+        setSelectionGroup1Entities,
+        setSelectionGroup2Entities,
+        selectionType,
+        setSelectionType
     }
 
     return (
