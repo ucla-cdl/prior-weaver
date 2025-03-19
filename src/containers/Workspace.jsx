@@ -10,7 +10,7 @@ import ResultsPanel from '../components/ResultsPanel';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UndoIcon from '@mui/icons-material/Undo';
-
+import RedoIcon from '@mui/icons-material/Redo';
 import { ELICITATION_SPACE, FEEDBACK_MODE, TASK_SETTINGS, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
@@ -19,7 +19,7 @@ import { ParameterPlot } from '../components/ParameterPlot';
 export default function Workspace() {
     const { taskId, space, feedback, model, setModel, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen } = useContext(WorkspaceContext);
     const { handleParseModel, variablesDict, parametersDict, biVariable1, biVariable2 } = useContext(VariableContext);
-    const { currentVersion, getUndoOperationDescription, undoEntityOperation, redoEntityOperation } = useContext(EntityContext);
+    const { entityHistory, currentVersion, undoEntityOperation, redoEntityOperation, getUndoOperationDescription, getRedoOperationDescription } = useContext(EntityContext);
 
     const [userName, setUserName] = useState("");
 
@@ -149,7 +149,9 @@ export default function Workspace() {
                                         position: 'absolute',
                                         top: 'calc(39vh - 10px)',
                                         right: rightPanelOpen ? 'calc(25vw + 10px)' : '10px',
-                                        zIndex: 1000
+                                        zIndex: 1000,
+                                        display: 'flex',
+                                        gap: 1
                                     }}>
                                         <Tooltip title={getUndoOperationDescription()}>
                                             <span>
@@ -165,6 +167,23 @@ export default function Workspace() {
                                                     }}
                                                 >
                                                     <UndoIcon />
+                                                </IconButton>
+                                            </span>
+                                        </Tooltip>
+                                        <Tooltip title={getRedoOperationDescription()}>
+                                            <span>
+                                                <IconButton
+                                                    onClick={redoEntityOperation}
+                                                    disabled={currentVersion >= entityHistory.length - 1}
+                                                    size="small"
+                                                    sx={{
+                                                        border: '2px solid',
+                                                        backgroundColor: 'white',
+                                                        '&:hover': { backgroundColor: '#f0f0f0' },
+                                                        boxShadow: 1,
+                                                    }}
+                                                >
+                                                    <RedoIcon />
                                                 </IconButton>
                                             </span>
                                         </Tooltip>

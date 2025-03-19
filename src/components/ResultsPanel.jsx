@@ -70,7 +70,7 @@ export default function ResultsPanel() {
                     console.log("translated", response.data);
                     const priorsResults = response.data.priors_results;
                     Object.entries(priorsResults).forEach(([paramName, distributions]) => {
-                        updateParameter(paramName, { 
+                        updateParameter(paramName, {
                             distributions: distributions,
                             selectedDistributionIdx: 0
                         });
@@ -82,9 +82,6 @@ export default function ResultsPanel() {
         else if (space === ELICITATION_SPACE.PARAMETER) {
             predictiveCheck(Object.values(parametersDict).map(param => param.distributions[param.selectedDistributionIdx]));
         }
-
-        setIsTranslating(false);
-        setTranslated(prev => prev + 1);
     };
 
     const predictiveCheck = (priors) => {
@@ -96,6 +93,10 @@ export default function ResultsPanel() {
             .then((response) => {
                 console.log("predictive check", response.data);
                 plotCheckResults(response.data.check_results);
+            })
+            .finally(() => {
+                setIsTranslating(false);
+                setTranslated(prev => prev + 1);
             });
     }
 
@@ -247,7 +248,7 @@ export default function ResultsPanel() {
             alignItems: 'center'
         }}>
             <Button
-                sx={{ my: 1 }}
+                sx={{ my: 3 }}
                 variant="contained"
                 onClick={translate}
                 disabled={(space === ELICITATION_SPACE.PARAMETER && Object.values(parametersDict).some(param => param.selectedDistributionIdx === null)) ||
@@ -256,14 +257,8 @@ export default function ResultsPanel() {
                 Translate
             </Button>
             {isTranslating && <CircularProgress sx={{ my: 2 }} />}
-            {!isTranslating && translated > 0 &&
-                <Box sx={{ width: '100%' }}>
-                    <Box sx={{ width: "100%", borderBottom: '1px solid #ccc', pb: 1 }}>
-                        <h4>Prior Predictive Check Result</h4>
-                        <Box sx={{ width: '100%' }} id={'predictive-check-div'}></Box>
-                    </Box>
-                </Box>
-            }
+            <Box sx={{ width: '100%' }} id={'predictive-check-div'}></Box>
+
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={6000}

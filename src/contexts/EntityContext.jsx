@@ -167,6 +167,28 @@ export const EntityProvider = ({ children }) => {
         }
     };
 
+    const getRedoOperationDescription = () => {
+        if (currentVersion >= entityHistory.length - 1) return "No operation to redo";
+        const nextOperation = entityHistory[currentVersion + 1];
+        const operation = nextOperation.operation;
+        if (operation === 'initial') return "Cannot redo initial state";
+
+        const count = nextOperation.entitiesAffected.length;
+
+        switch (operation) {
+            case 'add':
+                return `${currentVersion}: Redo adding ${count} ${count === 1 ? 'entity' : 'entities'}`;
+            case 'update':
+                return `${currentVersion}: Redo updating ${count} ${count === 1 ? 'entity' : 'entities'}`;
+            case 'delete':
+                return `${currentVersion}: Redo deleting ${count} ${count === 1 ? 'entity' : 'entities'}`;
+            case 'combine':
+                return `${currentVersion}: Redo combining ${count} ${count === 1 ? 'entity' : 'entities'}`;
+            default:
+                return "Unknown operation";
+        }
+    }
+
     const contextValue = {
         entities,
         setEntities,
@@ -178,7 +200,8 @@ export const EntityProvider = ({ children }) => {
         combineEntities,
         undoEntityOperation,
         redoEntityOperation,
-        getUndoOperationDescription
+        getUndoOperationDescription,
+        getRedoOperationDescription
     };
 
     return (
