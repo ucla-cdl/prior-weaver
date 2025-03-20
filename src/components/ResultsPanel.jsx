@@ -8,18 +8,13 @@ import { EntityContext } from '../contexts/EntityContext';
 import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 
 export default function ResultsPanel() {
-    const { taskId, space, feedback, model } = useContext(WorkspaceContext);
-    const { variablesDict, parametersDict, updateParameter } = useContext(VariableContext);
-    const { entities, entityHistory } = useContext(EntityContext);
+    const { space } = useContext(WorkspaceContext);
+    const { variablesDict, parametersDict, updateParameter, setTranslated } = useContext(VariableContext);
+    const { entities } = useContext(EntityContext);
 
     const [isTranslating, setIsTranslating] = useState(false);
-    const [translated, setTranslated] = useState(0);
-
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
-
     const [previousCheckResult, setPreviousCheckResult] = useState(null);
-
-    const [finishSpecificationDialogOpen, setFinishSpecificationDialogOpen] = useState(false);
 
     const svgHeight = 250;
     const margin = { top: 10, bottom: 40, left: 40, right: 20, };
@@ -241,34 +236,6 @@ export default function ResultsPanel() {
             });
     }
 
-    const finishSpecification = () => {
-        const data = {
-            finishTimeStamp: new Date().toISOString(),
-            taskId: taskId,
-            space: space,
-            feedback: feedback,
-            model: model,
-            variables: Object.values(variablesDict),
-            parameters: Object.values(parametersDict),
-            entities: Object.values(entities),
-            entityHistory: entityHistory,
-            translationTimes: translated,
-        };
-
-        // Create blob and download
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'elicitation_results.json';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-        setFinishSpecificationDialogOpen(false);
-    }
-
     return (
         <Box id='results-panel' sx={{
             width: '100%',
@@ -282,36 +249,12 @@ export default function ResultsPanel() {
                 variant="contained"
                 onClick={translate}
                 disabled={(space === ELICITATION_SPACE.PARAMETER && Object.values(parametersDict).some(param => param.selectedDistributionIdx === null)) ||
-                    (space === ELICITATION_SPACE.OBSERVABLE && Object.values(entities).some(entity => Object.values(entity).some(value => value === null)))}
+                    (space === ELICITATION_SPACE.OBSERVABLE && (Object.values(entities).length === 0))}
             >
                 Translate
             </Button>
             {isTranslating && <CircularProgress sx={{ my: 2 }} />}
             <Box sx={{ width: '100%' }} id={'predictive-check-div'}></Box>
-
-            <Dialog open={finishSpecificationDialogOpen} onClose={() => setFinishSpecificationDialogOpen(false)}>
-                <DialogTitle>Ready to Finish Prior Specification?</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Please review your specifications. If you are satisfied with the results, click "Finish" to complete the specification.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button color="error" onClick={() => setFinishSpecificationDialogOpen(false)}>Cancel</Button>
-                    <Button color="primary" onClick={finishSpecification}>Finish</Button>
-                </DialogActions>
-            </Dialog>
-
-            {translated > 0 &&
-                <Button
-                    sx={{ my: 3, mt: 'auto' }}
-                    variant="outlined"
-                    color="success"
-                    onClick={() => setFinishSpecificationDialogOpen(true)}
-                >
-                    Finish
-                </Button>
-            }
 
             <Snackbar
                 open={snackbarOpen}

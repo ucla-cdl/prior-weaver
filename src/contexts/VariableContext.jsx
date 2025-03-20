@@ -1,5 +1,5 @@
 import React, { createContext, useState, useRef, useEffect, useContext } from 'react';
-import { WorkspaceContext } from './WorkspaceContext';
+import { TASK_SETTINGS, WorkspaceContext } from './WorkspaceContext';
 import axios from 'axios';
 
 export const VariableContext = createContext();
@@ -7,7 +7,6 @@ export const VariableContext = createContext();
 const DEFAULT_VARIABLE_ATTRIBUTES = {
     min: 0,
     max: 100,
-    unitLabel: "",
 };
 
 const DEFAULT_PARAMETER_ATTRIBUTES = {
@@ -18,19 +17,14 @@ const DEFAULT_PARAMETER_ATTRIBUTES = {
     selectedDistributionIdx: null,
 };
 
-const RELATIONS = {
-    INFLUENCE: "influences",
-    ASSOCIATE: "associates with",
-    NONE: "not related to",
-};
-
 export const VariableProvider = ({ children }) => {
-    const { model, setModel, finishParseModel, setFinishParseModel } = useContext(WorkspaceContext);
+    const { taskId, model, setModel, finishParseModel, setFinishParseModel } = useContext(WorkspaceContext);
     const [variablesDict, setVariablesDict] = useState({});
     const [sortableVariables, setSortableVariables] = useState([]);
     const [parametersDict, setParametersDict] = useState({});
     const [biVariable1, setBiVariable1] = useState(null);
     const [biVariable2, setBiVariable2] = useState(null);
+    const [translated, setTranslated] = useState(0);
 
     useEffect(() => {
         setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
@@ -105,6 +99,44 @@ export const VariableProvider = ({ children }) => {
         }));
     }
 
+    const parseVariables = () => {
+        const variables = TASK_SETTINGS[taskId].variables;
+        let index = 0;
+        Object.entries(variables).forEach(([type, vars]) => {
+            if (type === "response") {
+                updateVariable(vars[0].name, {
+                    name: vars[0].name,
+                    type: type,
+                    unitLabel: vars[0].unit,
+                    sequenceNum: index,
+                    ...DEFAULT_VARIABLE_ATTRIBUTES
+                });
+                index++;
+            }
+            else if (type === "predictor") {
+                vars.forEach((v) => {
+                    addVariable({
+                        name: v.name,
+                        type: type,
+                        unitLabel: v.unit,
+                        sequenceNum: index,
+                        ...DEFAULT_VARIABLE_ATTRIBUTES
+                    });
+                    index++;
+                });
+            }
+        });
+
+        // Add Extra parameters
+        updateParameter('intercept', {
+            name: 'intercept',
+            relatedVar: 'intercept',
+            ...DEFAULT_PARAMETER_ATTRIBUTES
+        });
+
+        setFinishParseModel(true);
+    }
+
     // Parse the model in R code
     const handleParseModel = () => {
         axios.post(window.BACKEND_ADDRESS + '/getStanCodeInfo', {
@@ -131,6 +163,7 @@ export const VariableProvider = ({ children }) => {
                             updateVariable(sectionInfo, {
                                 name: sectionInfo,
                                 type: "response",
+                                unitLabel: "",
                                 sequenceNum: 0,
                                 ...DEFAULT_VARIABLE_ATTRIBUTES
                             });
@@ -140,6 +173,7 @@ export const VariableProvider = ({ children }) => {
                                 addVariable({
                                     name: predictor,
                                     type: "predictor",
+                                    unitLabel: "",
                                     sequenceNum: index + 1,
                                     ...DEFAULT_VARIABLE_ATTRIBUTES
                                 });
@@ -191,11 +225,13 @@ export const VariableProvider = ({ children }) => {
         addVariable,
         updateVariable,
         handleParseModel,
+        parseVariables,
         DEFAULT_VARIABLE_ATTRIBUTES,
-        RELATIONS,
         addToBiVarPlot,
         sortableVariables,
         setSortableVariables,
+        translated,
+        setTranslated,
     };
 
     return (

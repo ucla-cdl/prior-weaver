@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { WorkspaceContext } from './WorkspaceContext';
 import { VariableContext } from './VariableContext';
 
 export const EntityContext = createContext();
 
 export const EntityProvider = ({ children }) => {
-    const { variablesDict } = useContext(VariableContext);
+    const { taskId, space, feedback, model, setFinishSpecificationDialogOpen } = useContext(WorkspaceContext);
+    const { variablesDict, parametersDict, translated } = useContext(VariableContext);
     
     const [entities, setEntities] = useState({});
     const [entityHistory, setEntityHistory] = useState([{
@@ -189,6 +191,34 @@ export const EntityProvider = ({ children }) => {
         }
     }
 
+    const finishSpecification = () => {
+        const data = {
+            finishTimeStamp: new Date().toISOString(),
+            taskId: taskId,
+            space: space,
+            feedback: feedback,
+            model: model,
+            variables: Object.values(variablesDict),
+            parameters: Object.values(parametersDict),
+            entities: Object.values(entities),
+            entityHistory: entityHistory,
+            translationTimes: translated,
+        };
+
+        // Create blob and download
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'elicitation_results.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        setFinishSpecificationDialogOpen(false);
+    }
+
     const contextValue = {
         entities,
         setEntities,
@@ -201,7 +231,8 @@ export const EntityProvider = ({ children }) => {
         undoEntityOperation,
         redoEntityOperation,
         getUndoOperationDescription,
-        getRedoOperationDescription
+        getRedoOperationDescription,
+        finishSpecification
     };
 
     return (

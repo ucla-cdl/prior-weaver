@@ -9,17 +9,15 @@ import ParallelSankeyPlot from '../components/ParallelSankeyPlot';
 import ResultsPanel from '../components/ResultsPanel';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import UndoIcon from '@mui/icons-material/Undo';
-import RedoIcon from '@mui/icons-material/Redo';
 import { ELICITATION_SPACE, FEEDBACK_MODE, TASK_SETTINGS, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { ParameterPlot } from '../components/ParameterPlot';
+import NavBar from '../components/NavBar';
 
 export default function Workspace() {
     const { taskId, space, feedback, model, setModel, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen } = useContext(WorkspaceContext);
-    const { handleParseModel, variablesDict, parametersDict, biVariable1, biVariable2 } = useContext(VariableContext);
-    const { entityHistory, currentVersion, undoEntityOperation, redoEntityOperation, getUndoOperationDescription, getRedoOperationDescription } = useContext(EntityContext);
+    const { handleParseModel, parseVariables, variablesDict, parametersDict, biVariable1, biVariable2 } = useContext(VariableContext);
 
     useEffect(() => {
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
@@ -33,273 +31,247 @@ export default function Workspace() {
                     <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                         <Box className='panel setup-panel'>
                             {/* Scenario and Code Input */}
-                            <Box sx={{ my: 2, borderBottom: '1px solid #ddd', p: 4 }}>
+                            <Box sx={{ my: 2, p: 4, borderBottom: '1px solid #ddd' }}>
                                 <Typography variant="h4" gutterBottom>
                                     Scenario
                                 </Typography>
-                                <Typography variant='body1'>
+                                <Typography variant='h6'>
                                     {TASK_SETTINGS[taskId]?.scenario}
                                 </Typography>
                             </Box>
-                            <Box sx={{ my: 2, p: 4 }}>
-                                <Typography variant='h6'>
-                                    Please input your model in R code.
+                            <Box sx={{ my: 1, p: 4, borderBottom: '1px solid #ddd' }}>
+                                <Typography variant="h4" gutterBottom>
+                                    Model Settings
+                                    {/* Please input your model in R code. */}
                                 </Typography>
-                                <TextField
-                                    id="stan-code"
-                                    label="R Code"
-                                    multiline
-                                    rows={3}
-                                    variant="outlined"
-                                    fullWidth
-                                    sx={{ my: 2 }}
-                                    value={model}
-                                    onChange={(e) => setModel(e.target.value)}
-                                />
+                                <Box sx={{ my: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                                    {taskId && Object.entries(TASK_SETTINGS[taskId]?.variables)?.map(([type, variables]) => (
+                                        <Box key={type} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                            <Typography sx={{ my: 1 }} variant='h5'>
+                                                {type === "response" ? "Target Variable" : "Predictor Variables"}
+                                            </Typography>
+                                            {variables.map((variable) => (
+                                                <Typography variant='body1'>
+                                                    <b>{variable.name} ({variable.unit})</b>: {variable.description}
+                                                </Typography>
+                                            ))}
+                                        </Box>
+                                    ))}
+                                    <Box sx={{ my: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                                        <Typography variant='h5'>Model Code</Typography>
+                                        <TextField
+                                            id="stan-code"
+                                            label="R Code"
+                                            multiline
+                                            rows={3}
+                                            variant="outlined"
+                                            fullWidth
+                                            value={model}
+                                        // onChange={(e) => setModel(e.target.value)}
+                                        />
+                                    </Box>
+                                </Box>
                             </Box>
                             <Button
+                                sx={{ my: 2 }}
                                 disabled={!model}
-                                onClick={handleParseModel}
+                                onClick={parseVariables}
                                 variant="contained"
                                 size="large"
                             >
-                                Continue
+                                Next
                             </Button>
                         </Box>
                     </Box>
                 )
                 :
                 (
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', position: 'relative' }}>
-                        {/* Left Panel */}
-                        <Box
-                            className="panel left-panel"
-                            sx={{
-                                display: leftPanelOpen ? 'block' : 'none',
-                                position: 'relative'
-                            }}
-                        >
-                            <ModelPanel />
-                        </Box>
-
-                        {/* Left Panel Toggle Button - shown when left panel is closed */}
-                        {!leftPanelOpen && (
-                            <IconButton
-                                sx={{
-                                    position: 'fixed',
-                                    left: '0',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    backgroundColor: 'white',
-                                    '&:hover': { backgroundColor: '#f0f0f0' },
-                                    boxShadow: 2,
-                                    zIndex: 1000,
-                                    width: '24px',
-                                    height: '48px',
-                                    borderRadius: '0 4px 4px 0'
-                                }}
-                                onClick={() => setLeftPanelOpen(true)}
-                            >
-                                <ChevronRightIcon />
-                            </IconButton>
-                        )}
-
-                        {/* Left Panel Toggle Button - shown when left panel is open */}
-                        {leftPanelOpen && (
-                            <IconButton
-                                sx={{
-                                    position: 'absolute',
-                                    left: 'calc(20vw - 10px)', // Adjust based on your left panel width
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    backgroundColor: 'white',
-                                    '&:hover': { backgroundColor: '#f0f0f0' },
-                                    boxShadow: 2,
-                                    zIndex: 1000,
-                                    width: '24px',
-                                    height: '48px',
-                                    borderRadius: '0 4px 4px 0'
-                                }}
-                                onClick={() => setLeftPanelOpen(false)}
-                            >
-                                <ChevronLeftIcon />
-                            </IconButton>
-                        )}
-
-                        {/* Center Panel */}
-                        {space === ELICITATION_SPACE.OBSERVABLE &&
-                            <Box className="panel center-panel" sx={{ flex: 1 }}>
-                                {/* Add the undo button near the top of the center panel */}
-                                {feedback === FEEDBACK_MODE.FEEDBACK && (
-                                    <Box sx={{
-                                        position: 'absolute',
-                                        top: 'calc(39vh - 10px)',
-                                        right: rightPanelOpen ? 'calc(25vw + 10px)' : '10px',
-                                        zIndex: 1000,
-                                        display: 'flex',
-                                        gap: 1
-                                    }}>
-                                        <Tooltip title={getUndoOperationDescription()}>
-                                            <span>
-                                                <IconButton
-                                                    onClick={undoEntityOperation}
-                                                    disabled={currentVersion <= 0}
-                                                    size="small"
-                                                    sx={{
-                                                        border: '2px solid',
-                                                        backgroundColor: 'white',
-                                                        '&:hover': { backgroundColor: '#f0f0f0' },
-                                                        boxShadow: 1,
-                                                    }}
-                                                >
-                                                    <UndoIcon />
-                                                </IconButton>
-                                            </span>
-                                        </Tooltip>
-                                        <Tooltip title={getRedoOperationDescription()}>
-                                            <span>
-                                                <IconButton
-                                                    onClick={redoEntityOperation}
-                                                    disabled={currentVersion >= entityHistory.length - 1}
-                                                    size="small"
-                                                    sx={{
-                                                        border: '2px solid',
-                                                        backgroundColor: 'white',
-                                                        '&:hover': { backgroundColor: '#f0f0f0' },
-                                                        boxShadow: 1,
-                                                    }}
-                                                >
-                                                    <RedoIcon />
-                                                </IconButton>
-                                            </span>
-                                        </Tooltip>
-                                    </Box>
-                                )}
-
-                                {/* Univariate and Bivariate Plots */}
-                                <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row' }}>
-                                    <div className="component-container univariate-container">
-                                        <Typography variant="h6" gutterBottom>Univariate Distributions</Typography>
-                                        <Box sx={{
-                                            boxSizing: 'border-box',
-                                            height: 'calc(100% - 32px)',
-                                            display: 'flex',
-                                            overflowX: 'auto'
-                                        }}>
-                                            {Object.entries(variablesDict).sort((a, b) => a[1].sequenceNum - b[1].sequenceNum).map(([varName, curVar], i) => (
-                                                <VariablePlot key={i} variable={curVar} />
-                                            ))}
-                                        </Box>
-                                    </div>
-                                    <div className="component-container bivariate-container">
-                                        <Typography variant="h6" gutterBottom>Bivariate Relationship</Typography>
-                                        <Box sx={{
-                                            boxSizing: 'border-box',
-                                            height: 'calc(100% - 32px)',
-                                        }}>
-                                            {biVariable1 && biVariable2 ?
-                                                <BiVariablePlot />
-                                                :
-                                                <Skeleton variant="rectangular" sx={{ mx: 'auto', my: 2, width: '85%', height: '85%' }} />}
-                                        </Box>
-                                    </div>
-                                </Box>
-
-                                {/* Parallel Coordinates Plot */}
-                                <Box className="component-container parallel-plot-container">
-                                    <Typography variant="h6" gutterBottom>Parallel Coordinates Plot</Typography>
-                                    <Box sx={{
-                                        boxSizing: 'border-box',
-                                        height: 'calc(100% - 32px)'
-                                    }}>
-                                        <ParallelSankeyPlot />
-                                    </Box>
-                                </Box>
-                            </Box>
-                        }
-
-                        {space === ELICITATION_SPACE.PARAMETER &&
-                            <Box className="panel center-panel">
-                                <Box className="component-container">
-                                    <Box sx={{
-                                        boxSizing: 'border-box',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        overflowY: 'auto',
-                                        width: '100%'
-                                    }}>
-                                        {Object.entries(parametersDict).map(([paraName, parameter]) => (
-                                            <ParameterPlot key={paraName} parameter={parameter} />
-                                        ))}
-                                    </Box>
-                                </Box>
-                            </Box>
-                        }
-
-                        {/* Right Panel Toggle Button - shown when right panel is open */}
-                        {rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
-                            <IconButton
-                                sx={{
-                                    position: 'absolute',
-                                    right: 'calc(25vw - 10px)', // Adjust based on your right panel width
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    backgroundColor: 'white',
-                                    '&:hover': { backgroundColor: '#f0f0f0' },
-                                    boxShadow: 2,
-                                    zIndex: 1000,
-                                    width: '24px',
-                                    height: '48px',
-                                    borderRadius: '4px 0 0 4px'
-                                }}
-                                onClick={() => setRightPanelOpen(false)}
-                            >
-                                <ChevronRightIcon />
-                            </IconButton>
-                        )}
-
-                        {/* Right Panel Toggle Button - shown when right panel is closed */}
-                        {!rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
-                            <IconButton
-                                sx={{
-                                    position: 'fixed',
-                                    right: '0',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    backgroundColor: 'white',
-                                    '&:hover': { backgroundColor: '#f0f0f0' },
-                                    boxShadow: 2,
-                                    zIndex: 1000,
-                                    width: '24px',
-                                    height: '48px',
-                                    borderRadius: '4px 0 0 4px'
-                                }}
-                                onClick={() => setRightPanelOpen(true)}
-                            >
-                                <ChevronLeftIcon />
-                            </IconButton>
-                        )}
-
-                        {/* Right Panel */}
-                        {feedback === FEEDBACK_MODE.FEEDBACK && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+                        <NavBar />
+                        <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', position: 'relative' }}>
+                            {/* Left Panel */}
                             <Box
-                                className="panel right-panel"
+                                className="panel left-panel"
                                 sx={{
-                                    display: rightPanelOpen ? 'block' : 'none',
+                                    display: leftPanelOpen ? 'block' : 'none',
                                     position: 'relative'
                                 }}
                             >
-                                <div className="component-container results-container">
-                                    <Typography variant="h6" gutterBottom>Results Panel</Typography>
-                                    <Box sx={{
-                                        boxSizing: 'border-box',
-                                        height: 'calc(100% - 32px)'
-                                    }}>
-                                        <ResultsPanel />
-                                    </Box>
-                                </div>
+                                <ModelPanel />
                             </Box>
-                        )}
+
+                            {/* Left Panel Toggle Button - shown when left panel is closed */}
+                            {!leftPanelOpen && (
+                                <IconButton
+                                    sx={{
+                                        position: 'fixed',
+                                        left: '0',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        backgroundColor: 'white',
+                                        '&:hover': { backgroundColor: '#f0f0f0' },
+                                        boxShadow: 2,
+                                        zIndex: 1000,
+                                        width: '24px',
+                                        height: '48px',
+                                        borderRadius: '0 4px 4px 0'
+                                    }}
+                                    onClick={() => setLeftPanelOpen(true)}
+                                >
+                                    <ChevronRightIcon />
+                                </IconButton>
+                            )}
+
+                            {/* Left Panel Toggle Button - shown when left panel is open */}
+                            {leftPanelOpen && (
+                                <IconButton
+                                    sx={{
+                                        position: 'absolute',
+                                        left: 'calc(20vw - 10px)', // Adjust based on your left panel width
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        backgroundColor: 'white',
+                                        '&:hover': { backgroundColor: '#f0f0f0' },
+                                        boxShadow: 2,
+                                        zIndex: 1000,
+                                        width: '24px',
+                                        height: '48px',
+                                        borderRadius: '0 4px 4px 0'
+                                    }}
+                                    onClick={() => setLeftPanelOpen(false)}
+                                >
+                                    <ChevronLeftIcon />
+                                </IconButton>
+                            )}
+
+                            {/* Center Panel */}
+                            {space === ELICITATION_SPACE.OBSERVABLE &&
+                                <Box className="panel center-panel" sx={{ flex: 1 }}>
+                                    {/* Univariate and Bivariate Plots */}
+                                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row' }}>
+                                        <div className="component-container univariate-container">
+                                            <Typography variant="h6" gutterBottom>Univariate Distributions</Typography>
+                                            <Box sx={{
+                                                boxSizing: 'border-box',
+                                                height: 'calc(100% - 32px)',
+                                                display: 'flex',
+                                                overflowX: 'auto'
+                                            }}>
+                                                {Object.entries(variablesDict).sort((a, b) => a[1].sequenceNum - b[1].sequenceNum).map(([varName, curVar], i) => (
+                                                    <VariablePlot key={i} variable={curVar} />
+                                                ))}
+                                            </Box>
+                                        </div>
+                                        <div className="component-container bivariate-container">
+                                            <Typography variant="h6" gutterBottom>Bivariate Relationship</Typography>
+                                            <Box sx={{
+                                                boxSizing: 'border-box',
+                                                height: 'calc(100% - 32px)',
+                                            }}>
+                                                {biVariable1 && biVariable2 ?
+                                                    <BiVariablePlot />
+                                                    :
+                                                    <Skeleton variant="rectangular" sx={{ mx: 'auto', my: 2, width: '85%', height: '85%' }} />}
+                                            </Box>
+                                        </div>
+                                    </Box>
+
+                                    {/* Parallel Coordinates Plot */}
+                                    <Box className="component-container parallel-plot-container">
+                                        <Typography variant="h6" gutterBottom>Parallel Coordinates Plot</Typography>
+                                        <Box sx={{
+                                            boxSizing: 'border-box',
+                                            height: 'calc(100% - 32px)'
+                                        }}>
+                                            <ParallelSankeyPlot />
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            }
+
+                            {space === ELICITATION_SPACE.PARAMETER &&
+                                <Box className="panel center-panel">
+                                    <Box className="component-container">
+                                        <Box sx={{
+                                            boxSizing: 'border-box',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            overflowY: 'auto',
+                                            width: '100%'
+                                        }}>
+                                            {Object.entries(parametersDict).map(([paraName, parameter]) => (
+                                                <ParameterPlot key={paraName} parameter={parameter} />
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            }
+
+                            {/* Right Panel Toggle Button - shown when right panel is open */}
+                            {rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
+                                <IconButton
+                                    sx={{
+                                        position: 'absolute',
+                                        right: 'calc(25vw - 10px)', // Adjust based on your right panel width
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        backgroundColor: 'white',
+                                        '&:hover': { backgroundColor: '#f0f0f0' },
+                                        boxShadow: 2,
+                                        zIndex: 1000,
+                                        width: '24px',
+                                        height: '48px',
+                                        borderRadius: '4px 0 0 4px'
+                                    }}
+                                    onClick={() => setRightPanelOpen(false)}
+                                >
+                                    <ChevronRightIcon />
+                                </IconButton>
+                            )}
+
+                            {/* Right Panel Toggle Button - shown when right panel is closed */}
+                            {!rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
+                                <IconButton
+                                    sx={{
+                                        position: 'fixed',
+                                        right: '0',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        backgroundColor: 'white',
+                                        '&:hover': { backgroundColor: '#f0f0f0' },
+                                        boxShadow: 2,
+                                        zIndex: 1000,
+                                        width: '24px',
+                                        height: '48px',
+                                        borderRadius: '4px 0 0 4px'
+                                    }}
+                                    onClick={() => setRightPanelOpen(true)}
+                                >
+                                    <ChevronLeftIcon />
+                                </IconButton>
+                            )}
+
+                            {/* Right Panel */}
+                            {feedback === FEEDBACK_MODE.FEEDBACK && (
+                                <Box
+                                    className="panel right-panel"
+                                    sx={{
+                                        display: rightPanelOpen ? 'block' : 'none',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    <div className="component-container results-container">
+                                        <Typography variant="h6" gutterBottom>Results Panel</Typography>
+                                        <Box sx={{
+                                            boxSizing: 'border-box',
+                                            height: 'calc(100% - 32px)'
+                                        }}>
+                                            <ResultsPanel />
+                                        </Box>
+                                    </div>
+                                </Box>
+                            )}
+                        </Box>
                     </Box>
                 )}
         </div>

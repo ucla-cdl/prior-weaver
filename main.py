@@ -10,7 +10,7 @@ from enum import Enum
 import numpy as np
 import re
 import scipy.stats as stats
-from fitter import Fitter, get_distributions, get_common_distributions
+from fitter import Fitter
 
 import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures
@@ -54,11 +54,10 @@ class FeedbackMode(str, Enum):
 
 
 class TaskIDs(str, Enum):
-    GROWTH = "growth"
     INCOME = "income"
-    LOAN = "loan"
-    INSURANCE = "insurance"
-    PRESSURE = "pressure"
+    SCORE = "score"
+    CAR = "car"
+    HOUSE = "house"
 
 
 # Store current study settings
@@ -210,6 +209,7 @@ def translate(data: TranslationData = Body(...)):
     # Convert parameter samples to distributions
     priors_results = {}
     for param_name, samples in parameter_samples.items():
+        print("samples: ", param_name, samples)
         fitted_dists, param_min, param_max = fit_samples_to_distributions(
             samples)
 
@@ -281,7 +281,6 @@ def bootstrap_fit_linear_model(entities, predictors, response, parameters_dict):
 def fit_samples_to_distributions(samples):
     fit_dists = []
 
-    # unifrom, normal, student-t, gamma, beta, skew-normal, log-normal, log-student-t, mirror gamma, mirror log-normal, mirror log student-t
     distributions = ['uniform', 'norm', 't', 'gamma',
                      'beta', 'skewnorm', 'lognorm', 'loggamma', 'expon']
     f = Fitter(samples, distributions=distributions)

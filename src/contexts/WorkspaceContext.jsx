@@ -3,49 +3,122 @@ import axios from 'axios';
 
 export const WorkspaceContext = createContext();
 
-
 export const TASK_SETTINGS = {
-    // "growth":{
-    //     id: "growth",
-    //     name: "Human Growth Prediction",
-    //     scenario: "During the early stages of life the stature of female and male are about the same,\
-    //             but their stature start to clearly to differ during growth and in the later stages of life.\
-    //             In the early stage man and female are born roughly with the same stature, around 45cm - 55cm.\
-    //             By the time they are born reaching around 2.5 years old, both male and female present the highest growth rate (centimetres pey year).\
-    //             It is the time they grow the fastest. During this period, man has higher growth rate compared to female.\
-    //             For both male and female there is a spurt growth in the pre-adulthood.\
-    //             For man, this phase shows fast growth rate varying in between 13-17 years old and female varying from 11-15.\
-    //             Also, male tend to keep growing with roughly constant rate until the age of 17-18, while female with until the age of 15-16.\
-    //             After this period of life they tend to stablish their statures mostly around 162 - 190cm and 155 - 178cm respectively.",
-    //     defaultModel: `model <- glm(height ~ age, family = binomial(link = "logit"))`,
-    // },
     "income": {
         id: "income",
         name: "Income Prediction",
         scenario: "You are a social scientist interested in understanding the factors that influence people's income.\
                 Specifically, you want to assess how people's age and their years of education impact their annualy income in the U.S.",
-        defaultModel: `model <- glm(income ~ age + education, family = binomial(link = "logit"))`
+        defaultModel: `model <- glm(income ~ age + education, family = binomial(link = "logit"))`,
+        variables: {
+            "predictor": [
+                {
+                    "name": "age",
+                    "unit": "yrs",
+                    "description": "The age of the person."
+                },
+                {
+                    "name": "education",
+                    "unit": "yrs",
+                    "description": "The years of education of the person."
+                }
+            ],
+            "response": [
+                {
+                    "name": "income",
+                    "unit": "$k",
+                    "description": "The annual income of the person."
+                }
+            ]
+        }
     },
-    "loan": {
-        id: "loan",
-        name: "Loan Approval Prediction",
-        scenario: "You are a loan officer at a bank.\
-            You want to assess the likelihood of a loan will be approved based on the applicant's annual income, credit score, the amount of loan requested, and the term of the loan.",
-        defaultModel: `model <- glm(loan_approved ~ income + credit_score + loan_amount + loan_term, family = binomial(link = "logit"))`
+    "score": {
+        id: "score",
+        name: "Student Exam Score Prediction",
+        scenario: "You are a data scientist interested in understanding the factors that influence students' performance.\
+                Specifically, you want to assess how students' hours of study and attendence rate impact their exam score.",
+        defaultModel: `model <- glm(exam_score ~ hours_study + attendence_rate, family = gaussian(link = "identity"))`,
+        variables: {
+            "predictor": [
+                {
+                    "name": "hours_study",
+                    "unit": "hrs",
+                    "description": "The hours of study of the student."
+                },
+                {
+                    "name": "attendence_rate",
+                    "unit": "%",
+                    "description": "The attendence rate of the student."
+                }
+            ],
+            "response": [
+                {
+                    "name": "exam_score",
+                    "unit": "pts",
+                    "description": "The exam score of the student."
+                }
+            ]
+        }
     },
-    "insurance": {
-        id: "insurance",
-        name: "Insurance Cost Prediction",
-        scenario: "You are an insurance analyst at a insurance company.\
-         You want to assess the cost of insurance based on the applicants' ages and their BMI scores.",
-        defaultModel: `model <- glm(insurance_cost ~ age + bmi, family = gaussian(link = "identity"))`
+    "car": {
+        id: "car",
+        name: "Car Price Prediction",
+        scenario: "You are a data scientist interested in understanding the factors that influence car prices.\
+                Specifically, you want to assess how car's present price and mileage impact its selling price.",
+        defaultModel: `model <- glm(selling_price ~ mileage + present_price, family = gaussian(link = "identity"))`,
+        variables: {
+            "predictor": [
+                {
+                    "name": "mileage",
+                    "unit": "miles",
+                    "description": "The mileage of the car."
+                },
+                {
+                    "name": "present_price",
+                    "unit": "$k",
+                    "description": "The present price of the car."
+                }
+            ],
+            "response": [
+                {
+                    "name": "selling_price",
+                    "unit": "$k", "description": "The selling price of the car."
+                }
+            ]
+        }
     },
-    "pressure": {
-        id: "pressure",
-        name: "Student Pressure Prediction",
-        scenario: "You are a data analyst at a university.\
-            You want to assess the academic pressure of students based on the number of hours they sleep per night, the number of hours they study per week, and their satisfaction of their study progress.",
-        defaultModel: `model <- glm(pressure ~ sleep_hours + hours_studied + satisfaction, family = gaussian(link = "identity"))`
+    "house": {
+        id: "house",
+        name: "House Price Prediction",
+        scenario: "You are a data scientist interested in understanding the factors that influence house prices.\
+                Specifically, you want to assess how house's distance to the nearest metro station, its age, and the number of stores in the area impact its selling price.",
+        defaultModel: `model <- glm(house_price ~ distance_to_metro + house_age + num_stores, family = gaussian(link = "identity"))`,
+        variables: {
+            "predictor": [
+                {
+                    "name": "distance_to_metro",
+                    "unit": "km",
+                    "description": "The distance to the nearest metro station."
+                },
+                {
+                    "name": "house_age",
+                    "unit": "yrs",
+                    "description": "The age of the house."
+                },
+                {
+                    "name": "num_stores",
+                    "unit": "stores",
+                    "description": "The number of stores in the area."
+                }
+            ],
+            "response": [
+                {
+                    "name": "house_price",
+                    "unit": "$k",
+                    "description": "The selling price of the house."
+                }
+            ]
+        }
     }
 }
 
