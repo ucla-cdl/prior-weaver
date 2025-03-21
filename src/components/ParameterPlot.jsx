@@ -3,7 +3,9 @@ import { useState, useEffect, useRef, useContext } from 'react';
 import * as d3 from 'd3';
 import axios from 'axios';
 import "./ParameterPlot.css";
+import { WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
+
 const DISTRIBUTION_TYPES = {
     'uniform': 'Uniform',
     'norm': 'Normal',

@@ -74,17 +74,17 @@ export default function ParallelSankeyPlot() {
 
     const drawPlot = () => {
         const container = d3.select("#plot-container");
-        const interactionModeBox = d3.select("#interaction-mode-box");
+        const filterModeBox = d3.select("#filter-mode-box");
         const sortableContainer = d3.select("#sortable-container");
         const plotDiv = d3.select("#sankey-div");
         plotDiv.html("");
 
         const containerHeight = container.node().clientHeight;
-        const interactionModeBoxHeight = interactionModeBox.node().clientHeight;
+        const filterModeBoxHeight = filterModeBox.node().clientHeight;
         const sortableContainerHeight = sortableContainer.node().clientHeight;
 
         const svgWidth = plotDiv.node().clientWidth;
-        const svgHeight = containerHeight - interactionModeBoxHeight - sortableContainerHeight;
+        const svgHeight = containerHeight - filterModeBoxHeight - sortableContainerHeight;
         let svg = plotDiv.append("svg")
             .attr("id", "sankey-svg")
             .attr("width", svgWidth)
@@ -683,7 +683,7 @@ export default function ParallelSankeyPlot() {
 
     return (
         <Box id="plot-container" sx={{ boxSizing: 'border-box', height: "100%" }}>
-            <Box id="interaction-mode-box" sx={{
+            <Box className="filter-container" id="filter-mode-box" sx={{
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'row',
@@ -700,20 +700,22 @@ export default function ParallelSankeyPlot() {
                     borderRadius: 1,
                     p: 1
                 }}>
-                    <Typography sx={{ mr: 1.5 }}>Interaction Mode:</Typography>
+                    <Typography sx={{ mr: 1.5 }}>Filter Mode:</Typography>
                     <RadioGroup
                         row
-                        aria-label="interactionMode"
-                        name="interactionMode"
+                        aria-label="filterMode"
+                        name="filterMode"
                         value={activeFilter}
                         onChange={(event) => changeFilterMode(event.target.value)}
                     >
                         <FormControlLabel
+                            className='complete-filter-button'
                             value={FILTER_TYPES.COMPLETE}
                             control={<Radio />}
                             label="Completed"
                         />
                         <FormControlLabel
+                            className='incomplete-filter-button'
                             value={FILTER_TYPES.INCOMPLETE}
                             control={<Radio />}
                             label="Incompleted"
@@ -721,7 +723,7 @@ export default function ParallelSankeyPlot() {
                     </RadioGroup>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mx: 1, gap: 1 }}>
+                <Box className="filter-function-container" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mx: 1, gap: 1 }}>
                     {activeFilter === FILTER_TYPES.INCOMPLETE && (
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

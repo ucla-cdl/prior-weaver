@@ -7,7 +7,7 @@ import { VariableContext } from '../contexts/VariableContext';
 import { TASK_SETTINGS, ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 
 export default function ModelPanel() {
-    const { taskId, model, space } = useContext(WorkspaceContext)
+    const { taskId, model, space, tutorial } = useContext(WorkspaceContext)
     const { variablesDict, updateVariable, parametersDict, updateParameter, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot } = useContext(VariableContext);
 
     const [isEditingVariable, setIsEditingVariable] = useState(false);

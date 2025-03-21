@@ -11,16 +11,35 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { ELICITATION_SPACE, FEEDBACK_MODE, TASK_SETTINGS, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
+import { SelectionContext, FILTER_TYPES } from '../contexts/SelectionContext';
 import { ParameterPlot } from '../components/ParameterPlot';
 import NavBar from '../components/NavBar';
+import Joyride, { CallBackProps, ACTIONS, EVENTS, STATUS, ORIGIN } from 'react-joyride';
 
 export default function Workspace() {
-    const { taskId, space, feedback, model, setModel, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen } = useContext(WorkspaceContext);
+    const { taskId, space, feedback, model, finishParseModel, leftPanelOpen, setLeftPanelOpen, rightPanelOpen, setRightPanelOpen, tutorial, tutorialSteps, runTutorial, setRunTutorial } = useContext(WorkspaceContext);
     const { handleParseModel, parseVariables, variablesDict, parametersDict, biVariable1, biVariable2 } = useContext(VariableContext);
+    const { setActiveFilter } = useContext(SelectionContext);
+
+    const [stepIndex, setStepIndex] = useState(0);
 
     useEffect(() => {
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
     }, []);
+
+    const handleJoyrideCallback = (data) => {
+        const { action, index, origin, status, type, step } = data;
+
+        if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
+            setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+            if (step.data.pause) {
+                setActiveFilter(FILTER_TYPES.INCOMPLETE);
+            }
+        } else if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+            setStepIndex(0);
+            setRunTutorial(false);
+        }
+    };
 
     return (
         <div className='workspace-div'>
@@ -86,6 +105,16 @@ export default function Workspace() {
                 :
                 (
                     <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+                        <Joyride
+                            steps={tutorialSteps}
+                            continuous={true}
+                            run={tutorial && runTutorial}
+                            stepIndex={stepIndex}
+                            callback={handleJoyrideCallback}
+                            hideCloseButton={true}
+                            disableOverlayClose={true}
+                            spotlightClicks={true}
+                        />
                         <NavBar />
                         <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', position: 'relative' }}>
                             {/* Left Panel */}
@@ -100,7 +129,7 @@ export default function Workspace() {
                             </Box>
 
                             {/* Left Panel Toggle Button - shown when left panel is closed */}
-                            {!leftPanelOpen && (
+                            {/* {!leftPanelOpen && (
                                 <IconButton
                                     sx={{
                                         position: 'fixed',
@@ -119,10 +148,10 @@ export default function Workspace() {
                                 >
                                     <ChevronRightIcon />
                                 </IconButton>
-                            )}
+                            )} */}
 
                             {/* Left Panel Toggle Button - shown when left panel is open */}
-                            {leftPanelOpen && (
+                            {/* {leftPanelOpen && (
                                 <IconButton
                                     sx={{
                                         position: 'absolute',
@@ -141,7 +170,7 @@ export default function Workspace() {
                                 >
                                     <ChevronLeftIcon />
                                 </IconButton>
-                            )}
+                            )} */}
 
                             {/* Center Panel */}
                             {space === ELICITATION_SPACE.OBSERVABLE &&
@@ -149,7 +178,7 @@ export default function Workspace() {
                                     {/* Univariate and Bivariate Plots */}
                                     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row' }}>
                                         <div className="component-container univariate-container">
-                                            <Typography variant="h6" gutterBottom>Univariate Distributions</Typography>
+                                            <Typography variant="h6" gutterBottom>Univariate Histogram</Typography>
                                             <Box sx={{
                                                 boxSizing: 'border-box',
                                                 height: 'calc(100% - 32px)',
@@ -162,7 +191,7 @@ export default function Workspace() {
                                             </Box>
                                         </div>
                                         <div className="component-container bivariate-container">
-                                            <Typography variant="h6" gutterBottom>Bivariate Relationship</Typography>
+                                            <Typography variant="h6" gutterBottom>Bivariate Scatterplot</Typography>
                                             <Box sx={{
                                                 boxSizing: 'border-box',
                                                 height: 'calc(100% - 32px)',
@@ -207,7 +236,7 @@ export default function Workspace() {
                             }
 
                             {/* Right Panel Toggle Button - shown when right panel is open */}
-                            {rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
+                            {/* {rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
                                 <IconButton
                                     sx={{
                                         position: 'absolute',
@@ -226,10 +255,10 @@ export default function Workspace() {
                                 >
                                     <ChevronRightIcon />
                                 </IconButton>
-                            )}
+                            )} */}
 
                             {/* Right Panel Toggle Button - shown when right panel is closed */}
-                            {!rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
+                            {/* {!rightPanelOpen && feedback === FEEDBACK_MODE.FEEDBACK && (
                                 <IconButton
                                     sx={{
                                         position: 'fixed',
@@ -248,7 +277,7 @@ export default function Workspace() {
                                 >
                                     <ChevronLeftIcon />
                                 </IconButton>
-                            )}
+                            )} */}
 
                             {/* Right Panel */}
                             {feedback === FEEDBACK_MODE.FEEDBACK && (

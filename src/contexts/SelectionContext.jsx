@@ -8,7 +8,7 @@ export const SELECTION_SOURCES = {
     BIVARIATE: "bivariate"
 };
 
-const FILTER_TYPES = {
+export const FILTER_TYPES = {
     COMPLETE: "complete",
     INCOMPLETE: "incomplete"
 }
