@@ -1,4 +1,4 @@
-import React, { createContext, useState, useRef, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { TASK_SETTINGS, WorkspaceContext } from './WorkspaceContext';
 import axios from 'axios';
 
@@ -18,22 +18,40 @@ const DEFAULT_PARAMETER_ATTRIBUTES = {
 };
 
 export const VariableProvider = ({ children }) => {
-    const { taskId, model, setModel, finishParseModel, setFinishParseModel } = useContext(WorkspaceContext);
+    const { taskId, model, setModel, finishParseModel, setFinishParseModel, savedEnvironment, tutorial } = useContext(WorkspaceContext);
     const [variablesDict, setVariablesDict] = useState({});
     const [sortableVariables, setSortableVariables] = useState([]);
     const [parametersDict, setParametersDict] = useState({});
     const [biVariable1, setBiVariable1] = useState(null);
     const [biVariable2, setBiVariable2] = useState(null);
-    const [translated, setTranslated] = useState(0);
+    const [translationTimes, setTranslationTimes] = useState(0);
+    const [predictiveCheckResults, setPredictiveCheckResults] = useState([]);
+
+    // Load variables and parameters from saved environment if available
+    useEffect(() => {
+        if (savedEnvironment) {
+            setVariablesDict(savedEnvironment.variablesDict);
+            setParametersDict(savedEnvironment.parametersDict);
+            setTranslationTimes(savedEnvironment.translationTimes);
+            setPredictiveCheckResults(savedEnvironment.predictiveCheckResults);
+
+            console.log("Loaded variables and parameters from saved environment.");
+        }
+    }, [savedEnvironment]);
 
     useEffect(() => {
         setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
+        if (biVariable1 && biVariable2) {
+            setBiVariable1(variablesDict[biVariable1.name]);
+            setBiVariable2(variablesDict[biVariable2.name]);
+        }
     }, [variablesDict]);
 
     useEffect(() => {
         if (finishParseModel) {
-            setBiVariable1(Object.values(variablesDict)[1]);
-            setBiVariable2(Object.values(variablesDict)[0]);
+            const vars = Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum);
+            setBiVariable1(vars.length > 1 ? vars[1] : null);
+            setBiVariable2(vars.length > 0 ? vars[0] : null);
         }
     }, [finishParseModel]);
 
@@ -100,6 +118,11 @@ export const VariableProvider = ({ children }) => {
     }
 
     const parseVariables = () => {
+        if (tutorial) {
+            setFinishParseModel(true);
+            return;
+        };
+
         const variables = TASK_SETTINGS[taskId].variables;
         let index = 0;
         Object.entries(variables).forEach(([type, vars]) => {
@@ -139,6 +162,11 @@ export const VariableProvider = ({ children }) => {
 
     // Parse the model in R code
     const handleParseModel = () => {
+        if (tutorial) {
+            setFinishParseModel(true);
+            return;
+        };
+
         axios.post(window.BACKEND_ADDRESS + '/getStanCodeInfo', {
             code: model
         })
@@ -230,8 +258,10 @@ export const VariableProvider = ({ children }) => {
         addToBiVarPlot,
         sortableVariables,
         setSortableVariables,
-        translated,
-        setTranslated,
+        translationTimes,
+        setTranslationTimes,
+        predictiveCheckResults,
+        setPredictiveCheckResults,
     };
 
     return (

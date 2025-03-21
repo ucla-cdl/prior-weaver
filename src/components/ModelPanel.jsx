@@ -48,7 +48,7 @@ export default function ModelPanel() {
                     <Typography variant="h6" gutterBottom>Variables</Typography>
                     {Object.entries(variablesDict).map(([varName, variable]) => (
                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={varName}>
-                            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{varName}</Typography>
+                            <Typography variant="body1"><b>{varName}</b> ({variable.unitLabel})</Typography>
                             <IconButton onClick={() => {
                                 setEditingVariable(variable);
                                 setIsEditingVariable(true);
@@ -90,6 +90,7 @@ export default function ModelPanel() {
                                     label="Unit Label"
                                     value={editingVariable?.unitLabel || ''}
                                     onChange={(e) => setEditingVariable({ ...editingVariable, unitLabel: e.target.value })}
+                                    disabled
                                 />
                             </Box>
                             <Box>

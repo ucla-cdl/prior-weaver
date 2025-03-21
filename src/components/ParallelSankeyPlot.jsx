@@ -37,17 +37,14 @@ export default function ParallelSankeyPlot() {
     const marginLeft = 50;
     const labelOffset = 20;
 
-    const [connectedPoint, setConnectedPoint] = useState(null);
     const [generatedNum, setGeneratedNum] = useState(5);
-
     const [warningMessage, setWarningMessage] = useState("");
 
     const chartHeightRef = useRef(0);
     const valueAxesRef = useRef(new Map());
     const variableAxesRef = useRef(null);
-    const [draggedItem, setDraggedItem] = useState(null);
 
-    // TODO: selection should be a context variable -> same color encoding for all plots
+    const [draggedItem, setDraggedItem] = useState(null);
     const frozenAxesRef = useRef(new Set());
 
     const SELECTION_STEPS = {
@@ -800,7 +797,7 @@ export default function ParallelSankeyPlot() {
                     strategy={verticalListSortingStrategy}
                 >
                     <Box id='sortable-container' sx={{ width: '100%', minHeight: '40px', display: 'flex', flexDirection: 'row', position: 'relative' }}>
-                        {sortableVariables.map(item => {
+                        {variableAxesRef.current && sortableVariables.map(item => {
                             const axisPosition = variableAxesRef.current(item.name) + marginLeft;
 
                             return (

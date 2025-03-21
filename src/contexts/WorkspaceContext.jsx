@@ -4,12 +4,45 @@ import axios from 'axios';
 export const WorkspaceContext = createContext();
 
 export const TASK_SETTINGS = {
+    "house": {
+        id: "house",
+        name: "House Price Prediction",
+        scenario: "You are a data scientist interested in understanding the factors that influence house prices.\
+                Specifically, you want to assess how house's distance to the nearest metro station, its age, and the number of stores in the area impact its selling price.",
+        defaultModel: `model <- glm(house_price ~ distance_to_metro + house_age + num_stores, family = gaussian(link = "identity"))`,
+        variables: {
+            "predictor": [
+                {
+                    "name": "distance_to_metro",
+                    "unit": "km",
+                    "description": "The distance to the nearest metro station."
+                },
+                {
+                    "name": "house_age",
+                    "unit": "yrs",
+                    "description": "The age of the house."
+                },
+                {
+                    "name": "num_stores",
+                    "unit": "stores",
+                    "description": "The number of stores in the neighborhood."
+                }
+            ],
+            "response": [
+                {
+                    "name": "house_unit_price",
+                    "unit": "$k/m^2",
+                    "description": "The selling price of the house per square meter."
+                }
+            ]
+        }
+    },
     "income": {
         id: "income",
         name: "Income Prediction",
         scenario: "You are a social scientist interested in understanding the factors that influence people's income.\
                 Specifically, you want to assess how people's age and their years of education impact their annualy income in the U.S.",
-        defaultModel: `model <- glm(income ~ age + education, family = binomial(link = "logit"))`,
+        defaultModel: `model <- glm(income ~ age + education, family = gaussian(link = "identity"))`,
         variables: {
             "predictor": [
                 {
@@ -86,45 +119,12 @@ export const TASK_SETTINGS = {
                 }
             ]
         }
-    },
-    "house": {
-        id: "house",
-        name: "House Price Prediction",
-        scenario: "You are a data scientist interested in understanding the factors that influence house prices.\
-                Specifically, you want to assess how house's distance to the nearest metro station, its age, and the number of stores in the area impact its selling price.",
-        defaultModel: `model <- glm(house_price ~ distance_to_metro + house_age + num_stores, family = gaussian(link = "identity"))`,
-        variables: {
-            "predictor": [
-                {
-                    "name": "distance_to_metro",
-                    "unit": "km",
-                    "description": "The distance to the nearest metro station."
-                },
-                {
-                    "name": "house_age",
-                    "unit": "yrs",
-                    "description": "The age of the house."
-                },
-                {
-                    "name": "num_stores",
-                    "unit": "stores",
-                    "description": "The number of stores in the area."
-                }
-            ],
-            "response": [
-                {
-                    "name": "house_price",
-                    "unit": "$k",
-                    "description": "The selling price of the house."
-                }
-            ]
-        }
     }
 }
 
 export const ELICITATION_SPACE = {
-    PARAMETER: "Parameter Space",
-    OBSERVABLE: "Observable Space"
+    OBSERVABLE: "Observable Space",
+    PARAMETER: "Parameter Space"
 }
 
 export const FEEDBACK_MODE = {
@@ -142,24 +142,53 @@ export const WorkspaceProvider = ({ children }) => {
     const [feedback, setFeedback] = useState(null);
     const [finishParseModel, setFinishParseModel] = useState(false);
 
-    // Fetch study settings on component mount
+    const [tutorial, setTutorial] = useState(false);
+    const [savedEnvironment, setSavedEnvironment] = useState(null);
+
     useEffect(() => {
         axios.get(window.BACKEND_ADDRESS + '/study-settings')
             .then(response => {
-                console.log("fetch study settings", response.data);
-                setTaskId(response.data.task_id);
-                setSpace(response.data.elicitation_space);
-                setFeedback(response.data.feedback_mode);
+                console.log("fetching study settings", response.data);
+                if (response.data.tutorial) {
+                    fetch('/tutorial_data.json', {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    })
+                        .then((res) => {
+                            console.log("fetching tutorial data", res);
+                            return res.json()
+                        })
+                        .then((data) => {
+                            console.log("Loaded saved environment:", data);
+                            setTutorial(true);
+                            setSavedEnvironment(data);
+                        })
+                        .catch(error => {
+                            console.log("No saved environment found or error loading it:", error);
+                        });
+                } else {
+                    setTutorial(false);
+                    setTaskId(response.data.task_id);
+                    setModel(TASK_SETTINGS[response.data.task_id].defaultModel);
+                    setSpace(response.data.elicitation_space);
+                    setFeedback(response.data.feedback_mode);
+                }
             })
-            .catch(error => console.error('Error fetching study settings:', error));
+            .catch(error => {
+                console.log("Error fetching study settings:", error);
+            });
     }, []);
 
-    // Set model when task changes
     useEffect(() => {
-        if (taskId) {
-            setModel(TASK_SETTINGS[taskId].defaultModel);
+        if (savedEnvironment) {
+            setTaskId(savedEnvironment.taskId);
+            setModel(savedEnvironment.model);
+            setSpace(savedEnvironment.space);
+            setFeedback(savedEnvironment.feedback);
         }
-    }, [taskId]);
+    }, [savedEnvironment]);
 
     const contextValue = {
         finishParseModel,
@@ -175,7 +204,10 @@ export const WorkspaceProvider = ({ children }) => {
         space,
         setSpace,
         feedback,
-        setFeedback
+        setFeedback,
+        savedEnvironment,
+        tutorial,
+        setTutorial
     };
 
     return (

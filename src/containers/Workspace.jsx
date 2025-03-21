@@ -11,7 +11,6 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { ELICITATION_SPACE, FEEDBACK_MODE, TASK_SETTINGS, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
-import { EntityContext } from '../contexts/EntityContext';
 import { ParameterPlot } from '../components/ParameterPlot';
 import NavBar from '../components/NavBar';
 
@@ -51,7 +50,7 @@ export default function Workspace() {
                                                 {type === "response" ? "Target Variable" : "Predictor Variables"}
                                             </Typography>
                                             {variables.map((variable) => (
-                                                <Typography variant='body1'>
+                                                <Typography key={variable.name} variant='body1'>
                                                     <b>{variable.name} ({variable.unit})</b>: {variable.description}
                                                 </Typography>
                                             ))}

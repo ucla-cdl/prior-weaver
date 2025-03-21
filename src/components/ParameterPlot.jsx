@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useContext } from 'react';
 import * as d3 from 'd3';
 import axios from 'axios';
 import "./ParameterPlot.css";
-import { PriorContext } from '../contexts/PriorContext';
 import { VariableContext } from '../contexts/VariableContext';
 const DISTRIBUTION_TYPES = {
     'uniform': 'Uniform',
@@ -25,7 +24,6 @@ const EDIT_MODES = {
 export const ParameterPlot = ({ parameter }) => {
     const { parametersDict, updateParameter } = useContext(VariableContext);
     const [editMode, setEditMode] = useState(EDIT_MODES.ROULETTE);
-    const [drawnPoints, setDrawnPoints] = useState([]);
     const [showFittedDistribution, setShowFittedDistribution] = useState(false);
     const [isFitting, setIsFitting] = useState(false);
 

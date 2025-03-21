@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, FormControl, Grid2, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
+import { Box, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
@@ -9,12 +9,11 @@ import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContex
 
 export default function ResultsPanel() {
     const { space } = useContext(WorkspaceContext);
-    const { variablesDict, parametersDict, updateParameter, setTranslated } = useContext(VariableContext);
+    const { variablesDict, parametersDict, updateParameter, setTranslationTimes, predictiveCheckResults, setPredictiveCheckResults } = useContext(VariableContext);
     const { entities } = useContext(EntityContext);
 
     const [isTranslating, setIsTranslating] = useState(false);
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
-    const [previousCheckResult, setPreviousCheckResult] = useState(null);
 
     const svgHeight = 250;
     const margin = { top: 10, bottom: 40, left: 40, right: 20, };
@@ -22,6 +21,13 @@ export default function ResultsPanel() {
 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+
+    useEffect(() => {
+        console.log("results panel mounted");
+        if (predictiveCheckResults.length > 0) {
+            plotCheckResults();
+        }
+    }, [predictiveCheckResults]);
 
     const readyToTranslate = () => {
         if (space === ELICITATION_SPACE.OBSERVABLE) {
@@ -89,15 +95,15 @@ export default function ResultsPanel() {
             })
             .then((response) => {
                 console.log("predictive check", response.data);
-                plotCheckResults(response.data.check_results);
+                setPredictiveCheckResults(prev => [...prev, response.data.check_results]);
             })
             .finally(() => {
                 setIsTranslating(false);
-                setTranslated(prev => prev + 1);
+                setTranslationTimes(prev => prev + 1);
             });
     }
 
-    const plotCheckResults = (results) => {
+    const plotCheckResults = () => {
         /**
          * Plot the predictive check for the simulated dataset
          * 
@@ -127,7 +133,8 @@ export default function ResultsPanel() {
         const chart = svg.append('g')
             .attr('transform', `translate(${margin.left},${margin.top})`);
 
-        const simulatedResults = results["simulated_results"];
+        const results = predictiveCheckResults[predictiveCheckResults.length - 1];
+        const previousCheckResult = predictiveCheckResults.length > 1 ? predictiveCheckResults[predictiveCheckResults.length - 2] : null;
         const minX = previousCheckResult ? Math.min(previousCheckResult["min_response_val"], results["min_response_val"]) : results["min_response_val"]
         const maxX = previousCheckResult ? Math.max(previousCheckResult["max_response_val"], results["max_response_val"]) : results["max_response_val"]
         const maxY = previousCheckResult ? Math.max(previousCheckResult["max_density_val"], results["max_density_val"]) : results["max_density_val"]
@@ -180,6 +187,7 @@ export default function ResultsPanel() {
                 .text("Previous");
         }
 
+        const simulatedResults = results["simulated_results"];
         simulatedResults.forEach((simulatedData, index) => {
             // Plot current KDE
             chart.append('path')
@@ -214,9 +222,6 @@ export default function ResultsPanel() {
             .attr('y', chartHeight + labelOffset)
             .attr('text-anchor', 'middle')
             .text(`${responseVar.name} (${responseVar.unitLabel})`);
-
-        // Store current results 
-        setPreviousCheckResult(results);
     }
 
     const updateSelectedPriorDistribution = (paramName, paramKey, newValue) => {

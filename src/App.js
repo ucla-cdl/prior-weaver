@@ -10,7 +10,6 @@ import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { VariableProvider } from "./contexts/VariableContext";
 import { EntityProvider } from "./contexts/EntityContext";
 import { SelectionProvider } from "./contexts/SelectionContext";
-import { PriorProvider } from "./contexts/PriorContext";
 
 function App() {
   return (
@@ -18,7 +17,6 @@ function App() {
       <VariableProvider>
         <EntityProvider>
           <SelectionProvider>
-            <PriorProvider>
               <div className="App">
                 <HashRouter>
                   <Routes>
@@ -30,7 +28,6 @@ function App() {
                   </Routes>
                 </HashRouter>
               </div>
-            </PriorProvider>
           </SelectionProvider>
         </EntityProvider>
       </VariableProvider>

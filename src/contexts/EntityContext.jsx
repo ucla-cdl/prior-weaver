@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { WorkspaceContext } from './WorkspaceContext';
 import { VariableContext } from './VariableContext';
@@ -6,9 +6,9 @@ import { VariableContext } from './VariableContext';
 export const EntityContext = createContext();
 
 export const EntityProvider = ({ children }) => {
-    const { taskId, space, feedback, model, setFinishSpecificationDialogOpen } = useContext(WorkspaceContext);
-    const { variablesDict, parametersDict, translated } = useContext(VariableContext);
-    
+    const { taskId, space, feedback, model, savedEnvironment } = useContext(WorkspaceContext);
+    const { variablesDict, parametersDict, translationTimes, predictiveCheckResults } = useContext(VariableContext);
+
     const [entities, setEntities] = useState({});
     const [entityHistory, setEntityHistory] = useState([{
         timestamp: new Date().toISOString(),
@@ -19,6 +19,17 @@ export const EntityProvider = ({ children }) => {
         previousState: {}
     }]);
     const [currentVersion, setCurrentVersion] = useState(0);
+
+    // Load entities from saved environment if available
+    useEffect(() => {
+        if (savedEnvironment) {
+            setEntities(savedEnvironment.entities);
+            setEntityHistory(savedEnvironment.entityHistory);
+            setCurrentVersion(savedEnvironment.entityHistory.length - 1);
+
+            console.log("Loaded entities from saved environment.");
+        }
+    }, [savedEnvironment]);
 
     // Record the operation of the entity
     const recordEntityOperation = (operation, entitiesAffected, data, description, newEntities) => {
@@ -148,13 +159,13 @@ export const EntityProvider = ({ children }) => {
     // Get the description of the last operation
     const getUndoOperationDescription = () => {
         if (currentVersion <= 0) return "No operation to undo";
-        
+
         const currentOperation = entityHistory[currentVersion];
         const operation = currentOperation.operation;
         if (operation === 'initial') return "Cannot undo initial state";
-        
+
         const count = currentOperation.entitiesAffected.length;
-        
+
         switch (operation) {
             case 'add':
                 return `${currentVersion}: Undo adding ${count} ${count === 1 ? 'entity' : 'entities'}`;
@@ -198,11 +209,12 @@ export const EntityProvider = ({ children }) => {
             space: space,
             feedback: feedback,
             model: model,
-            variables: Object.values(variablesDict),
-            parameters: Object.values(parametersDict),
-            entities: Object.values(entities),
+            variablesDict: variablesDict,
+            parametersDict: parametersDict,
+            entities: entities,
             entityHistory: entityHistory,
-            translationTimes: translated,
+            translationTimes: translationTimes,
+            predictiveCheckResults: predictiveCheckResults,
         };
 
         // Create blob and download
@@ -210,13 +222,11 @@ export const EntityProvider = ({ children }) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'elicitation_results.json';
+        link.download = 'elicitation-results.json';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-
-        setFinishSpecificationDialogOpen(false);
     }
 
     const contextValue = {

@@ -11,10 +11,14 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 export default function NavBar() {
     const { space, feedback } = useContext(WorkspaceContext);
-    const { translated } = useContext(VariableContext);
+    const { translationTimes } = useContext(VariableContext);
     const { currentVersion, entityHistory, finishSpecification, getUndoOperationDescription, getRedoOperationDescription, undoEntityOperation, redoEntityOperation } = useContext(EntityContext);
     const [finishSpecificationDialogOpen, setFinishSpecificationDialogOpen] = useState(false);
 
+    const handleConfirmFinish = () => {
+        finishSpecification();
+        setFinishSpecificationDialogOpen(false);
+    }
 
     return (
         <Box sx={{
@@ -38,30 +42,36 @@ export default function NavBar() {
             </Button>
 
             {/* Middle section - Undo and Redo buttons */}
-            {space === ELICITATION_SPACE.OBSERVABLE && <Box sx={{ display: 'flex', gap: 1 }}>
-                <Tooltip title={getUndoOperationDescription()}>
-                    <Button
-                        variant="outlined"
-                        color="primary"
-                        startIcon={<UndoIcon />}
-                        onClick={undoEntityOperation}
-                        disabled={currentVersion <= 0}
-                    >
-                        Undo
-                    </Button>
-                </Tooltip>
-                <Tooltip title={getRedoOperationDescription()}>
-                    <Button
-                        variant="outlined"
-                        color="primary"
-                        endIcon={<RedoIcon />}
-                        onClick={redoEntityOperation}
-                        disabled={currentVersion >= entityHistory.length - 1}
-                    >
-                        Redo
-                    </Button>
-                </Tooltip>
-            </Box>
+            {space === ELICITATION_SPACE.OBSERVABLE &&
+                <Box sx={{ display: 'flex', gap: 1 }}>
+
+                    <Tooltip title={getUndoOperationDescription()}>
+                        <span>
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<UndoIcon />}
+                                onClick={undoEntityOperation}
+                                disabled={currentVersion <= 0}
+                            >
+                                Undo
+                            </Button>
+                        </span>
+                    </Tooltip>
+                    <Tooltip title={getRedoOperationDescription()}>
+                        <span>
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                endIcon={<RedoIcon />}
+                                onClick={redoEntityOperation}
+                                disabled={currentVersion >= entityHistory.length - 1}
+                            >
+                                Redo
+                            </Button>
+                        </span>
+                    </Tooltip>
+                </Box>
             }
 
             {/* Right section - Finish button */}
@@ -70,7 +80,7 @@ export default function NavBar() {
                 color="success"
                 endIcon={<CheckCircleOutlineIcon />}
                 onClick={() => setFinishSpecificationDialogOpen(true)}
-                disabled={translated === 0}
+                disabled={translationTimes === 0}
             >
                 Finish
             </Button>
@@ -84,7 +94,7 @@ export default function NavBar() {
                 </DialogContent>
                 <DialogActions>
                     <Button color="error" onClick={() => setFinishSpecificationDialogOpen(false)}>Cancel</Button>
-                    <Button color="primary" onClick={finishSpecification}>Finish</Button>
+                    <Button color="primary" onClick={handleConfirmFinish}>Finish</Button>
                 </DialogActions>
             </Dialog>
         </Box>

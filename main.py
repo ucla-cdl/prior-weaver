@@ -64,7 +64,8 @@ class TaskIDs(str, Enum):
 current_study_settings = {
     "task_id": TaskIDs.INCOME,
     "elicitation_space": ElicitationSpace.OBSERVABLE,
-    "feedback_mode": FeedbackMode.FEEDBACK
+    "feedback_mode": FeedbackMode.FEEDBACK,
+    "tutorial": False
 }
 
 
@@ -72,6 +73,7 @@ class AdminUpdateSettings(BaseModel):
     task_id: Optional[str]
     elicitation_space: Optional[ElicitationSpace]
     feedback_mode: Optional[FeedbackMode]
+    tutorial: Optional[bool]
 
 
 @app.get('/study-settings')
@@ -91,6 +93,9 @@ def update_study_settings(settings: AdminUpdateSettings):
 
     if settings.feedback_mode is not None:
         current_study_settings["feedback_mode"] = settings.feedback_mode
+
+    if settings.tutorial is not None:
+        current_study_settings["tutorial"] = settings.tutorial
 
     return current_study_settings
 

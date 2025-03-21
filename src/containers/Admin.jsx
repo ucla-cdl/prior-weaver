@@ -4,7 +4,7 @@ import { TASK_SETTINGS, ELICITATION_SPACE, FEEDBACK_MODE, WorkspaceContext } fro
 import axios from 'axios';
 
 const Admin = () => {
-    const { taskId, space, feedback, setTaskId, setSpace, setFeedback } = useContext(WorkspaceContext);
+    const { taskId, space, feedback, setTaskId, setSpace, setFeedback, tutorial, setTutorial } = useContext(WorkspaceContext);
     const [notification, setNotification] = useState(null);
 
     const handleSaveSettings = () => {
@@ -12,7 +12,8 @@ const Admin = () => {
             .post(window.BACKEND_ADDRESS + '/admin/study-settings', {
                 task_id: taskId,
                 elicitation_space: space,
-                feedback_mode: feedback
+                feedback_mode: feedback,
+                tutorial: tutorial
             })
             .then(() => {
                 setNotification("Settings saved successfully!");
@@ -25,6 +26,50 @@ const Admin = () => {
     return (
         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, p: 3 }}>
             <Typography variant="h4">Study Settings</Typography>
+            {/* Tutorial */}
+            <FormControl
+                sx={{
+                    position: 'relative',
+                    border: '1px solid rgba(0, 0, 0, 0.23)',
+                    borderRadius: '2px',
+                    p: 2
+                }}
+            >
+                <FormLabel id="demo-row-radio-buttons-group-label">Tutorial</FormLabel>
+                <RadioGroup
+                    row
+                    aria-labelledby="demo-row-radio-buttons-group-label"
+                    name="row-radio-buttons-group"
+                    value={tutorial}
+                    onChange={(e) => setTutorial(e.target.value)}
+                >
+                    <FormControlLabel value={true} control={<Radio />} label="Yes" />
+                    <FormControlLabel value={false} control={<Radio />} label="No" />
+                </RadioGroup>
+            </FormControl>
+            {/* Task */}
+            <FormControl
+                sx={{
+                    position: 'relative',
+                    border: '1px solid rgba(0, 0, 0, 0.23)',
+                    borderRadius: '2px',
+                    p: 2
+                }}
+            >
+                <FormLabel id="demo-row-radio-buttons-group-label">Task</FormLabel>
+                <RadioGroup
+                    row
+                    aria-labelledby="demo-row-radio-buttons-group-label"
+                    name="row-radio-buttons-group"
+                    value={taskId}
+                    onChange={(e) => setTaskId(e.target.value)}
+                >
+                    {Object.values(TASK_SETTINGS).map((t) => (
+                        <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} />
+                    ))}
+                </RadioGroup>
+            </FormControl>
+            {/* Conditions */}
             <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: 2 }}>
                 {/* Elicitation Space */}
                 <FormControl
@@ -72,31 +117,7 @@ const Admin = () => {
                 </FormControl>
             </Box>
 
-            {/* Task */}
-            <FormControl
-                sx={{
-                    position: 'relative',
-                    border: '1px solid rgba(0, 0, 0, 0.23)',
-                    borderRadius: '2px',
-                    p: 2
-                }}
-            >
-                <FormLabel id="demo-row-radio-buttons-group-label">Task</FormLabel>
-                <RadioGroup
-                    row
-                    aria-labelledby="demo-row-radio-buttons-group-label"
-                    name="row-radio-buttons-group"
-                    value={taskId}
-                    onChange={(e) => setTaskId(e.target.value)}
-                >
-                    {Object.values(TASK_SETTINGS).map((t) => (
-                        <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} />
-                    ))}
-                </RadioGroup>
-            </FormControl>
-
             <Button variant="contained" color="primary" onClick={handleSaveSettings}>Save Settings</Button>
-
             <Snackbar
                 open={Boolean(notification)}
                 autoHideDuration={3000}
