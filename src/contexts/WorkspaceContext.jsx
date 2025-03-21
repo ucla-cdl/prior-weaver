@@ -279,7 +279,7 @@ export const WorkspaceProvider = ({ children }) => {
                 setFeedback(response.data.feedback_mode);
 
                 if (response.data.example_playground) {
-                    const dataURL = `/example-data-${response.data.elicitation_space === ELICITATION_SPACE.PARAMETER ? "parameter" : "observable"}.json`;
+                    const dataURL = `./example-data-${response.data.elicitation_space === ELICITATION_SPACE.PARAMETER ? "parameter" : "observable"}.json`;
                     fetch(dataURL, {
                         headers: {
                             'Content-Type': 'application/json',

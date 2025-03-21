@@ -7,7 +7,7 @@ import "./VariablePlot.css";
 
 // Define the Variable Component
 export default function VariablePlot({ variable }) {
-    const { entities, addEntities, updateEntities } = useContext(EntityContext);
+    const { entities, addEntities, updateEntities, getEntitiesCntDifference } = useContext(EntityContext);
     const { selectedEntities, selectionGroup1Entities, selectionGroup2Entities, selectionType } = useContext(SelectionContext);
     const svgWidth = 300;
     const svgHeightRef = useRef(0);
@@ -53,13 +53,14 @@ export default function VariablePlot({ variable }) {
         let chartWidth = svgWidth - marginX * 2;
         let chartHeight = svgHeightRef.current - marginTop - marginBottom;
 
-        // Add total entities text in top margin
+        const [currentCnt, difference] = getEntitiesCntDifference(variable.name);
         chart.append("text")
+            .attr("class", "total-entities-text")
             .attr("text-anchor", "middle")
             .attr("transform", `translate(${chartWidth / 2}, ${- marginTop / 2})`)
             .style("font-size", "14px")
-            .style("fill", "#666")
-            .text(`Total Entities: ${Object.values(entities).filter(e => e[variable.name] !== null).length}`);
+            .style("fill", difference > 0 ? "red" : "#666")  
+            .text(`Total Entities: ${currentCnt} ${difference > 0 ? `(-${difference})` : ""}`);
 
         let xScale = d3.scaleLinear()
             .domain([variable.min, variable.max])

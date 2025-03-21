@@ -156,6 +156,21 @@ export const EntityProvider = ({ children }) => {
         setEntities(newEntities);
     }
 
+    // Get how many entities are on each axes
+    const getEntitiesCntDifference = (varName) => {
+        // Count entities for each variable
+        const variableEntityCounts = {};
+        Object.keys(variablesDict).forEach(key => {
+            variableEntityCounts[key] = Object.values(entities).filter(entity => entity[key] !== null).length;
+        });
+
+        // Find variable with most entities
+        const maxCount = Math.max(...Object.values(variableEntityCounts));
+
+        // Return difference between current variable and max
+        return [variableEntityCounts[varName], maxCount - variableEntityCounts[varName]];
+    }
+
     // Get the description of the last operation
     const getUndoOperationDescription = () => {
         if (currentVersion <= 0) return "No operation to undo";
@@ -240,6 +255,7 @@ export const EntityProvider = ({ children }) => {
         combineEntities,
         undoEntityOperation,
         redoEntityOperation,
+        getEntitiesCntDifference,
         getUndoOperationDescription,
         getRedoOperationDescription,
         finishSpecification
