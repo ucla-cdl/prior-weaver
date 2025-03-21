@@ -1,5 +1,5 @@
 {
-  "finishTimeStamp": "2025-03-21T12:52:29.303Z",
+  "finishTimeStamp": "2025-03-21T19:07:27.077Z",
   "taskId": "house",
   "space": "Observable Space",
   "feedback": "With Feedback",
@@ -66874,75 +66874,12 @@
       "num_stores": 13.248400542857755,
       "house_unit_price": 18.405605149551352
     },
-    "1cc4322d-0a88-4805-a870-d5ef29dcc872": {
-      "id": "1cc4322d-0a88-4805-a870-d5ef29dcc872",
-      "distance_to_metro": 2.705213432354433,
-      "house_age": 14.491742741610551,
-      "num_stores": 4.577172186481862,
-      "house_unit_price": 35.704612737960524
-    },
     "994cb74a-d81d-4c8a-a7f9-6db8b2d53760": {
       "id": "994cb74a-d81d-4c8a-a7f9-6db8b2d53760",
       "distance_to_metro": 3.3169905042240453,
       "house_age": 55.70168526167481,
       "num_stores": 8.059601561809256,
       "house_unit_price": 24.050108281930456
-    },
-    "51487963-48c0-4139-8830-0adae900acf0": {
-      "id": "51487963-48c0-4139-8830-0adae900acf0",
-      "distance_to_metro": 1.166301115783488,
-      "house_age": 59.30833481875062,
-      "num_stores": 10.172060615928277,
-      "house_unit_price": 37.699490326173105
-    },
-    "6f5ee720-b5c1-4765-99b3-8ce6a9b3b8f9": {
-      "id": "6f5ee720-b5c1-4765-99b3-8ce6a9b3b8f9",
-      "distance_to_metro": 0.9019691427036558,
-      "house_age": 17.79396516305897,
-      "num_stores": 11.521034335566906,
-      "house_unit_price": 41.26073909491207
-    },
-    "1ff8eadc-b19c-4288-8ad8-55b03abde6ed": {
-      "id": "1ff8eadc-b19c-4288-8ad8-55b03abde6ed",
-      "distance_to_metro": 2.648216888766375,
-      "house_age": 59.875138749995926,
-      "num_stores": 10.430847741076084,
-      "house_unit_price": 39.04082978790841
-    },
-    "60f54c3f-d284-495e-a727-95b6e50968a6": {
-      "id": "60f54c3f-d284-495e-a727-95b6e50968a6",
-      "distance_to_metro": 1.320058940935958,
-      "house_age": 31.21530583854949,
-      "num_stores": 3.813980443023283,
-      "house_unit_price": 39.696342966866965
-    },
-    "fc28a4ab-8a01-477c-9fe6-649ac16b9f42": {
-      "id": "fc28a4ab-8a01-477c-9fe6-649ac16b9f42",
-      "distance_to_metro": 1.6951627530986153,
-      "house_age": 35.31475457633228,
-      "num_stores": 5.862701259096754,
-      "house_unit_price": 45.21604088533618
-    },
-    "426602ba-1dc7-4ccf-8b79-80f155c7954a": {
-      "id": "426602ba-1dc7-4ccf-8b79-80f155c7954a",
-      "distance_to_metro": 1.4229660739753665,
-      "house_age": 56.16446163140094,
-      "num_stores": 8.287770966416666,
-      "house_unit_price": 30.069300870498996
-    },
-    "0fc49130-f57d-4198-a6ae-3264494fcbf8": {
-      "id": "0fc49130-f57d-4198-a6ae-3264494fcbf8",
-      "distance_to_metro": 2.836401944897518,
-      "house_age": 5.332311634789889,
-      "num_stores": 4.080092180548952,
-      "house_unit_price": 27.763107446302932
-    },
-    "8f2e16df-0a28-4ad0-94a2-3d82c31f8206": {
-      "id": "8f2e16df-0a28-4ad0-94a2-3d82c31f8206",
-      "distance_to_metro": 2.406077809483728,
-      "house_age": 61.956610802466834,
-      "num_stores": 12.427502470998009,
-      "house_unit_price": 20.807396452194844
     },
     "31799430-4191-47a2-b51d-57988403e2bf": {
       "distance_to_metro": 4.118958306898329,
@@ -66978,13 +66915,6 @@
       "num_stores": 5.95333508452725,
       "house_unit_price": 25.590648725490095,
       "id": "c42a8061-bc0b-4121-b3d0-e8d43a228499"
-    },
-    "0dc5fc13-6c6c-46c9-9acb-f103679f71ab": {
-      "distance_to_metro": 2.182384114539175,
-      "house_age": 46.51936098279418,
-      "num_stores": 10.073250743954462,
-      "house_unit_price": 22.85566263519869,
-      "id": "0dc5fc13-6c6c-46c9-9acb-f103679f71ab"
     },
     "2f4f9188-39f2-4605-8b07-c06f9f10a93b": {
       "distance_to_metro": 9.747154462799456,
@@ -67027,6 +66957,118 @@
       "house_age": 75.86063983230522,
       "num_stores": 10.329939156066947,
       "house_unit_price": 18.06765891923077
+    },
+    "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c": {
+      "id": "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c",
+      "distance_to_metro": 0.7135384715939519,
+      "house_age": 4.041883634382231,
+      "num_stores": 9.951964434192895,
+      "house_unit_price": null
+    },
+    "d04b078e-26e0-4523-afd8-fb536457de79": {
+      "id": "d04b078e-26e0-4523-afd8-fb536457de79",
+      "distance_to_metro": 1.0179960020257195,
+      "house_age": 24.837927175831275,
+      "num_stores": 11.996101609548681,
+      "house_unit_price": null
+    },
+    "7ca639ca-3b1f-4f81-888e-3c15a2855c90": {
+      "id": "7ca639ca-3b1f-4f81-888e-3c15a2855c90",
+      "distance_to_metro": 1.6045514612156864,
+      "house_age": 11.173991770210812,
+      "num_stores": 11.256227615268513,
+      "house_unit_price": null
+    },
+    "bb960242-5974-4dfb-b689-ad130e1865ad": {
+      "id": "bb960242-5974-4dfb-b689-ad130e1865ad",
+      "distance_to_metro": 2.447093626885497,
+      "house_age": 33.06905713342427,
+      "num_stores": 11.351458157712958,
+      "house_unit_price": null
+    },
+    "bb5dcda9-09d4-43ce-aed5-9fec54343ba9": {
+      "id": "bb5dcda9-09d4-43ce-aed5-9fec54343ba9",
+      "distance_to_metro": 0.8334268157975784,
+      "house_age": 16.56890484321739,
+      "num_stores": 9.70986022028486,
+      "house_unit_price": null
+    },
+    "4c099a8d-3b14-4623-8ed5-e8861a92515b": {
+      "id": "4c099a8d-3b14-4623-8ed5-e8861a92515b",
+      "distance_to_metro": null,
+      "house_age": null,
+      "num_stores": null,
+      "house_unit_price": 38.2070951626021
+    },
+    "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e": {
+      "id": "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e",
+      "distance_to_metro": null,
+      "house_age": null,
+      "num_stores": null,
+      "house_unit_price": 39.06941735594108
+    },
+    "7436e23d-256a-4db9-bc24-1518bddbc95c": {
+      "id": "7436e23d-256a-4db9-bc24-1518bddbc95c",
+      "distance_to_metro": null,
+      "house_age": null,
+      "num_stores": null,
+      "house_unit_price": 45.39369442335527
+    },
+    "e07ad029-7346-4801-8afd-58495c4d481b": {
+      "id": "e07ad029-7346-4801-8afd-58495c4d481b",
+      "distance_to_metro": null,
+      "house_age": null,
+      "num_stores": null,
+      "house_unit_price": 44.977563907997585
+    },
+    "9c450516-3bb9-4fbd-bb8e-05cfe07072db": {
+      "id": "9c450516-3bb9-4fbd-bb8e-05cfe07072db",
+      "distance_to_metro": null,
+      "house_age": null,
+      "num_stores": null,
+      "house_unit_price": 40.13545528067481
+    },
+    "44f93c4c-7688-4c7e-93f3-7e1f03cf3302": {
+      "id": "44f93c4c-7688-4c7e-93f3-7e1f03cf3302",
+      "distance_to_metro": null,
+      "house_age": null,
+      "num_stores": null,
+      "house_unit_price": 31.098269693862992
+    },
+    "a39e257a-e42a-4750-a1fd-90cb739089ac": {
+      "id": "a39e257a-e42a-4750-a1fd-90cb739089ac",
+      "distance_to_metro": null,
+      "house_age": null,
+      "num_stores": null,
+      "house_unit_price": 27.845521129697396
+    },
+    "f7cfd298-f672-4141-a37f-0fa551467cc4": {
+      "id": "f7cfd298-f672-4141-a37f-0fa551467cc4",
+      "distance_to_metro": null,
+      "house_age": null,
+      "num_stores": null,
+      "house_unit_price": 31.241669262300505
+    },
+    "eb406252-cf9d-4cf5-abde-a519fa32e8b2": {
+      "id": "eb406252-cf9d-4cf5-abde-a519fa32e8b2",
+      "distance_to_metro": 1.5168402136415238,
+      "house_age": 16.89551510763861,
+      "num_stores": 12.683209634089277,
+      "house_unit_price": null
+    },
+    "61caefbf-c0fb-4e2d-b307-001731a0f7af": {
+      "id": "61caefbf-c0fb-4e2d-b307-001731a0f7af",
+      "distance_to_metro": 2.5631348217659986,
+      "house_age": 12.996999731131652,
+      "num_stores": 12.639222247180053,
+      "house_unit_price": null
+    },
+    "33861217-8cb0-4098-bced-006b066b0bf0": {
+      "id": "33861217-8cb0-4098-bced-006b066b0bf0",
+      "distance_to_metro": 2.1695717553028495,
+      "house_age": 29.36401271247534,
+      "num_stores": 13.331478580291831,
+      "house_unit_price": null
     }
   },
   "entityHistory": [
@@ -74505,6 +74547,1670 @@
           "house_age": 75.86063983230522,
           "num_stores": 10.329939156066947,
           "house_unit_price": 18.06765891923077
+        }
+      }
+    },
+    {
+      "timestamp": "2025-03-21T19:06:01.976Z",
+      "operation": "delete",
+      "entitiesAffected": [
+        "1cc4322d-0a88-4805-a870-d5ef29dcc872",
+        "51487963-48c0-4139-8830-0adae900acf0",
+        "6f5ee720-b5c1-4765-99b3-8ce6a9b3b8f9",
+        "1ff8eadc-b19c-4288-8ad8-55b03abde6ed",
+        "60f54c3f-d284-495e-a727-95b6e50968a6",
+        "fc28a4ab-8a01-477c-9fe6-649ac16b9f42",
+        "426602ba-1dc7-4ccf-8b79-80f155c7954a",
+        "0fc49130-f57d-4198-a6ae-3264494fcbf8",
+        "8f2e16df-0a28-4ad0-94a2-3d82c31f8206",
+        "0dc5fc13-6c6c-46c9-9acb-f103679f71ab"
+      ],
+      "data": null,
+      "description": "",
+      "previousState": {
+        "33afae39-2c7f-412a-b9fb-8d4114ef71f3": {
+          "id": "33afae39-2c7f-412a-b9fb-8d4114ef71f3",
+          "distance_to_metro": 6.917433327342657,
+          "house_age": 28.211381695253372,
+          "num_stores": 7.183823436950008,
+          "house_unit_price": 9.158977160946632
+        },
+        "2723ce7b-dcea-4b04-8559-feb4a26f4465": {
+          "id": "2723ce7b-dcea-4b04-8559-feb4a26f4465",
+          "distance_to_metro": 7.50141483935561,
+          "house_age": 57.39154261802216,
+          "num_stores": 8.732619519093152,
+          "house_unit_price": 16.394218461906537
+        },
+        "85e16b46-e167-4020-9230-1100c291ce95": {
+          "id": "85e16b46-e167-4020-9230-1100c291ce95",
+          "distance_to_metro": 8.546822470544502,
+          "house_age": 37.2726648822539,
+          "num_stores": 7.880865356972443,
+          "house_unit_price": 10.268137545427738
+        },
+        "b12fb6fc-3f73-4d7d-af93-aa644ddb1526": {
+          "id": "b12fb6fc-3f73-4d7d-af93-aa644ddb1526",
+          "distance_to_metro": 7.417194836695192,
+          "house_age": 39.22357300644956,
+          "num_stores": 3.0683875979364457,
+          "house_unit_price": 15.431855647036748
+        },
+        "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f": {
+          "id": "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f",
+          "distance_to_metro": 8.564796667059543,
+          "house_age": 16.36801318787635,
+          "num_stores": 8.390864652061333,
+          "house_unit_price": 14.835718783860212
+        },
+        "21f8e296-500c-4285-888f-52adf00ab88e": {
+          "id": "21f8e296-500c-4285-888f-52adf00ab88e",
+          "distance_to_metro": 4.402315742896407,
+          "house_age": 22.70373594416168,
+          "num_stores": 6.99643059537114,
+          "house_unit_price": 12.502900839550286
+        },
+        "c7473055-0f43-4a9f-afa0-c052cd89d8aa": {
+          "id": "c7473055-0f43-4a9f-afa0-c052cd89d8aa",
+          "distance_to_metro": 5.025110447523107,
+          "house_age": 28.96668139377647,
+          "num_stores": 13.820422371303234,
+          "house_unit_price": 32.06972785981154
+        },
+        "6a559608-dc76-42b7-bb69-8ba915594a4c": {
+          "id": "6a559608-dc76-42b7-bb69-8ba915594a4c",
+          "distance_to_metro": 5.895048956446018,
+          "house_age": 27.521326231227512,
+          "num_stores": 9.16096054287086,
+          "house_unit_price": 16.68196389772959
+        },
+        "0f86b48b-6eda-4bd8-913d-4cdd43889249": {
+          "id": "0f86b48b-6eda-4bd8-913d-4cdd43889249",
+          "distance_to_metro": 3.423446498656348,
+          "house_age": 65.12974894127528,
+          "num_stores": 11.749598476555253,
+          "house_unit_price": 17.027447555048447
+        },
+        "936f64bc-2fa8-45dc-a7aa-1a43428d826d": {
+          "id": "936f64bc-2fa8-45dc-a7aa-1a43428d826d",
+          "distance_to_metro": 5.446309563382286,
+          "house_age": 69.46069164878647,
+          "num_stores": 13.248400542857755,
+          "house_unit_price": 18.405605149551352
+        },
+        "994cb74a-d81d-4c8a-a7f9-6db8b2d53760": {
+          "id": "994cb74a-d81d-4c8a-a7f9-6db8b2d53760",
+          "distance_to_metro": 3.3169905042240453,
+          "house_age": 55.70168526167481,
+          "num_stores": 8.059601561809256,
+          "house_unit_price": 24.050108281930456
+        },
+        "31799430-4191-47a2-b51d-57988403e2bf": {
+          "distance_to_metro": 4.118958306898329,
+          "house_age": 79.03513337285636,
+          "num_stores": 2.0054803867828883,
+          "house_unit_price": 21.440729033237552,
+          "id": "31799430-4191-47a2-b51d-57988403e2bf"
+        },
+        "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc": {
+          "distance_to_metro": 3.308416708840178,
+          "house_age": 46.15700678056115,
+          "num_stores": 6.072751946816404,
+          "house_unit_price": 23.176605566642287,
+          "id": "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc"
+        },
+        "8f27598e-fb44-4a8d-be10-63022a89cc3e": {
+          "distance_to_metro": 4.7536029319084605,
+          "house_age": 80.70136276060806,
+          "num_stores": 6.869999568594843,
+          "house_unit_price": 20.6022139181633,
+          "id": "8f27598e-fb44-4a8d-be10-63022a89cc3e"
+        },
+        "d7c0223d-8019-4753-b474-9cf0aa6da1a6": {
+          "distance_to_metro": 3.266661727326885,
+          "house_age": 73.09576088671254,
+          "num_stores": 1.6318085174391395,
+          "house_unit_price": 24.604534748755636,
+          "id": "d7c0223d-8019-4753-b474-9cf0aa6da1a6"
+        },
+        "c42a8061-bc0b-4121-b3d0-e8d43a228499": {
+          "distance_to_metro": 6.27474970780442,
+          "house_age": 45.988155630589674,
+          "num_stores": 5.95333508452725,
+          "house_unit_price": 25.590648725490095,
+          "id": "c42a8061-bc0b-4121-b3d0-e8d43a228499"
+        },
+        "2f4f9188-39f2-4605-8b07-c06f9f10a93b": {
+          "distance_to_metro": 9.747154462799456,
+          "house_age": 43.79735900071292,
+          "num_stores": 7.866925750303296,
+          "house_unit_price": 22.413507670731462,
+          "id": "2f4f9188-39f2-4605-8b07-c06f9f10a93b"
+        },
+        "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd": {
+          "id": "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd",
+          "distance_to_metro": 8.523538206728553,
+          "house_age": 90.77637326899816,
+          "num_stores": 2.0466883197372923,
+          "house_unit_price": 11.261639722009392
+        },
+        "53af583e-1ed3-45fa-b4ef-29feeb95e926": {
+          "id": "53af583e-1ed3-45fa-b4ef-29feeb95e926",
+          "distance_to_metro": 4.613606830325909,
+          "house_age": 11.080642379291135,
+          "num_stores": 4.939506512379058,
+          "house_unit_price": 24.528541693982785
+        },
+        "bb96415b-fa8f-4e25-b919-25b6c9f740f0": {
+          "id": "bb96415b-fa8f-4e25-b919-25b6c9f740f0",
+          "distance_to_metro": 6.095945974926524,
+          "house_age": 38.72611091072736,
+          "num_stores": 1.165610365142296,
+          "house_unit_price": 32.149507652828525
+        },
+        "65467735-1646-4f94-a3be-3309d3f13539": {
+          "id": "65467735-1646-4f94-a3be-3309d3f13539",
+          "distance_to_metro": 8.807581704069305,
+          "house_age": 39.5140490257394,
+          "num_stores": 13.239535429901597,
+          "house_unit_price": 33.917122314321844
+        },
+        "38ead28f-7749-4db4-a5d9-aa4c36fab3b0": {
+          "id": "38ead28f-7749-4db4-a5d9-aa4c36fab3b0",
+          "distance_to_metro": 4.079500789331825,
+          "house_age": 75.86063983230522,
+          "num_stores": 10.329939156066947,
+          "house_unit_price": 18.06765891923077
+        }
+      }
+    },
+    {
+      "timestamp": "2025-03-21T19:06:27.161Z",
+      "operation": "add",
+      "entitiesAffected": [
+        "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c",
+        "d04b078e-26e0-4523-afd8-fb536457de79",
+        "7ca639ca-3b1f-4f81-888e-3c15a2855c90",
+        "bb960242-5974-4dfb-b689-ad130e1865ad",
+        "bb5dcda9-09d4-43ce-aed5-9fec54343ba9"
+      ],
+      "data": [
+        {
+          "distance_to_metro": 0.7135384715939519,
+          "house_age": 4.041883634382231,
+          "num_stores": 9.951964434192895
+        },
+        {
+          "distance_to_metro": 1.0179960020257195,
+          "house_age": 24.837927175831275,
+          "num_stores": 11.996101609548681
+        },
+        {
+          "distance_to_metro": 1.6045514612156864,
+          "house_age": 11.173991770210812,
+          "num_stores": 11.256227615268513
+        },
+        {
+          "distance_to_metro": 2.447093626885497,
+          "house_age": 33.06905713342427,
+          "num_stores": 11.351458157712958
+        },
+        {
+          "distance_to_metro": 0.8334268157975784,
+          "house_age": 16.56890484321739,
+          "num_stores": 9.70986022028486
+        }
+      ],
+      "description": "",
+      "previousState": {
+        "33afae39-2c7f-412a-b9fb-8d4114ef71f3": {
+          "id": "33afae39-2c7f-412a-b9fb-8d4114ef71f3",
+          "distance_to_metro": 6.917433327342657,
+          "house_age": 28.211381695253372,
+          "num_stores": 7.183823436950008,
+          "house_unit_price": 9.158977160946632
+        },
+        "2723ce7b-dcea-4b04-8559-feb4a26f4465": {
+          "id": "2723ce7b-dcea-4b04-8559-feb4a26f4465",
+          "distance_to_metro": 7.50141483935561,
+          "house_age": 57.39154261802216,
+          "num_stores": 8.732619519093152,
+          "house_unit_price": 16.394218461906537
+        },
+        "85e16b46-e167-4020-9230-1100c291ce95": {
+          "id": "85e16b46-e167-4020-9230-1100c291ce95",
+          "distance_to_metro": 8.546822470544502,
+          "house_age": 37.2726648822539,
+          "num_stores": 7.880865356972443,
+          "house_unit_price": 10.268137545427738
+        },
+        "b12fb6fc-3f73-4d7d-af93-aa644ddb1526": {
+          "id": "b12fb6fc-3f73-4d7d-af93-aa644ddb1526",
+          "distance_to_metro": 7.417194836695192,
+          "house_age": 39.22357300644956,
+          "num_stores": 3.0683875979364457,
+          "house_unit_price": 15.431855647036748
+        },
+        "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f": {
+          "id": "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f",
+          "distance_to_metro": 8.564796667059543,
+          "house_age": 16.36801318787635,
+          "num_stores": 8.390864652061333,
+          "house_unit_price": 14.835718783860212
+        },
+        "21f8e296-500c-4285-888f-52adf00ab88e": {
+          "id": "21f8e296-500c-4285-888f-52adf00ab88e",
+          "distance_to_metro": 4.402315742896407,
+          "house_age": 22.70373594416168,
+          "num_stores": 6.99643059537114,
+          "house_unit_price": 12.502900839550286
+        },
+        "c7473055-0f43-4a9f-afa0-c052cd89d8aa": {
+          "id": "c7473055-0f43-4a9f-afa0-c052cd89d8aa",
+          "distance_to_metro": 5.025110447523107,
+          "house_age": 28.96668139377647,
+          "num_stores": 13.820422371303234,
+          "house_unit_price": 32.06972785981154
+        },
+        "6a559608-dc76-42b7-bb69-8ba915594a4c": {
+          "id": "6a559608-dc76-42b7-bb69-8ba915594a4c",
+          "distance_to_metro": 5.895048956446018,
+          "house_age": 27.521326231227512,
+          "num_stores": 9.16096054287086,
+          "house_unit_price": 16.68196389772959
+        },
+        "0f86b48b-6eda-4bd8-913d-4cdd43889249": {
+          "id": "0f86b48b-6eda-4bd8-913d-4cdd43889249",
+          "distance_to_metro": 3.423446498656348,
+          "house_age": 65.12974894127528,
+          "num_stores": 11.749598476555253,
+          "house_unit_price": 17.027447555048447
+        },
+        "936f64bc-2fa8-45dc-a7aa-1a43428d826d": {
+          "id": "936f64bc-2fa8-45dc-a7aa-1a43428d826d",
+          "distance_to_metro": 5.446309563382286,
+          "house_age": 69.46069164878647,
+          "num_stores": 13.248400542857755,
+          "house_unit_price": 18.405605149551352
+        },
+        "994cb74a-d81d-4c8a-a7f9-6db8b2d53760": {
+          "id": "994cb74a-d81d-4c8a-a7f9-6db8b2d53760",
+          "distance_to_metro": 3.3169905042240453,
+          "house_age": 55.70168526167481,
+          "num_stores": 8.059601561809256,
+          "house_unit_price": 24.050108281930456
+        },
+        "31799430-4191-47a2-b51d-57988403e2bf": {
+          "distance_to_metro": 4.118958306898329,
+          "house_age": 79.03513337285636,
+          "num_stores": 2.0054803867828883,
+          "house_unit_price": 21.440729033237552,
+          "id": "31799430-4191-47a2-b51d-57988403e2bf"
+        },
+        "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc": {
+          "distance_to_metro": 3.308416708840178,
+          "house_age": 46.15700678056115,
+          "num_stores": 6.072751946816404,
+          "house_unit_price": 23.176605566642287,
+          "id": "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc"
+        },
+        "8f27598e-fb44-4a8d-be10-63022a89cc3e": {
+          "distance_to_metro": 4.7536029319084605,
+          "house_age": 80.70136276060806,
+          "num_stores": 6.869999568594843,
+          "house_unit_price": 20.6022139181633,
+          "id": "8f27598e-fb44-4a8d-be10-63022a89cc3e"
+        },
+        "d7c0223d-8019-4753-b474-9cf0aa6da1a6": {
+          "distance_to_metro": 3.266661727326885,
+          "house_age": 73.09576088671254,
+          "num_stores": 1.6318085174391395,
+          "house_unit_price": 24.604534748755636,
+          "id": "d7c0223d-8019-4753-b474-9cf0aa6da1a6"
+        },
+        "c42a8061-bc0b-4121-b3d0-e8d43a228499": {
+          "distance_to_metro": 6.27474970780442,
+          "house_age": 45.988155630589674,
+          "num_stores": 5.95333508452725,
+          "house_unit_price": 25.590648725490095,
+          "id": "c42a8061-bc0b-4121-b3d0-e8d43a228499"
+        },
+        "2f4f9188-39f2-4605-8b07-c06f9f10a93b": {
+          "distance_to_metro": 9.747154462799456,
+          "house_age": 43.79735900071292,
+          "num_stores": 7.866925750303296,
+          "house_unit_price": 22.413507670731462,
+          "id": "2f4f9188-39f2-4605-8b07-c06f9f10a93b"
+        },
+        "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd": {
+          "id": "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd",
+          "distance_to_metro": 8.523538206728553,
+          "house_age": 90.77637326899816,
+          "num_stores": 2.0466883197372923,
+          "house_unit_price": 11.261639722009392
+        },
+        "53af583e-1ed3-45fa-b4ef-29feeb95e926": {
+          "id": "53af583e-1ed3-45fa-b4ef-29feeb95e926",
+          "distance_to_metro": 4.613606830325909,
+          "house_age": 11.080642379291135,
+          "num_stores": 4.939506512379058,
+          "house_unit_price": 24.528541693982785
+        },
+        "bb96415b-fa8f-4e25-b919-25b6c9f740f0": {
+          "id": "bb96415b-fa8f-4e25-b919-25b6c9f740f0",
+          "distance_to_metro": 6.095945974926524,
+          "house_age": 38.72611091072736,
+          "num_stores": 1.165610365142296,
+          "house_unit_price": 32.149507652828525
+        },
+        "65467735-1646-4f94-a3be-3309d3f13539": {
+          "id": "65467735-1646-4f94-a3be-3309d3f13539",
+          "distance_to_metro": 8.807581704069305,
+          "house_age": 39.5140490257394,
+          "num_stores": 13.239535429901597,
+          "house_unit_price": 33.917122314321844
+        },
+        "38ead28f-7749-4db4-a5d9-aa4c36fab3b0": {
+          "id": "38ead28f-7749-4db4-a5d9-aa4c36fab3b0",
+          "distance_to_metro": 4.079500789331825,
+          "house_age": 75.86063983230522,
+          "num_stores": 10.329939156066947,
+          "house_unit_price": 18.06765891923077
+        },
+        "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c": {
+          "id": "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c",
+          "distance_to_metro": 0.7135384715939519,
+          "house_age": 4.041883634382231,
+          "num_stores": 9.951964434192895,
+          "house_unit_price": null
+        },
+        "d04b078e-26e0-4523-afd8-fb536457de79": {
+          "id": "d04b078e-26e0-4523-afd8-fb536457de79",
+          "distance_to_metro": 1.0179960020257195,
+          "house_age": 24.837927175831275,
+          "num_stores": 11.996101609548681,
+          "house_unit_price": null
+        },
+        "7ca639ca-3b1f-4f81-888e-3c15a2855c90": {
+          "id": "7ca639ca-3b1f-4f81-888e-3c15a2855c90",
+          "distance_to_metro": 1.6045514612156864,
+          "house_age": 11.173991770210812,
+          "num_stores": 11.256227615268513,
+          "house_unit_price": null
+        },
+        "bb960242-5974-4dfb-b689-ad130e1865ad": {
+          "id": "bb960242-5974-4dfb-b689-ad130e1865ad",
+          "distance_to_metro": 2.447093626885497,
+          "house_age": 33.06905713342427,
+          "num_stores": 11.351458157712958,
+          "house_unit_price": null
+        },
+        "bb5dcda9-09d4-43ce-aed5-9fec54343ba9": {
+          "id": "bb5dcda9-09d4-43ce-aed5-9fec54343ba9",
+          "distance_to_metro": 0.8334268157975784,
+          "house_age": 16.56890484321739,
+          "num_stores": 9.70986022028486,
+          "house_unit_price": null
+        }
+      }
+    },
+    {
+      "timestamp": "2025-03-21T19:06:36.395Z",
+      "operation": "add",
+      "entitiesAffected": [
+        "4c099a8d-3b14-4623-8ed5-e8861a92515b",
+        "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e"
+      ],
+      "data": [
+        {
+          "house_unit_price": 38.2070951626021
+        },
+        {
+          "house_unit_price": 39.06941735594108
+        }
+      ],
+      "description": "",
+      "previousState": {
+        "33afae39-2c7f-412a-b9fb-8d4114ef71f3": {
+          "id": "33afae39-2c7f-412a-b9fb-8d4114ef71f3",
+          "distance_to_metro": 6.917433327342657,
+          "house_age": 28.211381695253372,
+          "num_stores": 7.183823436950008,
+          "house_unit_price": 9.158977160946632
+        },
+        "2723ce7b-dcea-4b04-8559-feb4a26f4465": {
+          "id": "2723ce7b-dcea-4b04-8559-feb4a26f4465",
+          "distance_to_metro": 7.50141483935561,
+          "house_age": 57.39154261802216,
+          "num_stores": 8.732619519093152,
+          "house_unit_price": 16.394218461906537
+        },
+        "85e16b46-e167-4020-9230-1100c291ce95": {
+          "id": "85e16b46-e167-4020-9230-1100c291ce95",
+          "distance_to_metro": 8.546822470544502,
+          "house_age": 37.2726648822539,
+          "num_stores": 7.880865356972443,
+          "house_unit_price": 10.268137545427738
+        },
+        "b12fb6fc-3f73-4d7d-af93-aa644ddb1526": {
+          "id": "b12fb6fc-3f73-4d7d-af93-aa644ddb1526",
+          "distance_to_metro": 7.417194836695192,
+          "house_age": 39.22357300644956,
+          "num_stores": 3.0683875979364457,
+          "house_unit_price": 15.431855647036748
+        },
+        "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f": {
+          "id": "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f",
+          "distance_to_metro": 8.564796667059543,
+          "house_age": 16.36801318787635,
+          "num_stores": 8.390864652061333,
+          "house_unit_price": 14.835718783860212
+        },
+        "21f8e296-500c-4285-888f-52adf00ab88e": {
+          "id": "21f8e296-500c-4285-888f-52adf00ab88e",
+          "distance_to_metro": 4.402315742896407,
+          "house_age": 22.70373594416168,
+          "num_stores": 6.99643059537114,
+          "house_unit_price": 12.502900839550286
+        },
+        "c7473055-0f43-4a9f-afa0-c052cd89d8aa": {
+          "id": "c7473055-0f43-4a9f-afa0-c052cd89d8aa",
+          "distance_to_metro": 5.025110447523107,
+          "house_age": 28.96668139377647,
+          "num_stores": 13.820422371303234,
+          "house_unit_price": 32.06972785981154
+        },
+        "6a559608-dc76-42b7-bb69-8ba915594a4c": {
+          "id": "6a559608-dc76-42b7-bb69-8ba915594a4c",
+          "distance_to_metro": 5.895048956446018,
+          "house_age": 27.521326231227512,
+          "num_stores": 9.16096054287086,
+          "house_unit_price": 16.68196389772959
+        },
+        "0f86b48b-6eda-4bd8-913d-4cdd43889249": {
+          "id": "0f86b48b-6eda-4bd8-913d-4cdd43889249",
+          "distance_to_metro": 3.423446498656348,
+          "house_age": 65.12974894127528,
+          "num_stores": 11.749598476555253,
+          "house_unit_price": 17.027447555048447
+        },
+        "936f64bc-2fa8-45dc-a7aa-1a43428d826d": {
+          "id": "936f64bc-2fa8-45dc-a7aa-1a43428d826d",
+          "distance_to_metro": 5.446309563382286,
+          "house_age": 69.46069164878647,
+          "num_stores": 13.248400542857755,
+          "house_unit_price": 18.405605149551352
+        },
+        "994cb74a-d81d-4c8a-a7f9-6db8b2d53760": {
+          "id": "994cb74a-d81d-4c8a-a7f9-6db8b2d53760",
+          "distance_to_metro": 3.3169905042240453,
+          "house_age": 55.70168526167481,
+          "num_stores": 8.059601561809256,
+          "house_unit_price": 24.050108281930456
+        },
+        "31799430-4191-47a2-b51d-57988403e2bf": {
+          "distance_to_metro": 4.118958306898329,
+          "house_age": 79.03513337285636,
+          "num_stores": 2.0054803867828883,
+          "house_unit_price": 21.440729033237552,
+          "id": "31799430-4191-47a2-b51d-57988403e2bf"
+        },
+        "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc": {
+          "distance_to_metro": 3.308416708840178,
+          "house_age": 46.15700678056115,
+          "num_stores": 6.072751946816404,
+          "house_unit_price": 23.176605566642287,
+          "id": "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc"
+        },
+        "8f27598e-fb44-4a8d-be10-63022a89cc3e": {
+          "distance_to_metro": 4.7536029319084605,
+          "house_age": 80.70136276060806,
+          "num_stores": 6.869999568594843,
+          "house_unit_price": 20.6022139181633,
+          "id": "8f27598e-fb44-4a8d-be10-63022a89cc3e"
+        },
+        "d7c0223d-8019-4753-b474-9cf0aa6da1a6": {
+          "distance_to_metro": 3.266661727326885,
+          "house_age": 73.09576088671254,
+          "num_stores": 1.6318085174391395,
+          "house_unit_price": 24.604534748755636,
+          "id": "d7c0223d-8019-4753-b474-9cf0aa6da1a6"
+        },
+        "c42a8061-bc0b-4121-b3d0-e8d43a228499": {
+          "distance_to_metro": 6.27474970780442,
+          "house_age": 45.988155630589674,
+          "num_stores": 5.95333508452725,
+          "house_unit_price": 25.590648725490095,
+          "id": "c42a8061-bc0b-4121-b3d0-e8d43a228499"
+        },
+        "2f4f9188-39f2-4605-8b07-c06f9f10a93b": {
+          "distance_to_metro": 9.747154462799456,
+          "house_age": 43.79735900071292,
+          "num_stores": 7.866925750303296,
+          "house_unit_price": 22.413507670731462,
+          "id": "2f4f9188-39f2-4605-8b07-c06f9f10a93b"
+        },
+        "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd": {
+          "id": "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd",
+          "distance_to_metro": 8.523538206728553,
+          "house_age": 90.77637326899816,
+          "num_stores": 2.0466883197372923,
+          "house_unit_price": 11.261639722009392
+        },
+        "53af583e-1ed3-45fa-b4ef-29feeb95e926": {
+          "id": "53af583e-1ed3-45fa-b4ef-29feeb95e926",
+          "distance_to_metro": 4.613606830325909,
+          "house_age": 11.080642379291135,
+          "num_stores": 4.939506512379058,
+          "house_unit_price": 24.528541693982785
+        },
+        "bb96415b-fa8f-4e25-b919-25b6c9f740f0": {
+          "id": "bb96415b-fa8f-4e25-b919-25b6c9f740f0",
+          "distance_to_metro": 6.095945974926524,
+          "house_age": 38.72611091072736,
+          "num_stores": 1.165610365142296,
+          "house_unit_price": 32.149507652828525
+        },
+        "65467735-1646-4f94-a3be-3309d3f13539": {
+          "id": "65467735-1646-4f94-a3be-3309d3f13539",
+          "distance_to_metro": 8.807581704069305,
+          "house_age": 39.5140490257394,
+          "num_stores": 13.239535429901597,
+          "house_unit_price": 33.917122314321844
+        },
+        "38ead28f-7749-4db4-a5d9-aa4c36fab3b0": {
+          "id": "38ead28f-7749-4db4-a5d9-aa4c36fab3b0",
+          "distance_to_metro": 4.079500789331825,
+          "house_age": 75.86063983230522,
+          "num_stores": 10.329939156066947,
+          "house_unit_price": 18.06765891923077
+        },
+        "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c": {
+          "id": "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c",
+          "distance_to_metro": 0.7135384715939519,
+          "house_age": 4.041883634382231,
+          "num_stores": 9.951964434192895,
+          "house_unit_price": null
+        },
+        "d04b078e-26e0-4523-afd8-fb536457de79": {
+          "id": "d04b078e-26e0-4523-afd8-fb536457de79",
+          "distance_to_metro": 1.0179960020257195,
+          "house_age": 24.837927175831275,
+          "num_stores": 11.996101609548681,
+          "house_unit_price": null
+        },
+        "7ca639ca-3b1f-4f81-888e-3c15a2855c90": {
+          "id": "7ca639ca-3b1f-4f81-888e-3c15a2855c90",
+          "distance_to_metro": 1.6045514612156864,
+          "house_age": 11.173991770210812,
+          "num_stores": 11.256227615268513,
+          "house_unit_price": null
+        },
+        "bb960242-5974-4dfb-b689-ad130e1865ad": {
+          "id": "bb960242-5974-4dfb-b689-ad130e1865ad",
+          "distance_to_metro": 2.447093626885497,
+          "house_age": 33.06905713342427,
+          "num_stores": 11.351458157712958,
+          "house_unit_price": null
+        },
+        "bb5dcda9-09d4-43ce-aed5-9fec54343ba9": {
+          "id": "bb5dcda9-09d4-43ce-aed5-9fec54343ba9",
+          "distance_to_metro": 0.8334268157975784,
+          "house_age": 16.56890484321739,
+          "num_stores": 9.70986022028486,
+          "house_unit_price": null
+        },
+        "4c099a8d-3b14-4623-8ed5-e8861a92515b": {
+          "id": "4c099a8d-3b14-4623-8ed5-e8861a92515b",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 38.2070951626021
+        },
+        "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e": {
+          "id": "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 39.06941735594108
+        }
+      }
+    },
+    {
+      "timestamp": "2025-03-21T19:06:37.111Z",
+      "operation": "add",
+      "entitiesAffected": [
+        "7436e23d-256a-4db9-bc24-1518bddbc95c",
+        "e07ad029-7346-4801-8afd-58495c4d481b"
+      ],
+      "data": [
+        {
+          "house_unit_price": 45.39369442335527
+        },
+        {
+          "house_unit_price": 44.977563907997585
+        }
+      ],
+      "description": "",
+      "previousState": {
+        "33afae39-2c7f-412a-b9fb-8d4114ef71f3": {
+          "id": "33afae39-2c7f-412a-b9fb-8d4114ef71f3",
+          "distance_to_metro": 6.917433327342657,
+          "house_age": 28.211381695253372,
+          "num_stores": 7.183823436950008,
+          "house_unit_price": 9.158977160946632
+        },
+        "2723ce7b-dcea-4b04-8559-feb4a26f4465": {
+          "id": "2723ce7b-dcea-4b04-8559-feb4a26f4465",
+          "distance_to_metro": 7.50141483935561,
+          "house_age": 57.39154261802216,
+          "num_stores": 8.732619519093152,
+          "house_unit_price": 16.394218461906537
+        },
+        "85e16b46-e167-4020-9230-1100c291ce95": {
+          "id": "85e16b46-e167-4020-9230-1100c291ce95",
+          "distance_to_metro": 8.546822470544502,
+          "house_age": 37.2726648822539,
+          "num_stores": 7.880865356972443,
+          "house_unit_price": 10.268137545427738
+        },
+        "b12fb6fc-3f73-4d7d-af93-aa644ddb1526": {
+          "id": "b12fb6fc-3f73-4d7d-af93-aa644ddb1526",
+          "distance_to_metro": 7.417194836695192,
+          "house_age": 39.22357300644956,
+          "num_stores": 3.0683875979364457,
+          "house_unit_price": 15.431855647036748
+        },
+        "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f": {
+          "id": "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f",
+          "distance_to_metro": 8.564796667059543,
+          "house_age": 16.36801318787635,
+          "num_stores": 8.390864652061333,
+          "house_unit_price": 14.835718783860212
+        },
+        "21f8e296-500c-4285-888f-52adf00ab88e": {
+          "id": "21f8e296-500c-4285-888f-52adf00ab88e",
+          "distance_to_metro": 4.402315742896407,
+          "house_age": 22.70373594416168,
+          "num_stores": 6.99643059537114,
+          "house_unit_price": 12.502900839550286
+        },
+        "c7473055-0f43-4a9f-afa0-c052cd89d8aa": {
+          "id": "c7473055-0f43-4a9f-afa0-c052cd89d8aa",
+          "distance_to_metro": 5.025110447523107,
+          "house_age": 28.96668139377647,
+          "num_stores": 13.820422371303234,
+          "house_unit_price": 32.06972785981154
+        },
+        "6a559608-dc76-42b7-bb69-8ba915594a4c": {
+          "id": "6a559608-dc76-42b7-bb69-8ba915594a4c",
+          "distance_to_metro": 5.895048956446018,
+          "house_age": 27.521326231227512,
+          "num_stores": 9.16096054287086,
+          "house_unit_price": 16.68196389772959
+        },
+        "0f86b48b-6eda-4bd8-913d-4cdd43889249": {
+          "id": "0f86b48b-6eda-4bd8-913d-4cdd43889249",
+          "distance_to_metro": 3.423446498656348,
+          "house_age": 65.12974894127528,
+          "num_stores": 11.749598476555253,
+          "house_unit_price": 17.027447555048447
+        },
+        "936f64bc-2fa8-45dc-a7aa-1a43428d826d": {
+          "id": "936f64bc-2fa8-45dc-a7aa-1a43428d826d",
+          "distance_to_metro": 5.446309563382286,
+          "house_age": 69.46069164878647,
+          "num_stores": 13.248400542857755,
+          "house_unit_price": 18.405605149551352
+        },
+        "994cb74a-d81d-4c8a-a7f9-6db8b2d53760": {
+          "id": "994cb74a-d81d-4c8a-a7f9-6db8b2d53760",
+          "distance_to_metro": 3.3169905042240453,
+          "house_age": 55.70168526167481,
+          "num_stores": 8.059601561809256,
+          "house_unit_price": 24.050108281930456
+        },
+        "31799430-4191-47a2-b51d-57988403e2bf": {
+          "distance_to_metro": 4.118958306898329,
+          "house_age": 79.03513337285636,
+          "num_stores": 2.0054803867828883,
+          "house_unit_price": 21.440729033237552,
+          "id": "31799430-4191-47a2-b51d-57988403e2bf"
+        },
+        "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc": {
+          "distance_to_metro": 3.308416708840178,
+          "house_age": 46.15700678056115,
+          "num_stores": 6.072751946816404,
+          "house_unit_price": 23.176605566642287,
+          "id": "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc"
+        },
+        "8f27598e-fb44-4a8d-be10-63022a89cc3e": {
+          "distance_to_metro": 4.7536029319084605,
+          "house_age": 80.70136276060806,
+          "num_stores": 6.869999568594843,
+          "house_unit_price": 20.6022139181633,
+          "id": "8f27598e-fb44-4a8d-be10-63022a89cc3e"
+        },
+        "d7c0223d-8019-4753-b474-9cf0aa6da1a6": {
+          "distance_to_metro": 3.266661727326885,
+          "house_age": 73.09576088671254,
+          "num_stores": 1.6318085174391395,
+          "house_unit_price": 24.604534748755636,
+          "id": "d7c0223d-8019-4753-b474-9cf0aa6da1a6"
+        },
+        "c42a8061-bc0b-4121-b3d0-e8d43a228499": {
+          "distance_to_metro": 6.27474970780442,
+          "house_age": 45.988155630589674,
+          "num_stores": 5.95333508452725,
+          "house_unit_price": 25.590648725490095,
+          "id": "c42a8061-bc0b-4121-b3d0-e8d43a228499"
+        },
+        "2f4f9188-39f2-4605-8b07-c06f9f10a93b": {
+          "distance_to_metro": 9.747154462799456,
+          "house_age": 43.79735900071292,
+          "num_stores": 7.866925750303296,
+          "house_unit_price": 22.413507670731462,
+          "id": "2f4f9188-39f2-4605-8b07-c06f9f10a93b"
+        },
+        "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd": {
+          "id": "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd",
+          "distance_to_metro": 8.523538206728553,
+          "house_age": 90.77637326899816,
+          "num_stores": 2.0466883197372923,
+          "house_unit_price": 11.261639722009392
+        },
+        "53af583e-1ed3-45fa-b4ef-29feeb95e926": {
+          "id": "53af583e-1ed3-45fa-b4ef-29feeb95e926",
+          "distance_to_metro": 4.613606830325909,
+          "house_age": 11.080642379291135,
+          "num_stores": 4.939506512379058,
+          "house_unit_price": 24.528541693982785
+        },
+        "bb96415b-fa8f-4e25-b919-25b6c9f740f0": {
+          "id": "bb96415b-fa8f-4e25-b919-25b6c9f740f0",
+          "distance_to_metro": 6.095945974926524,
+          "house_age": 38.72611091072736,
+          "num_stores": 1.165610365142296,
+          "house_unit_price": 32.149507652828525
+        },
+        "65467735-1646-4f94-a3be-3309d3f13539": {
+          "id": "65467735-1646-4f94-a3be-3309d3f13539",
+          "distance_to_metro": 8.807581704069305,
+          "house_age": 39.5140490257394,
+          "num_stores": 13.239535429901597,
+          "house_unit_price": 33.917122314321844
+        },
+        "38ead28f-7749-4db4-a5d9-aa4c36fab3b0": {
+          "id": "38ead28f-7749-4db4-a5d9-aa4c36fab3b0",
+          "distance_to_metro": 4.079500789331825,
+          "house_age": 75.86063983230522,
+          "num_stores": 10.329939156066947,
+          "house_unit_price": 18.06765891923077
+        },
+        "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c": {
+          "id": "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c",
+          "distance_to_metro": 0.7135384715939519,
+          "house_age": 4.041883634382231,
+          "num_stores": 9.951964434192895,
+          "house_unit_price": null
+        },
+        "d04b078e-26e0-4523-afd8-fb536457de79": {
+          "id": "d04b078e-26e0-4523-afd8-fb536457de79",
+          "distance_to_metro": 1.0179960020257195,
+          "house_age": 24.837927175831275,
+          "num_stores": 11.996101609548681,
+          "house_unit_price": null
+        },
+        "7ca639ca-3b1f-4f81-888e-3c15a2855c90": {
+          "id": "7ca639ca-3b1f-4f81-888e-3c15a2855c90",
+          "distance_to_metro": 1.6045514612156864,
+          "house_age": 11.173991770210812,
+          "num_stores": 11.256227615268513,
+          "house_unit_price": null
+        },
+        "bb960242-5974-4dfb-b689-ad130e1865ad": {
+          "id": "bb960242-5974-4dfb-b689-ad130e1865ad",
+          "distance_to_metro": 2.447093626885497,
+          "house_age": 33.06905713342427,
+          "num_stores": 11.351458157712958,
+          "house_unit_price": null
+        },
+        "bb5dcda9-09d4-43ce-aed5-9fec54343ba9": {
+          "id": "bb5dcda9-09d4-43ce-aed5-9fec54343ba9",
+          "distance_to_metro": 0.8334268157975784,
+          "house_age": 16.56890484321739,
+          "num_stores": 9.70986022028486,
+          "house_unit_price": null
+        },
+        "4c099a8d-3b14-4623-8ed5-e8861a92515b": {
+          "id": "4c099a8d-3b14-4623-8ed5-e8861a92515b",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 38.2070951626021
+        },
+        "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e": {
+          "id": "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 39.06941735594108
+        },
+        "7436e23d-256a-4db9-bc24-1518bddbc95c": {
+          "id": "7436e23d-256a-4db9-bc24-1518bddbc95c",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 45.39369442335527
+        },
+        "e07ad029-7346-4801-8afd-58495c4d481b": {
+          "id": "e07ad029-7346-4801-8afd-58495c4d481b",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 44.977563907997585
+        }
+      }
+    },
+    {
+      "timestamp": "2025-03-21T19:06:42.972Z",
+      "operation": "add",
+      "entitiesAffected": [
+        "9c450516-3bb9-4fbd-bb8e-05cfe07072db"
+      ],
+      "data": [
+        {
+          "house_unit_price": 40.13545528067481
+        }
+      ],
+      "description": "",
+      "previousState": {
+        "33afae39-2c7f-412a-b9fb-8d4114ef71f3": {
+          "id": "33afae39-2c7f-412a-b9fb-8d4114ef71f3",
+          "distance_to_metro": 6.917433327342657,
+          "house_age": 28.211381695253372,
+          "num_stores": 7.183823436950008,
+          "house_unit_price": 9.158977160946632
+        },
+        "2723ce7b-dcea-4b04-8559-feb4a26f4465": {
+          "id": "2723ce7b-dcea-4b04-8559-feb4a26f4465",
+          "distance_to_metro": 7.50141483935561,
+          "house_age": 57.39154261802216,
+          "num_stores": 8.732619519093152,
+          "house_unit_price": 16.394218461906537
+        },
+        "85e16b46-e167-4020-9230-1100c291ce95": {
+          "id": "85e16b46-e167-4020-9230-1100c291ce95",
+          "distance_to_metro": 8.546822470544502,
+          "house_age": 37.2726648822539,
+          "num_stores": 7.880865356972443,
+          "house_unit_price": 10.268137545427738
+        },
+        "b12fb6fc-3f73-4d7d-af93-aa644ddb1526": {
+          "id": "b12fb6fc-3f73-4d7d-af93-aa644ddb1526",
+          "distance_to_metro": 7.417194836695192,
+          "house_age": 39.22357300644956,
+          "num_stores": 3.0683875979364457,
+          "house_unit_price": 15.431855647036748
+        },
+        "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f": {
+          "id": "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f",
+          "distance_to_metro": 8.564796667059543,
+          "house_age": 16.36801318787635,
+          "num_stores": 8.390864652061333,
+          "house_unit_price": 14.835718783860212
+        },
+        "21f8e296-500c-4285-888f-52adf00ab88e": {
+          "id": "21f8e296-500c-4285-888f-52adf00ab88e",
+          "distance_to_metro": 4.402315742896407,
+          "house_age": 22.70373594416168,
+          "num_stores": 6.99643059537114,
+          "house_unit_price": 12.502900839550286
+        },
+        "c7473055-0f43-4a9f-afa0-c052cd89d8aa": {
+          "id": "c7473055-0f43-4a9f-afa0-c052cd89d8aa",
+          "distance_to_metro": 5.025110447523107,
+          "house_age": 28.96668139377647,
+          "num_stores": 13.820422371303234,
+          "house_unit_price": 32.06972785981154
+        },
+        "6a559608-dc76-42b7-bb69-8ba915594a4c": {
+          "id": "6a559608-dc76-42b7-bb69-8ba915594a4c",
+          "distance_to_metro": 5.895048956446018,
+          "house_age": 27.521326231227512,
+          "num_stores": 9.16096054287086,
+          "house_unit_price": 16.68196389772959
+        },
+        "0f86b48b-6eda-4bd8-913d-4cdd43889249": {
+          "id": "0f86b48b-6eda-4bd8-913d-4cdd43889249",
+          "distance_to_metro": 3.423446498656348,
+          "house_age": 65.12974894127528,
+          "num_stores": 11.749598476555253,
+          "house_unit_price": 17.027447555048447
+        },
+        "936f64bc-2fa8-45dc-a7aa-1a43428d826d": {
+          "id": "936f64bc-2fa8-45dc-a7aa-1a43428d826d",
+          "distance_to_metro": 5.446309563382286,
+          "house_age": 69.46069164878647,
+          "num_stores": 13.248400542857755,
+          "house_unit_price": 18.405605149551352
+        },
+        "994cb74a-d81d-4c8a-a7f9-6db8b2d53760": {
+          "id": "994cb74a-d81d-4c8a-a7f9-6db8b2d53760",
+          "distance_to_metro": 3.3169905042240453,
+          "house_age": 55.70168526167481,
+          "num_stores": 8.059601561809256,
+          "house_unit_price": 24.050108281930456
+        },
+        "31799430-4191-47a2-b51d-57988403e2bf": {
+          "distance_to_metro": 4.118958306898329,
+          "house_age": 79.03513337285636,
+          "num_stores": 2.0054803867828883,
+          "house_unit_price": 21.440729033237552,
+          "id": "31799430-4191-47a2-b51d-57988403e2bf"
+        },
+        "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc": {
+          "distance_to_metro": 3.308416708840178,
+          "house_age": 46.15700678056115,
+          "num_stores": 6.072751946816404,
+          "house_unit_price": 23.176605566642287,
+          "id": "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc"
+        },
+        "8f27598e-fb44-4a8d-be10-63022a89cc3e": {
+          "distance_to_metro": 4.7536029319084605,
+          "house_age": 80.70136276060806,
+          "num_stores": 6.869999568594843,
+          "house_unit_price": 20.6022139181633,
+          "id": "8f27598e-fb44-4a8d-be10-63022a89cc3e"
+        },
+        "d7c0223d-8019-4753-b474-9cf0aa6da1a6": {
+          "distance_to_metro": 3.266661727326885,
+          "house_age": 73.09576088671254,
+          "num_stores": 1.6318085174391395,
+          "house_unit_price": 24.604534748755636,
+          "id": "d7c0223d-8019-4753-b474-9cf0aa6da1a6"
+        },
+        "c42a8061-bc0b-4121-b3d0-e8d43a228499": {
+          "distance_to_metro": 6.27474970780442,
+          "house_age": 45.988155630589674,
+          "num_stores": 5.95333508452725,
+          "house_unit_price": 25.590648725490095,
+          "id": "c42a8061-bc0b-4121-b3d0-e8d43a228499"
+        },
+        "2f4f9188-39f2-4605-8b07-c06f9f10a93b": {
+          "distance_to_metro": 9.747154462799456,
+          "house_age": 43.79735900071292,
+          "num_stores": 7.866925750303296,
+          "house_unit_price": 22.413507670731462,
+          "id": "2f4f9188-39f2-4605-8b07-c06f9f10a93b"
+        },
+        "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd": {
+          "id": "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd",
+          "distance_to_metro": 8.523538206728553,
+          "house_age": 90.77637326899816,
+          "num_stores": 2.0466883197372923,
+          "house_unit_price": 11.261639722009392
+        },
+        "53af583e-1ed3-45fa-b4ef-29feeb95e926": {
+          "id": "53af583e-1ed3-45fa-b4ef-29feeb95e926",
+          "distance_to_metro": 4.613606830325909,
+          "house_age": 11.080642379291135,
+          "num_stores": 4.939506512379058,
+          "house_unit_price": 24.528541693982785
+        },
+        "bb96415b-fa8f-4e25-b919-25b6c9f740f0": {
+          "id": "bb96415b-fa8f-4e25-b919-25b6c9f740f0",
+          "distance_to_metro": 6.095945974926524,
+          "house_age": 38.72611091072736,
+          "num_stores": 1.165610365142296,
+          "house_unit_price": 32.149507652828525
+        },
+        "65467735-1646-4f94-a3be-3309d3f13539": {
+          "id": "65467735-1646-4f94-a3be-3309d3f13539",
+          "distance_to_metro": 8.807581704069305,
+          "house_age": 39.5140490257394,
+          "num_stores": 13.239535429901597,
+          "house_unit_price": 33.917122314321844
+        },
+        "38ead28f-7749-4db4-a5d9-aa4c36fab3b0": {
+          "id": "38ead28f-7749-4db4-a5d9-aa4c36fab3b0",
+          "distance_to_metro": 4.079500789331825,
+          "house_age": 75.86063983230522,
+          "num_stores": 10.329939156066947,
+          "house_unit_price": 18.06765891923077
+        },
+        "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c": {
+          "id": "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c",
+          "distance_to_metro": 0.7135384715939519,
+          "house_age": 4.041883634382231,
+          "num_stores": 9.951964434192895,
+          "house_unit_price": null
+        },
+        "d04b078e-26e0-4523-afd8-fb536457de79": {
+          "id": "d04b078e-26e0-4523-afd8-fb536457de79",
+          "distance_to_metro": 1.0179960020257195,
+          "house_age": 24.837927175831275,
+          "num_stores": 11.996101609548681,
+          "house_unit_price": null
+        },
+        "7ca639ca-3b1f-4f81-888e-3c15a2855c90": {
+          "id": "7ca639ca-3b1f-4f81-888e-3c15a2855c90",
+          "distance_to_metro": 1.6045514612156864,
+          "house_age": 11.173991770210812,
+          "num_stores": 11.256227615268513,
+          "house_unit_price": null
+        },
+        "bb960242-5974-4dfb-b689-ad130e1865ad": {
+          "id": "bb960242-5974-4dfb-b689-ad130e1865ad",
+          "distance_to_metro": 2.447093626885497,
+          "house_age": 33.06905713342427,
+          "num_stores": 11.351458157712958,
+          "house_unit_price": null
+        },
+        "bb5dcda9-09d4-43ce-aed5-9fec54343ba9": {
+          "id": "bb5dcda9-09d4-43ce-aed5-9fec54343ba9",
+          "distance_to_metro": 0.8334268157975784,
+          "house_age": 16.56890484321739,
+          "num_stores": 9.70986022028486,
+          "house_unit_price": null
+        },
+        "4c099a8d-3b14-4623-8ed5-e8861a92515b": {
+          "id": "4c099a8d-3b14-4623-8ed5-e8861a92515b",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 38.2070951626021
+        },
+        "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e": {
+          "id": "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 39.06941735594108
+        },
+        "7436e23d-256a-4db9-bc24-1518bddbc95c": {
+          "id": "7436e23d-256a-4db9-bc24-1518bddbc95c",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 45.39369442335527
+        },
+        "e07ad029-7346-4801-8afd-58495c4d481b": {
+          "id": "e07ad029-7346-4801-8afd-58495c4d481b",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 44.977563907997585
+        },
+        "9c450516-3bb9-4fbd-bb8e-05cfe07072db": {
+          "id": "9c450516-3bb9-4fbd-bb8e-05cfe07072db",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 40.13545528067481
+        }
+      }
+    },
+    {
+      "timestamp": "2025-03-21T19:06:51.387Z",
+      "operation": "add",
+      "entitiesAffected": [
+        "44f93c4c-7688-4c7e-93f3-7e1f03cf3302",
+        "a39e257a-e42a-4750-a1fd-90cb739089ac",
+        "f7cfd298-f672-4141-a37f-0fa551467cc4"
+      ],
+      "data": [
+        {
+          "house_unit_price": 31.098269693862992
+        },
+        {
+          "house_unit_price": 27.845521129697396
+        },
+        {
+          "house_unit_price": 31.241669262300505
+        }
+      ],
+      "description": "",
+      "previousState": {
+        "33afae39-2c7f-412a-b9fb-8d4114ef71f3": {
+          "id": "33afae39-2c7f-412a-b9fb-8d4114ef71f3",
+          "distance_to_metro": 6.917433327342657,
+          "house_age": 28.211381695253372,
+          "num_stores": 7.183823436950008,
+          "house_unit_price": 9.158977160946632
+        },
+        "2723ce7b-dcea-4b04-8559-feb4a26f4465": {
+          "id": "2723ce7b-dcea-4b04-8559-feb4a26f4465",
+          "distance_to_metro": 7.50141483935561,
+          "house_age": 57.39154261802216,
+          "num_stores": 8.732619519093152,
+          "house_unit_price": 16.394218461906537
+        },
+        "85e16b46-e167-4020-9230-1100c291ce95": {
+          "id": "85e16b46-e167-4020-9230-1100c291ce95",
+          "distance_to_metro": 8.546822470544502,
+          "house_age": 37.2726648822539,
+          "num_stores": 7.880865356972443,
+          "house_unit_price": 10.268137545427738
+        },
+        "b12fb6fc-3f73-4d7d-af93-aa644ddb1526": {
+          "id": "b12fb6fc-3f73-4d7d-af93-aa644ddb1526",
+          "distance_to_metro": 7.417194836695192,
+          "house_age": 39.22357300644956,
+          "num_stores": 3.0683875979364457,
+          "house_unit_price": 15.431855647036748
+        },
+        "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f": {
+          "id": "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f",
+          "distance_to_metro": 8.564796667059543,
+          "house_age": 16.36801318787635,
+          "num_stores": 8.390864652061333,
+          "house_unit_price": 14.835718783860212
+        },
+        "21f8e296-500c-4285-888f-52adf00ab88e": {
+          "id": "21f8e296-500c-4285-888f-52adf00ab88e",
+          "distance_to_metro": 4.402315742896407,
+          "house_age": 22.70373594416168,
+          "num_stores": 6.99643059537114,
+          "house_unit_price": 12.502900839550286
+        },
+        "c7473055-0f43-4a9f-afa0-c052cd89d8aa": {
+          "id": "c7473055-0f43-4a9f-afa0-c052cd89d8aa",
+          "distance_to_metro": 5.025110447523107,
+          "house_age": 28.96668139377647,
+          "num_stores": 13.820422371303234,
+          "house_unit_price": 32.06972785981154
+        },
+        "6a559608-dc76-42b7-bb69-8ba915594a4c": {
+          "id": "6a559608-dc76-42b7-bb69-8ba915594a4c",
+          "distance_to_metro": 5.895048956446018,
+          "house_age": 27.521326231227512,
+          "num_stores": 9.16096054287086,
+          "house_unit_price": 16.68196389772959
+        },
+        "0f86b48b-6eda-4bd8-913d-4cdd43889249": {
+          "id": "0f86b48b-6eda-4bd8-913d-4cdd43889249",
+          "distance_to_metro": 3.423446498656348,
+          "house_age": 65.12974894127528,
+          "num_stores": 11.749598476555253,
+          "house_unit_price": 17.027447555048447
+        },
+        "936f64bc-2fa8-45dc-a7aa-1a43428d826d": {
+          "id": "936f64bc-2fa8-45dc-a7aa-1a43428d826d",
+          "distance_to_metro": 5.446309563382286,
+          "house_age": 69.46069164878647,
+          "num_stores": 13.248400542857755,
+          "house_unit_price": 18.405605149551352
+        },
+        "994cb74a-d81d-4c8a-a7f9-6db8b2d53760": {
+          "id": "994cb74a-d81d-4c8a-a7f9-6db8b2d53760",
+          "distance_to_metro": 3.3169905042240453,
+          "house_age": 55.70168526167481,
+          "num_stores": 8.059601561809256,
+          "house_unit_price": 24.050108281930456
+        },
+        "31799430-4191-47a2-b51d-57988403e2bf": {
+          "distance_to_metro": 4.118958306898329,
+          "house_age": 79.03513337285636,
+          "num_stores": 2.0054803867828883,
+          "house_unit_price": 21.440729033237552,
+          "id": "31799430-4191-47a2-b51d-57988403e2bf"
+        },
+        "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc": {
+          "distance_to_metro": 3.308416708840178,
+          "house_age": 46.15700678056115,
+          "num_stores": 6.072751946816404,
+          "house_unit_price": 23.176605566642287,
+          "id": "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc"
+        },
+        "8f27598e-fb44-4a8d-be10-63022a89cc3e": {
+          "distance_to_metro": 4.7536029319084605,
+          "house_age": 80.70136276060806,
+          "num_stores": 6.869999568594843,
+          "house_unit_price": 20.6022139181633,
+          "id": "8f27598e-fb44-4a8d-be10-63022a89cc3e"
+        },
+        "d7c0223d-8019-4753-b474-9cf0aa6da1a6": {
+          "distance_to_metro": 3.266661727326885,
+          "house_age": 73.09576088671254,
+          "num_stores": 1.6318085174391395,
+          "house_unit_price": 24.604534748755636,
+          "id": "d7c0223d-8019-4753-b474-9cf0aa6da1a6"
+        },
+        "c42a8061-bc0b-4121-b3d0-e8d43a228499": {
+          "distance_to_metro": 6.27474970780442,
+          "house_age": 45.988155630589674,
+          "num_stores": 5.95333508452725,
+          "house_unit_price": 25.590648725490095,
+          "id": "c42a8061-bc0b-4121-b3d0-e8d43a228499"
+        },
+        "2f4f9188-39f2-4605-8b07-c06f9f10a93b": {
+          "distance_to_metro": 9.747154462799456,
+          "house_age": 43.79735900071292,
+          "num_stores": 7.866925750303296,
+          "house_unit_price": 22.413507670731462,
+          "id": "2f4f9188-39f2-4605-8b07-c06f9f10a93b"
+        },
+        "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd": {
+          "id": "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd",
+          "distance_to_metro": 8.523538206728553,
+          "house_age": 90.77637326899816,
+          "num_stores": 2.0466883197372923,
+          "house_unit_price": 11.261639722009392
+        },
+        "53af583e-1ed3-45fa-b4ef-29feeb95e926": {
+          "id": "53af583e-1ed3-45fa-b4ef-29feeb95e926",
+          "distance_to_metro": 4.613606830325909,
+          "house_age": 11.080642379291135,
+          "num_stores": 4.939506512379058,
+          "house_unit_price": 24.528541693982785
+        },
+        "bb96415b-fa8f-4e25-b919-25b6c9f740f0": {
+          "id": "bb96415b-fa8f-4e25-b919-25b6c9f740f0",
+          "distance_to_metro": 6.095945974926524,
+          "house_age": 38.72611091072736,
+          "num_stores": 1.165610365142296,
+          "house_unit_price": 32.149507652828525
+        },
+        "65467735-1646-4f94-a3be-3309d3f13539": {
+          "id": "65467735-1646-4f94-a3be-3309d3f13539",
+          "distance_to_metro": 8.807581704069305,
+          "house_age": 39.5140490257394,
+          "num_stores": 13.239535429901597,
+          "house_unit_price": 33.917122314321844
+        },
+        "38ead28f-7749-4db4-a5d9-aa4c36fab3b0": {
+          "id": "38ead28f-7749-4db4-a5d9-aa4c36fab3b0",
+          "distance_to_metro": 4.079500789331825,
+          "house_age": 75.86063983230522,
+          "num_stores": 10.329939156066947,
+          "house_unit_price": 18.06765891923077
+        },
+        "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c": {
+          "id": "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c",
+          "distance_to_metro": 0.7135384715939519,
+          "house_age": 4.041883634382231,
+          "num_stores": 9.951964434192895,
+          "house_unit_price": null
+        },
+        "d04b078e-26e0-4523-afd8-fb536457de79": {
+          "id": "d04b078e-26e0-4523-afd8-fb536457de79",
+          "distance_to_metro": 1.0179960020257195,
+          "house_age": 24.837927175831275,
+          "num_stores": 11.996101609548681,
+          "house_unit_price": null
+        },
+        "7ca639ca-3b1f-4f81-888e-3c15a2855c90": {
+          "id": "7ca639ca-3b1f-4f81-888e-3c15a2855c90",
+          "distance_to_metro": 1.6045514612156864,
+          "house_age": 11.173991770210812,
+          "num_stores": 11.256227615268513,
+          "house_unit_price": null
+        },
+        "bb960242-5974-4dfb-b689-ad130e1865ad": {
+          "id": "bb960242-5974-4dfb-b689-ad130e1865ad",
+          "distance_to_metro": 2.447093626885497,
+          "house_age": 33.06905713342427,
+          "num_stores": 11.351458157712958,
+          "house_unit_price": null
+        },
+        "bb5dcda9-09d4-43ce-aed5-9fec54343ba9": {
+          "id": "bb5dcda9-09d4-43ce-aed5-9fec54343ba9",
+          "distance_to_metro": 0.8334268157975784,
+          "house_age": 16.56890484321739,
+          "num_stores": 9.70986022028486,
+          "house_unit_price": null
+        },
+        "4c099a8d-3b14-4623-8ed5-e8861a92515b": {
+          "id": "4c099a8d-3b14-4623-8ed5-e8861a92515b",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 38.2070951626021
+        },
+        "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e": {
+          "id": "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 39.06941735594108
+        },
+        "7436e23d-256a-4db9-bc24-1518bddbc95c": {
+          "id": "7436e23d-256a-4db9-bc24-1518bddbc95c",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 45.39369442335527
+        },
+        "e07ad029-7346-4801-8afd-58495c4d481b": {
+          "id": "e07ad029-7346-4801-8afd-58495c4d481b",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 44.977563907997585
+        },
+        "9c450516-3bb9-4fbd-bb8e-05cfe07072db": {
+          "id": "9c450516-3bb9-4fbd-bb8e-05cfe07072db",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 40.13545528067481
+        },
+        "44f93c4c-7688-4c7e-93f3-7e1f03cf3302": {
+          "id": "44f93c4c-7688-4c7e-93f3-7e1f03cf3302",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 31.098269693862992
+        },
+        "a39e257a-e42a-4750-a1fd-90cb739089ac": {
+          "id": "a39e257a-e42a-4750-a1fd-90cb739089ac",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 27.845521129697396
+        },
+        "f7cfd298-f672-4141-a37f-0fa551467cc4": {
+          "id": "f7cfd298-f672-4141-a37f-0fa551467cc4",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 31.241669262300505
+        }
+      }
+    },
+    {
+      "timestamp": "2025-03-21T19:07:10.144Z",
+      "operation": "add",
+      "entitiesAffected": [
+        "eb406252-cf9d-4cf5-abde-a519fa32e8b2",
+        "61caefbf-c0fb-4e2d-b307-001731a0f7af",
+        "33861217-8cb0-4098-bced-006b066b0bf0"
+      ],
+      "data": [
+        {
+          "distance_to_metro": 1.5168402136415238,
+          "house_age": 16.89551510763861,
+          "num_stores": 12.683209634089277
+        },
+        {
+          "distance_to_metro": 2.5631348217659986,
+          "house_age": 12.996999731131652,
+          "num_stores": 12.639222247180053
+        },
+        {
+          "distance_to_metro": 2.1695717553028495,
+          "house_age": 29.36401271247534,
+          "num_stores": 13.331478580291831
+        }
+      ],
+      "description": "",
+      "previousState": {
+        "33afae39-2c7f-412a-b9fb-8d4114ef71f3": {
+          "id": "33afae39-2c7f-412a-b9fb-8d4114ef71f3",
+          "distance_to_metro": 6.917433327342657,
+          "house_age": 28.211381695253372,
+          "num_stores": 7.183823436950008,
+          "house_unit_price": 9.158977160946632
+        },
+        "2723ce7b-dcea-4b04-8559-feb4a26f4465": {
+          "id": "2723ce7b-dcea-4b04-8559-feb4a26f4465",
+          "distance_to_metro": 7.50141483935561,
+          "house_age": 57.39154261802216,
+          "num_stores": 8.732619519093152,
+          "house_unit_price": 16.394218461906537
+        },
+        "85e16b46-e167-4020-9230-1100c291ce95": {
+          "id": "85e16b46-e167-4020-9230-1100c291ce95",
+          "distance_to_metro": 8.546822470544502,
+          "house_age": 37.2726648822539,
+          "num_stores": 7.880865356972443,
+          "house_unit_price": 10.268137545427738
+        },
+        "b12fb6fc-3f73-4d7d-af93-aa644ddb1526": {
+          "id": "b12fb6fc-3f73-4d7d-af93-aa644ddb1526",
+          "distance_to_metro": 7.417194836695192,
+          "house_age": 39.22357300644956,
+          "num_stores": 3.0683875979364457,
+          "house_unit_price": 15.431855647036748
+        },
+        "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f": {
+          "id": "1bfd4a6c-6397-426c-8dd9-9a7e6b8f9b8f",
+          "distance_to_metro": 8.564796667059543,
+          "house_age": 16.36801318787635,
+          "num_stores": 8.390864652061333,
+          "house_unit_price": 14.835718783860212
+        },
+        "21f8e296-500c-4285-888f-52adf00ab88e": {
+          "id": "21f8e296-500c-4285-888f-52adf00ab88e",
+          "distance_to_metro": 4.402315742896407,
+          "house_age": 22.70373594416168,
+          "num_stores": 6.99643059537114,
+          "house_unit_price": 12.502900839550286
+        },
+        "c7473055-0f43-4a9f-afa0-c052cd89d8aa": {
+          "id": "c7473055-0f43-4a9f-afa0-c052cd89d8aa",
+          "distance_to_metro": 5.025110447523107,
+          "house_age": 28.96668139377647,
+          "num_stores": 13.820422371303234,
+          "house_unit_price": 32.06972785981154
+        },
+        "6a559608-dc76-42b7-bb69-8ba915594a4c": {
+          "id": "6a559608-dc76-42b7-bb69-8ba915594a4c",
+          "distance_to_metro": 5.895048956446018,
+          "house_age": 27.521326231227512,
+          "num_stores": 9.16096054287086,
+          "house_unit_price": 16.68196389772959
+        },
+        "0f86b48b-6eda-4bd8-913d-4cdd43889249": {
+          "id": "0f86b48b-6eda-4bd8-913d-4cdd43889249",
+          "distance_to_metro": 3.423446498656348,
+          "house_age": 65.12974894127528,
+          "num_stores": 11.749598476555253,
+          "house_unit_price": 17.027447555048447
+        },
+        "936f64bc-2fa8-45dc-a7aa-1a43428d826d": {
+          "id": "936f64bc-2fa8-45dc-a7aa-1a43428d826d",
+          "distance_to_metro": 5.446309563382286,
+          "house_age": 69.46069164878647,
+          "num_stores": 13.248400542857755,
+          "house_unit_price": 18.405605149551352
+        },
+        "994cb74a-d81d-4c8a-a7f9-6db8b2d53760": {
+          "id": "994cb74a-d81d-4c8a-a7f9-6db8b2d53760",
+          "distance_to_metro": 3.3169905042240453,
+          "house_age": 55.70168526167481,
+          "num_stores": 8.059601561809256,
+          "house_unit_price": 24.050108281930456
+        },
+        "31799430-4191-47a2-b51d-57988403e2bf": {
+          "distance_to_metro": 4.118958306898329,
+          "house_age": 79.03513337285636,
+          "num_stores": 2.0054803867828883,
+          "house_unit_price": 21.440729033237552,
+          "id": "31799430-4191-47a2-b51d-57988403e2bf"
+        },
+        "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc": {
+          "distance_to_metro": 3.308416708840178,
+          "house_age": 46.15700678056115,
+          "num_stores": 6.072751946816404,
+          "house_unit_price": 23.176605566642287,
+          "id": "d0a831fa-ed33-4a62-a3bb-9cdf7453c3dc"
+        },
+        "8f27598e-fb44-4a8d-be10-63022a89cc3e": {
+          "distance_to_metro": 4.7536029319084605,
+          "house_age": 80.70136276060806,
+          "num_stores": 6.869999568594843,
+          "house_unit_price": 20.6022139181633,
+          "id": "8f27598e-fb44-4a8d-be10-63022a89cc3e"
+        },
+        "d7c0223d-8019-4753-b474-9cf0aa6da1a6": {
+          "distance_to_metro": 3.266661727326885,
+          "house_age": 73.09576088671254,
+          "num_stores": 1.6318085174391395,
+          "house_unit_price": 24.604534748755636,
+          "id": "d7c0223d-8019-4753-b474-9cf0aa6da1a6"
+        },
+        "c42a8061-bc0b-4121-b3d0-e8d43a228499": {
+          "distance_to_metro": 6.27474970780442,
+          "house_age": 45.988155630589674,
+          "num_stores": 5.95333508452725,
+          "house_unit_price": 25.590648725490095,
+          "id": "c42a8061-bc0b-4121-b3d0-e8d43a228499"
+        },
+        "2f4f9188-39f2-4605-8b07-c06f9f10a93b": {
+          "distance_to_metro": 9.747154462799456,
+          "house_age": 43.79735900071292,
+          "num_stores": 7.866925750303296,
+          "house_unit_price": 22.413507670731462,
+          "id": "2f4f9188-39f2-4605-8b07-c06f9f10a93b"
+        },
+        "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd": {
+          "id": "0e2308f4-9ff3-4487-8cf7-e8a40ffcebbd",
+          "distance_to_metro": 8.523538206728553,
+          "house_age": 90.77637326899816,
+          "num_stores": 2.0466883197372923,
+          "house_unit_price": 11.261639722009392
+        },
+        "53af583e-1ed3-45fa-b4ef-29feeb95e926": {
+          "id": "53af583e-1ed3-45fa-b4ef-29feeb95e926",
+          "distance_to_metro": 4.613606830325909,
+          "house_age": 11.080642379291135,
+          "num_stores": 4.939506512379058,
+          "house_unit_price": 24.528541693982785
+        },
+        "bb96415b-fa8f-4e25-b919-25b6c9f740f0": {
+          "id": "bb96415b-fa8f-4e25-b919-25b6c9f740f0",
+          "distance_to_metro": 6.095945974926524,
+          "house_age": 38.72611091072736,
+          "num_stores": 1.165610365142296,
+          "house_unit_price": 32.149507652828525
+        },
+        "65467735-1646-4f94-a3be-3309d3f13539": {
+          "id": "65467735-1646-4f94-a3be-3309d3f13539",
+          "distance_to_metro": 8.807581704069305,
+          "house_age": 39.5140490257394,
+          "num_stores": 13.239535429901597,
+          "house_unit_price": 33.917122314321844
+        },
+        "38ead28f-7749-4db4-a5d9-aa4c36fab3b0": {
+          "id": "38ead28f-7749-4db4-a5d9-aa4c36fab3b0",
+          "distance_to_metro": 4.079500789331825,
+          "house_age": 75.86063983230522,
+          "num_stores": 10.329939156066947,
+          "house_unit_price": 18.06765891923077
+        },
+        "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c": {
+          "id": "17ae9dc7-5eec-4a79-b7a9-b5b2e30cd84c",
+          "distance_to_metro": 0.7135384715939519,
+          "house_age": 4.041883634382231,
+          "num_stores": 9.951964434192895,
+          "house_unit_price": null
+        },
+        "d04b078e-26e0-4523-afd8-fb536457de79": {
+          "id": "d04b078e-26e0-4523-afd8-fb536457de79",
+          "distance_to_metro": 1.0179960020257195,
+          "house_age": 24.837927175831275,
+          "num_stores": 11.996101609548681,
+          "house_unit_price": null
+        },
+        "7ca639ca-3b1f-4f81-888e-3c15a2855c90": {
+          "id": "7ca639ca-3b1f-4f81-888e-3c15a2855c90",
+          "distance_to_metro": 1.6045514612156864,
+          "house_age": 11.173991770210812,
+          "num_stores": 11.256227615268513,
+          "house_unit_price": null
+        },
+        "bb960242-5974-4dfb-b689-ad130e1865ad": {
+          "id": "bb960242-5974-4dfb-b689-ad130e1865ad",
+          "distance_to_metro": 2.447093626885497,
+          "house_age": 33.06905713342427,
+          "num_stores": 11.351458157712958,
+          "house_unit_price": null
+        },
+        "bb5dcda9-09d4-43ce-aed5-9fec54343ba9": {
+          "id": "bb5dcda9-09d4-43ce-aed5-9fec54343ba9",
+          "distance_to_metro": 0.8334268157975784,
+          "house_age": 16.56890484321739,
+          "num_stores": 9.70986022028486,
+          "house_unit_price": null
+        },
+        "4c099a8d-3b14-4623-8ed5-e8861a92515b": {
+          "id": "4c099a8d-3b14-4623-8ed5-e8861a92515b",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 38.2070951626021
+        },
+        "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e": {
+          "id": "1d7a80e6-87bd-4528-84f1-dda7ab5fdc3e",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 39.06941735594108
+        },
+        "7436e23d-256a-4db9-bc24-1518bddbc95c": {
+          "id": "7436e23d-256a-4db9-bc24-1518bddbc95c",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 45.39369442335527
+        },
+        "e07ad029-7346-4801-8afd-58495c4d481b": {
+          "id": "e07ad029-7346-4801-8afd-58495c4d481b",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 44.977563907997585
+        },
+        "9c450516-3bb9-4fbd-bb8e-05cfe07072db": {
+          "id": "9c450516-3bb9-4fbd-bb8e-05cfe07072db",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 40.13545528067481
+        },
+        "44f93c4c-7688-4c7e-93f3-7e1f03cf3302": {
+          "id": "44f93c4c-7688-4c7e-93f3-7e1f03cf3302",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 31.098269693862992
+        },
+        "a39e257a-e42a-4750-a1fd-90cb739089ac": {
+          "id": "a39e257a-e42a-4750-a1fd-90cb739089ac",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 27.845521129697396
+        },
+        "f7cfd298-f672-4141-a37f-0fa551467cc4": {
+          "id": "f7cfd298-f672-4141-a37f-0fa551467cc4",
+          "distance_to_metro": null,
+          "house_age": null,
+          "num_stores": null,
+          "house_unit_price": 31.241669262300505
+        },
+        "eb406252-cf9d-4cf5-abde-a519fa32e8b2": {
+          "id": "eb406252-cf9d-4cf5-abde-a519fa32e8b2",
+          "distance_to_metro": 1.5168402136415238,
+          "house_age": 16.89551510763861,
+          "num_stores": 12.683209634089277,
+          "house_unit_price": null
+        },
+        "61caefbf-c0fb-4e2d-b307-001731a0f7af": {
+          "id": "61caefbf-c0fb-4e2d-b307-001731a0f7af",
+          "distance_to_metro": 2.5631348217659986,
+          "house_age": 12.996999731131652,
+          "num_stores": 12.639222247180053,
+          "house_unit_price": null
+        },
+        "33861217-8cb0-4098-bced-006b066b0bf0": {
+          "id": "33861217-8cb0-4098-bced-006b066b0bf0",
+          "distance_to_metro": 2.1695717553028495,
+          "house_age": 29.36401271247534,
+          "num_stores": 13.331478580291831,
+          "house_unit_price": null
         }
       }
     }
