@@ -65,7 +65,7 @@ current_study_settings = {
     "task_id": TaskIDs.INCOME,
     "elicitation_space": ElicitationSpace.OBSERVABLE,
     "feedback_mode": FeedbackMode.FEEDBACK,
-    "tutorial": False
+    "example_playground": False
 }
 
 
@@ -73,7 +73,7 @@ class AdminUpdateSettings(BaseModel):
     task_id: Optional[str]
     elicitation_space: Optional[ElicitationSpace]
     feedback_mode: Optional[FeedbackMode]
-    tutorial: Optional[bool]
+    example_playground: Optional[bool]
 
 
 @app.get('/study-settings')
@@ -94,8 +94,8 @@ def update_study_settings(settings: AdminUpdateSettings):
     if settings.feedback_mode is not None:
         current_study_settings["feedback_mode"] = settings.feedback_mode
 
-    if settings.tutorial is not None:
-        current_study_settings["tutorial"] = settings.tutorial
+    if settings.example_playground is not None:
+        current_study_settings["example_playground"] = settings.example_playground
 
     return current_study_settings
 

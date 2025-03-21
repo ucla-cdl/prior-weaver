@@ -29,12 +29,10 @@ export const ParameterPlot = ({ parameter }) => {
     const [showFittedDistribution, setShowFittedDistribution] = useState(false);
     const [isFitting, setIsFitting] = useState(false);
 
-    const svgHeight = 250;
-    const svgWidth = 400;
+    const svgHeightRef = useRef(0);
+    const svgWidthRef = useRef(0);
     const margin = { top: 10, bottom: 40, left: 40, right: 40 };
     const labelOffset = 35;
-    const chartWidth = svgWidth - margin.left - margin.right;
-    const chartHeight = svgHeight - margin.top - margin.bottom;
 
     useEffect(() => {
         drawPlot();
@@ -47,6 +45,12 @@ export const ParameterPlot = ({ parameter }) => {
     const drawPlot = () => {
         const container = d3.select(`#parameter-container-${parameter.name}`);
         container.html('');
+
+        const svgHeight = container.node().clientHeight;
+        svgHeightRef.current = svgHeight;
+
+        const svgWidth = container.node().clientWidth;
+        svgWidthRef.current = svgWidth;
 
         let svg = container.append('svg')
             .attr('id', `parameter-svg-${parameter.name}`)
@@ -67,6 +71,9 @@ export const ParameterPlot = ({ parameter }) => {
     const plotDistribution = (distribution) => {
         let chart = d3.select(`#parameter-distribution-${parameter.name}`);
         chart.html('');
+
+        const chartWidth = svgWidthRef.current - margin.left - margin.right;
+        const chartHeight = svgHeightRef.current - margin.top - margin.bottom;
 
         const x = d3.scaleLinear()
             .domain([parameter.min, parameter.max])
@@ -101,6 +108,9 @@ export const ParameterPlot = ({ parameter }) => {
     const plotRoulette = () => {
         let chart = d3.select(`#parameter-roulette-${parameter.name}`);
         chart.html('');
+
+        const chartWidth = svgWidthRef.current - margin.left - margin.right;
+        const chartHeight = svgHeightRef.current - margin.top - margin.bottom;
 
         // Create scales
         const xScale = d3.scaleLinear()
@@ -223,14 +233,16 @@ export const ParameterPlot = ({ parameter }) => {
     }
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+        <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
             <Box 
+                className="parameter-operation-container"
                 sx={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
                     alignItems: 'center', 
                     gap: 2,
-                    width: '40%'
+                    width: '40%',
+                    height: '100%'
                 }}>
                 <Typography variant="h6">{parameter.name}</Typography>
                 {showFittedDistribution && parametersDict[parameter.name] && (

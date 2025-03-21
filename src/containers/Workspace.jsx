@@ -219,14 +219,17 @@ export default function Workspace() {
 
                             {space === ELICITATION_SPACE.PARAMETER &&
                                 <Box className="panel center-panel">
-                                    <Box className="component-container">
-                                        <Box sx={{
-                                            boxSizing: 'border-box',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            overflowY: 'auto',
-                                            width: '100%'
-                                        }}>
+                                    <Box className="component-container" sx={{ height: '100%' }}>
+                                        <Box
+                                            className="parameters-container"
+                                            sx={{
+                                                boxSizing: 'border-box',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                width: '100%',
+                                                height: '100%'
+                                            }}
+                                        >
                                             {Object.entries(parametersDict).map(([paraName, parameter]) => (
                                                 <ParameterPlot key={paraName} parameter={parameter} />
                                             ))}

@@ -30,6 +30,7 @@ export const VariableProvider = ({ children }) => {
     // Load variables and parameters from saved environment if available
     useEffect(() => {
         if (savedEnvironment) {
+            console.log("saved environment", savedEnvironment);
             setVariablesDict(savedEnvironment.variablesDict);
             setParametersDict(savedEnvironment.parametersDict);
             setTranslationTimes(savedEnvironment.translationTimes);
@@ -118,7 +119,7 @@ export const VariableProvider = ({ children }) => {
     }
 
     const parseVariables = () => {
-        if (tutorial) {
+        if (savedEnvironment) {
             setFinishParseModel(true);
             return;
         };
@@ -162,7 +163,7 @@ export const VariableProvider = ({ children }) => {
 
     // Parse the model in R code
     const handleParseModel = () => {
-        if (tutorial) {
+        if (savedEnvironment) {
             setFinishParseModel(true);
             return;
         };

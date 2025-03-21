@@ -17,6 +17,7 @@ export default function VariablePlot({ variable }) {
     const labelOffset = 35;
 
     useEffect(() => {
+        console.log("variable", variable);
         drawPlot();
     }, [variable]);
 

@@ -4,7 +4,7 @@ import { TASK_SETTINGS, ELICITATION_SPACE, FEEDBACK_MODE, WorkspaceContext } fro
 import axios from 'axios';
 
 const Admin = () => {
-    const { taskId, space, feedback, setTaskId, setSpace, setFeedback, tutorial, setTutorial } = useContext(WorkspaceContext);
+    const { taskId, space, feedback, setTaskId, setSpace, setFeedback, examplePlayground, setExamplePlayground } = useContext(WorkspaceContext);
     const [notification, setNotification] = useState(null);
 
     const handleSaveSettings = () => {
@@ -13,7 +13,7 @@ const Admin = () => {
                 task_id: taskId,
                 elicitation_space: space,
                 feedback_mode: feedback,
-                tutorial: tutorial
+                example_playground: examplePlayground
             })
             .then(() => {
                 setNotification("Settings saved successfully!");
@@ -21,6 +21,13 @@ const Admin = () => {
             .catch((error) => {
                 setNotification("Error saving settings: " + error.response.data.detail);
             });
+    }
+
+    const handleChangeExamplePlayground = (e) => {
+        setExamplePlayground(e.target.value === "true");
+        if (e.target.value === "true") {
+            setTaskId("house");
+        }
     }
 
     return (
@@ -35,13 +42,13 @@ const Admin = () => {
                     p: 2
                 }}
             >
-                <FormLabel id="demo-row-radio-buttons-group-label">Tutorial</FormLabel>
+                <FormLabel id="demo-row-radio-buttons-group-label">Example Playground</FormLabel>
                 <RadioGroup
                     row
                     aria-labelledby="demo-row-radio-buttons-group-label"
                     name="row-radio-buttons-group"
-                    value={tutorial}
-                    onChange={(e) => setTutorial(e.target.value)}
+                    value={examplePlayground}
+                    onChange={handleChangeExamplePlayground}
                 >
                     <FormControlLabel value={true} control={<Radio />} label="Yes" />
                     <FormControlLabel value={false} control={<Radio />} label="No" />
@@ -65,7 +72,7 @@ const Admin = () => {
                     onChange={(e) => setTaskId(e.target.value)}
                 >
                     {Object.values(TASK_SETTINGS).map((t) => (
-                        <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} />
+                        <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} disabled={examplePlayground}/>
                     ))}
                 </RadioGroup>
             </FormControl>

@@ -132,6 +132,126 @@ export const FEEDBACK_MODE = {
     NO_FEEDBACK: "Without Feedback"
 }
 
+const steps = [
+    {
+        target: '.left-panel',
+        content: `Describe the Task's Scenario, model, variables.\n 
+        You can "click the brush icon" next to the variable to modify the parameter's range.`,
+        placement: 'right',
+        data: {
+            hide: [ELICITATION_SPACE.OBSERVABLE]
+        }
+    },
+    {
+        target: '.left-panel',
+        content: `Describe the Task's Scenario, model, variables.\n 
+        You can "click the brush icon" next to the variable to modify the variable's range and click the add/remove icon next to the variableto add/remove it from the bivariate scatterplot.`,
+        placement: 'right',
+        data: {
+            hide: [ELICITATION_SPACE.PARAMETER]
+        }
+    },
+    {
+        target: '.center-panel',
+        content: 'Show the multi-view interactive visualziations, which are interconnected with each other.',
+        placement: 'center',
+        data: {
+            hide: [ELICITATION_SPACE.PARAMETER]
+        }
+    },
+    {
+        target: '.univariate-container',
+        content: `Show the histogram distribution of the variables.\n
+         You can draw the distribution by clicking the grid in the histogram plot.`,
+        placement: 'right',
+        data: {
+            hide: [ELICITATION_SPACE.PARAMETER]
+        }
+    },
+    {
+        target: '.parameters-container',
+        content: `Show the histogram distribution of the parameters.\n
+         You can draw the distribution by clicking the grid in the histogram plot.`,
+        placement: 'center',
+        data: {
+            hide: [ELICITATION_SPACE.OBSERVABLE]
+        }
+    },
+    {
+        target: '.parameter-operation-container',
+        content: "You can fit your sketched histogram to continuous distributions by cliking the fit button and selecting the desired distribution.",
+        placement: 'right',
+        data: {
+            hide: [ELICITATION_SPACE.OBSERVABLE]
+        }
+    },
+    {
+        target: '.bivariate-container',
+        content: 'Show the bivariate scatterplot of the selected two variables.',
+        placement: 'right',
+        data: {
+            hide: [ELICITATION_SPACE.PARAMETER]
+        }
+    },
+    {
+        target: '.parallel-plot-container',
+        content: 'Show the parallel coordinates of all variables.',
+        placement: 'right',
+        data: {
+            hide: [ELICITATION_SPACE.PARAMETER]
+        }
+    },
+    {
+        target: '.filter-container',
+        content: 'Select the filter of current specified entities. The complete filter will show the entities that have values on all axes, while the incomplete filter will show the entities that only have values on some axes.',
+        placement: 'bottom',
+        data: {
+            hide: [ELICITATION_SPACE.PARAMETER]
+        }
+    },
+    {
+        target: '.complete-filter-button',
+        content: 'When the complete filter selected, you can brush on axes to select regions and click generate button to generate entities within those regions.',
+        placement: 'bottom',
+        data: {
+            hide: [ELICITATION_SPACE.PARAMETER],
+            pause: true
+        }
+    },
+    {
+        target: '.incomplete-filter-button',
+        content: 'When the incomplete filter selected, you can click the select button to begin selection of two groups of entities that you want to link together.',
+        placement: 'bottom',
+        data: {
+            hide: [ELICITATION_SPACE.PARAMETER]
+        }
+    },
+    {
+        target: '.results-container',
+        content: 'Show the prior predictive results of current specification.',
+        placement: 'left',
+        data: {
+            hide: [FEEDBACK_MODE.NO_FEEDBACK]
+        }
+    },
+    {
+        target: '.version-operation-container',
+        content: 'Undo or Redo the previous actions.',
+        placement: 'bottom',
+        data: {
+            hide: [ELICITATION_SPACE.PARAMETER]
+        }
+    },
+    {
+        target: '.finish-button',
+        content: 'When you are satisfied with your specification, you can click the finish button to end the current task.',
+        placement: 'bottom',
+        data: {
+            hide: []
+        }
+    }
+]
+
 export const WorkspaceProvider = ({ children }) => {
     const [leftPanelOpen, setLeftPanelOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
@@ -142,114 +262,12 @@ export const WorkspaceProvider = ({ children }) => {
     const [feedback, setFeedback] = useState(null);
     const [finishParseModel, setFinishParseModel] = useState(false);
 
+    const [examplePlayground, setExamplePlayground] = useState(false);
+
     const [tutorial, setTutorial] = useState(false);
     const [tutorialSteps, setTutorialSteps] = useState([]);
     const [runTutorial, setRunTutorial] = useState(true);
     const [savedEnvironment, setSavedEnvironment] = useState(null);
-
-    const steps = [
-        {
-            target: '.left-panel',
-            content: `Describe the Task's Scenario, model, variables.\n 
-            You can "click the brush icon" next to the variable to modify the 
-            ${space === ELICITATION_SPACE.PARAMETER ? "parameter's range" :
-                    "variable's range and click the add/remove icon next to the variableto add/remove it from the bivariate scatterplot."}`,
-            placement: 'right',
-            data: {
-                hide: []
-            }
-        },
-        {
-            target: '.center-panel',
-            content: 'Show the multi-view interactive visualziations, which are interconnected with each other.',
-            placement: 'center',
-            data: {
-                hide: [ELICITATION_SPACE.PARAMETER]
-            }
-        },
-        {
-            target: '.univariate-container',
-            content: `Show the histogram distribution of the ${space === ELICITATION_SPACE.OBSERVABLE ? "variables" : "parameters"}.\n
-             You can draw the distribution by clicking the grid in the histogram plot.`,
-            placement: 'right',
-            data: {
-                hide: []
-            }
-        },
-        {
-            target: '.distribution-operation-container',
-            content: "You can fit your sketched histogram to continuous distributions by cliking the fit button and selecting the desired distribution.",
-            placement: 'right',
-            data: {
-                hide: [ELICITATION_SPACE.OBSERVABLE]
-            }
-        },
-        {
-            target: '.bivariate-container',
-            content: 'Show the bivariate scatterplot of the selected two variables.',
-            placement: 'right',
-            data: {
-                hide: [ELICITATION_SPACE.PARAMETER]
-            }
-        },
-        {
-            target: '.parallel-plot-container',
-            content: 'Show the parallel coordinates of all variables.',
-            placement: 'right',
-            data: {
-                hide: [ELICITATION_SPACE.PARAMETER]
-            }
-        },
-        {
-            target: '.filter-container',
-            content: 'Select the filter of current specified entities. The complete filter will show the entities that have values on all axes, while the incomplete filter will show the entities that only have values on some axes.',
-            placement: 'bottom',
-            data: {
-                hide: [ELICITATION_SPACE.PARAMETER]
-            }
-        },
-        {
-            target: '.complete-filter-button',
-            content: 'When the complete filter selected, you can brush on axes to select regions and click generate button to generate entities within those regions.',
-            placement: 'bottom',
-            data: {
-                hide: [ELICITATION_SPACE.PARAMETER],
-                pause: true
-            }
-        },
-        {
-            target: '.incomplete-filter-button',
-            content: 'When the incomplete filter selected, you can click the select button to begin selection of two groups of entities that you want to link together.',
-            placement: 'bottom',
-            data: {
-                hide: [ELICITATION_SPACE.PARAMETER]
-            }
-        },
-        {
-            target: '.results-container',
-            content: 'Show the prior predictive results of current specification.',
-            placement: 'left',
-            data: {
-                hide: [FEEDBACK_MODE.NO_FEEDBACK]
-            }
-        },
-        {
-            target: '.version-operation-container',
-            content: 'Undo or Redo the previous actions.',
-            placement: 'bottom',
-            data: {
-                hide: [ELICITATION_SPACE.PARAMETER]
-            }
-        },
-        {
-            target: '.finish-button',
-            content: 'When you are satisfied with your specification, you can click the finish button to end the current task.',
-            placement: 'bottom',
-            data: {
-                hide: []
-            }
-        }
-    ]
 
     useEffect(() => {
         axios.get(window.BACKEND_ADDRESS + '/study-settings')
@@ -260,27 +278,25 @@ export const WorkspaceProvider = ({ children }) => {
                 setSpace(response.data.elicitation_space);
                 setFeedback(response.data.feedback_mode);
 
-                if (response.data.tutorial) {
-                    fetch('/tutorial_data.json', {
+                if (response.data.example_playground) {
+                    const dataURL = `/example-data-${response.data.elicitation_space === ELICITATION_SPACE.PARAMETER ? "parameter" : "observable"}.json`;
+                    fetch(dataURL, {
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json'
                         }
                     })
                         .then((res) => {
-                            console.log("fetching tutorial data", res);
+                            console.log("fetching example data", res);
                             return res.json()
                         })
                         .then((data) => {
                             console.log("Loaded saved environment:", data);
-                            setTutorial(true);
                             setSavedEnvironment(data);
                         })
                         .catch(error => {
                             console.log("No saved environment found or error loading it:", error);
                         });
-                } else {
-                    setTutorial(false);
                 }
             })
             .catch(error => {
@@ -311,6 +327,8 @@ export const WorkspaceProvider = ({ children }) => {
         setSpace,
         feedback,
         setFeedback,
+        examplePlayground,
+        setExamplePlayground,
         savedEnvironment,
         tutorial,
         setTutorial,
