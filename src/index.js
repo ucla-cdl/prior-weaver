@@ -6,6 +6,7 @@ import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 window.BACKEND_ADDRESS = process.env.NODE_ENV === 'production' ? process.env.REACT_APP_BACKEND_URL : 'http://localhost:8000';
+window.POST_TASK_SURVEY_URL = process.env.REACT_APP_POST_TASK_SURVEY_URL;
 
 root.render(
   <React.StrictMode>

@@ -86,7 +86,7 @@ export default function NavBar() {
                 color="success"
                 endIcon={<CheckCircleOutlineIcon />}
                 onClick={() => setFinishSpecificationDialogOpen(true)}
-                disabled={translationTimes === 0}
+                disabled={translationTimes === 0 && feedback === FEEDBACK_MODE.FEEDBACK}
             >
                 Finish
             </Button>

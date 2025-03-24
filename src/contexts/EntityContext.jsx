@@ -6,7 +6,7 @@ import { VariableContext } from './VariableContext';
 export const EntityContext = createContext();
 
 export const EntityProvider = ({ children }) => {
-    const { taskId, space, feedback, model, savedEnvironment } = useContext(WorkspaceContext);
+    const { taskId, space, feedback, model, savedEnvironment, studyActive } = useContext(WorkspaceContext);
     const { variablesDict, parametersDict, translationTimes, predictiveCheckResults } = useContext(VariableContext);
 
     const [entities, setEntities] = useState({});
@@ -242,6 +242,10 @@ export const EntityProvider = ({ children }) => {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
+
+        if (studyActive) {
+            window.open(window.POST_TASK_SURVEY_URL);
+        }
     }
 
     const contextValue = {

@@ -7,31 +7,31 @@ export const TASK_SETTINGS = {
     "house": {
         id: "house",
         name: "House Price Prediction",
-        scenario: "You are a data scientist interested in understanding the factors that influence house prices.\
-                Specifically, you want to assess how house's distance to the nearest metro station, its age, and the number of stores in the area impact its selling price.",
-        defaultModel: `model <- glm(house_price ~ distance_to_metro + house_age + num_stores, family = gaussian(link = "identity"))`,
+        scenario: "You are a data scientist analyzing the factors that influence house prices.\
+                Specifically, you aim to assess how a house's proximity to the nearest metro station, its age, and the number of nearby stores affect its selling price per square meter.",
+        defaultModel: `model <- glm(house_unit_price ~ distance_to_metro + house_age + num_stores, family = gaussian(link = "identity"))`,
         variables: {
             "predictor": [
                 {
                     "name": "distance_to_metro",
                     "unit": "km",
-                    "description": "The distance to the nearest metro station."
+                    "description": "The distance from the house to the nearest metro station."
                 },
                 {
                     "name": "house_age",
-                    "unit": "yrs",
-                    "description": "The age of the house."
+                    "unit": "years",
+                    "description": "The number of years since the house was built."
                 },
                 {
                     "name": "num_stores",
                     "unit": "stores",
-                    "description": "The number of stores in the neighborhood."
+                    "description": "The number of retail stores in the surrounding area."
                 }
             ],
             "response": [
                 {
                     "name": "house_unit_price",
-                    "unit": "$k/m^2",
+                    "unit": "$k/m²",
                     "description": "The selling price of the house per square meter."
                 }
             ]
@@ -40,27 +40,27 @@ export const TASK_SETTINGS = {
     "income": {
         id: "income",
         name: "Income Prediction",
-        scenario: "You are a social scientist interested in understanding the factors that influence people's income.\
-                Specifically, you want to assess how people's age and their years of education impact their annualy income in the U.S.",
+        scenario: "You are a social scientist studying the factors that influence income levels in the U.S.\
+                Specifically, you want to evaluate how an individual's age and years of education impact their annual income.",
         defaultModel: `model <- glm(income ~ age + education, family = gaussian(link = "identity"))`,
         variables: {
             "predictor": [
                 {
                     "name": "age",
-                    "unit": "yrs",
-                    "description": "The age of the person."
+                    "unit": "years",
+                    "description": "The individual's age."
                 },
                 {
                     "name": "education",
-                    "unit": "yrs",
-                    "description": "The years of education of the person."
+                    "unit": "years",
+                    "description": "The total number of years the individual has spent in formal education."
                 }
             ],
             "response": [
                 {
                     "name": "income",
                     "unit": "$k",
-                    "description": "The annual income of the person."
+                    "description": "The individual's annual income in thousands of dollars."
                 }
             ]
         }
@@ -68,27 +68,27 @@ export const TASK_SETTINGS = {
     "score": {
         id: "score",
         name: "Student Exam Score Prediction",
-        scenario: "You are a data scientist interested in understanding the factors that influence students' performance.\
-                Specifically, you want to assess how students' hours of study and attendence rate impact their exam score.",
-        defaultModel: `model <- glm(exam_score ~ hours_study + attendence_rate, family = gaussian(link = "identity"))`,
+        scenario: "You are a data scientist investigating factors that influence student performance.\
+                Specifically, you seek to understand how the number of hours a student studies and their attendance rate affect their exam score.",
+        defaultModel: `model <- glm(exam_score ~ hours_study + attendance_rate, family = gaussian(link = "identity"))`,
         variables: {
             "predictor": [
                 {
                     "name": "hours_study",
-                    "unit": "hrs",
-                    "description": "The hours of study of the student."
+                    "unit": "hours",
+                    "description": "The number of hours the student spends studying per week."
                 },
                 {
-                    "name": "attendence_rate",
+                    "name": "attendance_rate",
                     "unit": "%",
-                    "description": "The attendence rate of the student."
+                    "description": "The percentage of classes the student attended."
                 }
             ],
             "response": [
                 {
                     "name": "exam_score",
-                    "unit": "pts",
-                    "description": "The exam score of the student."
+                    "unit": "points",
+                    "description": "The student's exam score."
                 }
             ]
         }
@@ -96,31 +96,32 @@ export const TASK_SETTINGS = {
     "car": {
         id: "car",
         name: "Car Price Prediction",
-        scenario: "You are a data scientist interested in understanding the factors that influence car prices.\
-                Specifically, you want to assess how car's present price and mileage impact its selling price.",
+        scenario: "You are a data scientist examining factors that influence car prices.\
+                Specifically, you aim to assess how a car's current market price and mileage affect its selling price.",
         defaultModel: `model <- glm(selling_price ~ mileage + present_price, family = gaussian(link = "identity"))`,
         variables: {
             "predictor": [
                 {
                     "name": "mileage",
                     "unit": "miles",
-                    "description": "The mileage of the car."
+                    "description": "The total distance the car has been driven."
                 },
                 {
                     "name": "present_price",
                     "unit": "$k",
-                    "description": "The present price of the car."
+                    "description": "The car's current market value in thousands of dollars."
                 }
             ],
             "response": [
                 {
                     "name": "selling_price",
-                    "unit": "$k", "description": "The selling price of the car."
+                    "unit": "$k",
+                    "description": "The final selling price of the car in thousands of dollars."
                 }
             ]
         }
     }
-}
+};
 
 export const ELICITATION_SPACE = {
     OBSERVABLE: "Observable Space",
@@ -135,8 +136,8 @@ export const FEEDBACK_MODE = {
 const steps = [
     {
         target: '.left-panel',
-        content: `Describe the Task's Scenario, model, variables.\n 
-        You can "click the brush icon" next to the variable to modify the parameter's range.`,
+        content: `Define the task scenario, model, and variables.\n
+        Click the brush icon next to a variable to modify its range.`,
         placement: 'right',
         data: {
             hide: [ELICITATION_SPACE.OBSERVABLE]
@@ -144,8 +145,8 @@ const steps = [
     },
     {
         target: '.left-panel',
-        content: `Describe the Task's Scenario, model, variables.\n 
-        You can "click the brush icon" next to the variable to modify the variable's range and click the add/remove icon next to the variableto add/remove it from the bivariate scatterplot.`,
+        content: `Define the task scenario, model, and variables.\n
+        Click the brush icon next to a variable to modify its range. Use the add/remove icon to include or exclude it from the bivariate scatterplot.`,
         placement: 'right',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -153,7 +154,7 @@ const steps = [
     },
     {
         target: '.center-panel',
-        content: 'Show the multi-view interactive visualziations, which are interconnected with each other.',
+        content: 'Explore the multi-view interactive visualizations, which are interconnected.',
         placement: 'center',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -161,8 +162,8 @@ const steps = [
     },
     {
         target: '.univariate-container',
-        content: `Show the histogram distribution of the variables.\n
-         You can draw the distribution by clicking the grid in the histogram plot.`,
+        content: `View the histogram representation of variable distributions.\n
+        Click on the grid in the histogram plot to draw a distribution.`,
         placement: 'right',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -170,8 +171,8 @@ const steps = [
     },
     {
         target: '.parameters-container',
-        content: `Show the histogram distribution of the parameters.\n
-         You can draw the distribution by clicking the grid in the histogram plot.`,
+        content: `View the histogram representation of parameter distributions.\n\r
+        Click on the grid in the histogram plot to draw a distribution.`,
         placement: 'center',
         data: {
             hide: [ELICITATION_SPACE.OBSERVABLE]
@@ -179,7 +180,7 @@ const steps = [
     },
     {
         target: '.parameter-operation-container',
-        content: "You can fit your sketched histogram to continuous distributions by cliking the fit button and selecting the desired distribution.",
+        content: "Fit your sketched histogram to a continuous distribution by clicking the 'Fit' button and selecting the desired distribution.",
         placement: 'right',
         data: {
             hide: [ELICITATION_SPACE.OBSERVABLE]
@@ -187,7 +188,7 @@ const steps = [
     },
     {
         target: '.bivariate-container',
-        content: 'Show the bivariate scatterplot of the selected two variables.',
+        content: 'View the bivariate scatterplot of the selected variables.',
         placement: 'right',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -195,7 +196,7 @@ const steps = [
     },
     {
         target: '.parallel-plot-container',
-        content: 'Show the parallel coordinates of all variables.',
+        content: 'Explore the parallel coordinates plot representing all variables.',
         placement: 'right',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -203,7 +204,9 @@ const steps = [
     },
     {
         target: '.filter-container',
-        content: 'Select the filter of current specified entities. The complete filter will show the entities that have values on all axes, while the incomplete filter will show the entities that only have values on some axes.',
+        content: `Filter the displayed entities based on their data completeness.\n\n
+        - Completed filter: Shows entities with values on all axes.\n\n
+        - Incompleted filter: Shows entities with values on some axes.`,
         placement: 'bottom',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -211,7 +214,9 @@ const steps = [
     },
     {
         target: '.complete-filter-button',
-        content: 'When the complete filter selected, you can brush on axes to select regions and click generate button to generate entities within those regions.',
+        content: `When the complete filter is selected:\n\n
+        - Brush on axes to select regions.\n\n
+        - Click 'Generate' to create entities within those regions.`,
         placement: 'bottom',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER],
@@ -220,7 +225,8 @@ const steps = [
     },
     {
         target: '.incomplete-filter-button',
-        content: 'When the incomplete filter selected, you can click the select button to begin selection of two groups of entities that you want to link together.',
+        content: `When the incomplete filter is selected:\n\n
+        - Click 'Select' to begin choosing two groups of entities to link together.`,
         placement: 'bottom',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -228,7 +234,7 @@ const steps = [
     },
     {
         target: '.results-container',
-        content: 'Show the prior predictive results of current specification.',
+        content: 'View the prior predictive results based on your current specification.',
         placement: 'left',
         data: {
             hide: [FEEDBACK_MODE.NO_FEEDBACK]
@@ -236,7 +242,7 @@ const steps = [
     },
     {
         target: '.version-operation-container',
-        content: 'Undo or Redo the previous actions.',
+        content: 'Undo or redo previous actions.',
         placement: 'bottom',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -244,13 +250,13 @@ const steps = [
     },
     {
         target: '.finish-button',
-        content: 'When you are satisfied with your specification, you can click the finish button to end the current task.',
+        content: `When you're satisfied with your specification, click 'Finish' to complete the task.`,
         placement: 'bottom',
         data: {
             hide: []
         }
     }
-]
+];
 
 export const WorkspaceProvider = ({ children }) => {
     const [leftPanelOpen, setLeftPanelOpen] = useState(true);
@@ -268,6 +274,8 @@ export const WorkspaceProvider = ({ children }) => {
     const [tutorialSteps, setTutorialSteps] = useState([]);
     const [runTutorial, setRunTutorial] = useState(true);
     const [savedEnvironment, setSavedEnvironment] = useState(null);
+
+    const [studyActive, setStudyActive] = useState(true);
 
     useEffect(() => {
         axios.get(window.BACKEND_ADDRESS + '/study-settings')
@@ -334,7 +342,8 @@ export const WorkspaceProvider = ({ children }) => {
         setTutorial,
         runTutorial,
         setRunTutorial,
-        tutorialSteps
+        tutorialSteps,
+        studyActive,
     };
 
     return (
