@@ -97,17 +97,17 @@ export const TASK_SETTINGS = {
         id: "car",
         name: "Car Price Prediction",
         scenario: "You are a data scientist examining factors that influence car prices.\
-                Specifically, you aim to assess how a car's current market price and mileage affect its selling price.",
-        defaultModel: `model <- glm(selling_price ~ mileage + present_price, family = gaussian(link = "identity"))`,
+                Specifically, you aim to assess how a car's showroom price and mileage affect its selling price.",
+        defaultModel: `model <- glm(selling_price ~ mileage + showroom_price, family = gaussian(link = "identity"))`,
         variables: {
             "predictor": [
                 {
                     "name": "mileage",
-                    "unit": "miles",
+                    "unit": "k miles",
                     "description": "The total distance the car has been driven."
                 },
                 {
-                    "name": "present_price",
+                    "name": "showroom_price",
                     "unit": "$k",
                     "description": "The car's current market value in thousands of dollars."
                 }
