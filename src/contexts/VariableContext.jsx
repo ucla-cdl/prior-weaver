@@ -10,7 +10,7 @@ const DEFAULT_VARIABLE_ATTRIBUTES = {
 };
 
 const DEFAULT_PARAMETER_ATTRIBUTES = {
-    min: 0,
+    min: -10,
     max: 10,
     roulettePoints: [],
     distributions: [],

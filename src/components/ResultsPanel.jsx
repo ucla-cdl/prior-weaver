@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { Box, Button, CircularProgress, Snackbar, Alert, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Checkbox } from '@mui/material';
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
@@ -9,7 +9,7 @@ import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContex
 
 export default function ResultsPanel() {
     const { space } = useContext(WorkspaceContext);
-    const { variablesDict, parametersDict, updateParameter, setTranslationTimes, predictiveCheckResults, setPredictiveCheckResults } = useContext(VariableContext);
+    const { variablesDict, parametersDict, updateParameter, translationTimes, setTranslationTimes, predictiveCheckResults, setPredictiveCheckResults } = useContext(VariableContext);
     const { entities } = useContext(EntityContext);
 
     const [isTranslating, setIsTranslating] = useState(false);
@@ -19,6 +19,8 @@ export default function ResultsPanel() {
     const margin = { top: 10, bottom: 40, left: 40, right: 20, };
     const labelOffset = 35;
 
+    const [showPlot, setShowPlot] = useState("both");
+
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
@@ -27,7 +29,7 @@ export default function ResultsPanel() {
         if (predictiveCheckResults.length > 0) {
             plotCheckResults();
         }
-    }, [predictiveCheckResults]);
+    }, [predictiveCheckResults, showPlot]);
 
     const readyToTranslate = () => {
         if (space === ELICITATION_SPACE.OBSERVABLE) {
@@ -95,12 +97,10 @@ export default function ResultsPanel() {
             })
             .then((response) => {
                 console.log("predictive check", response.data);
-                setPredictiveCheckResults(prev => [...prev, response.data.check_results]);
-            })
-            .finally(() => {
                 setIsTranslating(false);
                 setTranslationTimes(prev => prev + 1);
-            });
+                setPredictiveCheckResults(prev => [...prev, response.data.check_results]);
+            })
     }
 
     const plotCheckResults = () => {
@@ -159,13 +159,13 @@ export default function ResultsPanel() {
             .call(d3.axisLeft(yKDE));
 
         // Plot previous KDE if it exists
-        if (previousCheckResult) {
+        if (previousCheckResult && (showPlot === "both" || showPlot === "previous")) {
             previousCheckResult["simulated_results"].forEach((simulatedData, index) => {
                 chart.append('path')
                     .datum(simulatedData["kde"])
                     .attr('fill', 'none')
                     .attr('stroke', 'red')
-                    .attr('stroke-width', 0.5)
+                    .attr('stroke-width', 1)
                     .attr('d', d3.line()
                         .x(d => x(d.x))
                         .y(d => yKDE(d.density)));
@@ -181,39 +181,41 @@ export default function ResultsPanel() {
 
             chart.append("text")
                 .attr("x", chartWidth - 30)
-                .attr("y", 20)
+                .attr("y", 25)
                 .attr("text-anchor", "start")
                 .style("font-size", "12px")
                 .text("Previous");
         }
 
-        const simulatedResults = results["simulated_results"];
-        simulatedResults.forEach((simulatedData, index) => {
-            // Plot current KDE
-            chart.append('path')
-                .datum(simulatedData["kde"])
-                .attr('fill', 'none')
-                .attr('stroke', 'blue')
-                .attr('stroke-width', 0.5)
-                .attr('d', d3.line()
-                    .x(d => x(d.x))
-                    .y(d => yKDE(d.density)));
-        });
+        if ((showPlot === "both" || showPlot === "current")) {
+            const simulatedResults = results["simulated_results"];
+            simulatedResults.forEach((simulatedData, index) => {
+                // Plot current KDE
+                chart.append('path')
+                    .datum(simulatedData["kde"])
+                    .attr('fill', 'none')
+                    .attr('stroke', 'blue')
+                    .attr('stroke-width', 1)
+                    .attr('d', d3.line()
+                        .x(d => x(d.x))
+                        .y(d => yKDE(d.density)));
+            });
 
-        // Add legend for current results
-        chart.append("rect")
-            .attr("x", chartWidth - 50)
-            .attr("y", 10)
-            .attr("width", 15)
-            .attr("height", 2)
-            .attr("fill", "blue");
+            // Add legend for current results
+            chart.append("rect")
+                .attr("x", chartWidth - 50)
+                .attr("y", 10)
+                .attr("width", 15)
+                .attr("height", 2)
+                .attr("fill", "blue");
 
-        chart.append("text")
-            .attr("x", chartWidth - 30)
-            .attr("y", 10)
-            .attr("text-anchor", "start")
-            .style("font-size", "12px")
-            .text("Current");
+            chart.append("text")
+                .attr("x", chartWidth - 30)
+                .attr("y", 15)
+                .attr("text-anchor", "start")
+                .style("font-size", "12px")
+                .text("Current");
+        }
 
         // Add title
         const responseVar = Object.values(variablesDict).find(v => v.type === "response");
@@ -256,10 +258,50 @@ export default function ResultsPanel() {
                 disabled={(space === ELICITATION_SPACE.PARAMETER && Object.values(parametersDict).some(param => param.selectedDistributionIdx === null)) ||
                     (space === ELICITATION_SPACE.OBSERVABLE && (Object.values(entities).length === 0))}
             >
-                Translate
+                {space === ELICITATION_SPACE.OBSERVABLE ? "Translate" : "Check"}
             </Button>
             {isTranslating && <CircularProgress sx={{ my: 2 }} />}
-            <Box sx={{ width: '100%' }} id={'predictive-check-div'}></Box>
+            {!isTranslating && translationTimes > 0 &&
+                <Box className='hide-plot-box' sx={{ mb: 2 }}>
+                    <FormControl sx={{ border: '1px solid #bbb', borderRadius: '8px', padding: '15px' }}>
+                        <FormLabel>Show: </FormLabel>
+                        <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={(showPlot === "both" || showPlot === "previous")}
+                                        onChange={() => {
+                                            if (showPlot === "both" || showPlot === "previous") {
+                                                setShowPlot("current");
+                                            } else if (showPlot === "current") {
+                                                setShowPlot("both");
+                                            }
+                                        }}
+                                    />
+                                }
+                                label="Previous"
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={(showPlot === "both" || showPlot === "current")}
+                                        onChange={() => {
+                                            if (showPlot === "both" || showPlot === "current") {
+                                                setShowPlot("previous");
+                                            } else if (showPlot === "previous") {
+                                                setShowPlot("both");
+                                            }
+                                        }}
+                                    />
+                                }
+                                label="Current"
+                                sx={{ mr: 2 }}
+                            />
+                        </Box>
+                    </FormControl>
+                </Box>
+            }
+            {!isTranslating && translationTimes > 0 && <Box sx={{ width: '100%' }} id={'predictive-check-div'}></Box>}
 
             <Snackbar
                 open={snackbarOpen}

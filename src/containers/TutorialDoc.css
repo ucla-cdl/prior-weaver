@@ -1,0 +1,113 @@
+/* Main container */
+.tutorial-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+/* Sidebar styles */
+.sidebar {
+    width: 250px;
+    height: 100%;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    background-color: #fff;
+}
+
+.sidebar-header {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1;
+}
+
+/* Main content area */
+.tutorial-content {
+    width: 100%;
+    height: 100%;
+    padding: 40px 40px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 25px;
+}
+
+.tutorial-title {
+    margin-bottom: 32px;
+    font-weight: 700;
+    color: #1976d2;
+}
+
+/* Clip box styles */
+.clip-box {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 16px;
+    scroll-margin-top: 16px;
+    gap: 20px;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.clip-title {
+    font-weight: 600;
+    color: #1976d2;
+}
+
+.clip-description {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+/* Markdown specific styles */
+.clip-description p {
+    margin-bottom: 1em;
+}
+
+.clip-description ul, 
+.clip-description ol {
+    margin-left: 2em;
+    margin-bottom: 1em;
+}
+
+.clip-description li {
+    margin-bottom: 0.5em;
+}
+
+.clip-description strong {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.8);
+}
+
+.clip-description em {
+    font-style: italic;
+    color: #1976d2;
+}
+
+.clip-description code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.clip-description blockquote {
+    border-left: 4px solid #1976d2;
+    padding-left: 1em;
+    margin-left: 0;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.clip-box-video {
+    width: 80%;
+    aspect-ratio: 16/9;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

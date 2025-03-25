@@ -1,10 +1,10 @@
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid2, IconButton, TextField, Typography } from '@mui/material';
 import React, { useContext, useState } from 'react';
-import BrushIcon from '@mui/icons-material/Brush';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import { VariableContext } from '../contexts/VariableContext';
 import { TASK_SETTINGS, ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
+import { Edit } from '@mui/icons-material';
 
 export default function ModelPanel() {
     const { taskId, model, space, tutorial } = useContext(WorkspaceContext)
@@ -43,19 +43,20 @@ export default function ModelPanel() {
             </Box>
 
             {/* Variable List */}
-            {space === ELICITATION_SPACE.OBSERVABLE &&
-                <Box className="context-container">
-                    <Typography variant="h6" gutterBottom>Variables</Typography>
-                    {Object.entries(variablesDict).map(([varName, variable]) => (
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={varName}>
-                            <Typography variant="body1"><b>{varName}</b> ({variable.unitLabel})</Typography>
-                            <IconButton onClick={() => {
-                                setEditingVariable(variable);
-                                setIsEditingVariable(true);
-                            }}>
-                                <BrushIcon fontSize='small' />
-                            </IconButton>
-                            {biVariable1?.name === variable.name ? (
+            <Box className="context-container">
+                <Typography variant="h6" gutterBottom>Variables</Typography>
+                {Object.entries(variablesDict).map(([varName, variable]) => (
+                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={varName}>
+                        <Typography variant="body1"><b>{varName}</b> ({variable.unitLabel})</Typography>
+                        <IconButton onClick={() => {
+                            setEditingVariable(variable);
+                            setIsEditingVariable(true);
+                        }}>
+                            <Edit fontSize='small' />
+                        </IconButton>
+                        {space === ELICITATION_SPACE.PARAMETER ?
+                            <></>
+                            : biVariable1?.name === variable.name ? (
                                 <IconButton
                                     onClick={() => setBiVariable1(null)}>
                                     <RemoveCircleIcon fontSize='small' />
@@ -72,51 +73,50 @@ export default function ModelPanel() {
                                     <AddCircleIcon fontSize='small' />
                                 </IconButton>
                             )}
-                        </Box>
-                    ))}
+                    </Box>
+                ))}
 
-                    <Dialog open={isEditingVariable}>
-                        <DialogTitle>Editing Variable</DialogTitle>
-                        <DialogContent>
+                <Dialog open={isEditingVariable}>
+                    <DialogTitle>Editing Variable</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            sx={{ m: '10px' }}
+                            label="Variable Name"
+                            value={editingVariable?.name || ''}
+                            disabled
+                        />
+                        <Box>
                             <TextField
                                 sx={{ m: '10px' }}
-                                label="Variable Name"
-                                value={editingVariable?.name || ''}
+                                label="Unit Label"
+                                value={editingVariable?.unitLabel || ''}
+                                onChange={(e) => setEditingVariable({ ...editingVariable, unitLabel: e.target.value })}
                                 disabled
                             />
-                            <Box>
-                                <TextField
-                                    sx={{ m: '10px' }}
-                                    label="Unit Label"
-                                    value={editingVariable?.unitLabel || ''}
-                                    onChange={(e) => setEditingVariable({ ...editingVariable, unitLabel: e.target.value })}
-                                    disabled
-                                />
-                            </Box>
-                            <Box>
-                                <TextField
-                                    sx={{ m: '10px' }}
-                                    label="Min Value"
-                                    type="number"
-                                    value={editingVariable?.min || 0}
-                                    onChange={(e) => setEditingVariable({ ...editingVariable, min: parseFloat(e.target.value) })}
-                                />
-                                <TextField
-                                    sx={{ m: '10px' }}
-                                    label="Max Value"
-                                    type="number"
-                                    value={editingVariable?.max || 100}
-                                    onChange={(e) => setEditingVariable({ ...editingVariable, max: parseFloat(e.target.value) })}
-                                />
-                            </Box>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button color='danger' onClick={() => setIsEditingVariable(false)}>Cancel</Button>
-                            <Button variant="contained" onClick={confirmEditvariable}>Confirm</Button>
-                        </DialogActions>
-                    </Dialog>
-                </Box>
-            }
+                        </Box>
+                        <Box>
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Min Value"
+                                type="number"
+                                value={editingVariable?.min || 0}
+                                onChange={(e) => setEditingVariable({ ...editingVariable, min: parseFloat(e.target.value) })}
+                            />
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Max Value"
+                                type="number"
+                                value={editingVariable?.max || 100}
+                                onChange={(e) => setEditingVariable({ ...editingVariable, max: parseFloat(e.target.value) })}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button color='danger' onClick={() => setIsEditingVariable(false)}>Cancel</Button>
+                        <Button variant="contained" onClick={confirmEditvariable}>Confirm</Button>
+                    </DialogActions>
+                </Dialog>
+            </Box>
 
             {space === ELICITATION_SPACE.PARAMETER &&
                 <Box className="context-container">
@@ -128,7 +128,7 @@ export default function ModelPanel() {
                                 setEditingParameter(parameter);
                                 setIsEditingParameter(true);
                             }}>
-                                <BrushIcon fontSize='small' />
+                                <Edit fontSize='small' />
                             </IconButton>
                         </Box>
                     ))}

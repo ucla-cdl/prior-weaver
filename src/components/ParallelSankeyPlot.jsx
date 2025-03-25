@@ -565,6 +565,11 @@ export default function ParallelSankeyPlot() {
     }
 
     const confirmSelection = () => {
+        if (selectionStep === SELECTION_STEPS.LINK) {
+            connectEntities();
+            return;
+        }
+
         switch (selectionStep) {
             case SELECTION_STEPS.INITIAL:
                 setSelectionType(SELECTION_TYPE.GROUP_1);
@@ -655,6 +660,19 @@ export default function ParallelSankeyPlot() {
         resetSelection();
     }
 
+    const getLinkButtonColor = () => {
+        switch (selectionStep) {
+            case SELECTION_STEPS.INITIAL:
+                return 'primary';
+            case SELECTION_STEPS.SELECT_G1:
+                return 'secondary';
+            case SELECTION_STEPS.SELECT_G2:
+                return 'success';
+            case SELECTION_STEPS.LINK:
+                return 'primary';
+        }
+    }
+
     const handleDragStart = (event) => {
         setDraggedItem(event.active.id);
     }
@@ -734,13 +752,13 @@ export default function ParallelSankeyPlot() {
                                 <Button
                                     size='small'
                                     variant={selectionStep === SELECTION_STEPS.INITIAL ? 'outlined' : 'contained'}
-                                    color={selectionStep === SELECTION_STEPS.INITIAL ? 'primary' : selectionStep < SELECTION_STEPS.SELECT_G2 ? 'secondary' : 'success'}
+                                    color={getLinkButtonColor()}
                                     onClick={confirmSelection}
-                                    disabled={selectionStep > SELECTION_STEPS.SELECT_G2}
                                 >
                                     {selectionStep === SELECTION_STEPS.INITIAL ? 'Start Selection' :
                                         selectionStep === SELECTION_STEPS.SELECT_G1 ? 'Confirm Group 1' :
                                             selectionStep === SELECTION_STEPS.SELECT_G2 ? 'Confirm Group 2' :
+                                                selectionStep === SELECTION_STEPS.LINK ? 'Link' :
                                                 "Selection Finished"}
                                 </Button>
                                 <Button
@@ -771,20 +789,6 @@ export default function ParallelSankeyPlot() {
                                 style={{ width: '60px', textAlign: 'center' }}
                             />
                         </Box>
-                    )}
-
-                    {activeFilter === FILTER_TYPES.INCOMPLETE && (
-                        <Button
-                            size='small'
-                            variant='contained'
-                            color='primary'
-                            onClick={() => {
-                                connectEntities();
-                            }}
-                            disabled={selectionStep < SELECTION_STEPS.LINK}
-                        >
-                            Link
-                        </Button>
                     )}
 
                     <Button

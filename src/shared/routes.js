@@ -3,7 +3,8 @@ const routes = {
     home: "/test",
     workspace: "/workspace",
     logger: "/logger",
-    admin: "/admin"
+    admin: "/admin",
+    tutorial: "/tutorial"
 };
 
 export default routes;

@@ -5,6 +5,7 @@ import Workspace from "./containers/Workspace";
 import Logger from "./containers/Logger";
 import Home from "./containers/Home";
 import Admin from "./containers/Admin";
+import TutorialDoc from "./containers/TutorialDoc";
 
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { VariableProvider } from "./contexts/VariableContext";
@@ -25,6 +26,7 @@ function App() {
                     <Route path={routes.workspace} element={<Workspace />}></Route>
                     <Route path={routes.logger} element={<Logger />}></Route>
                     <Route path={routes.admin} element={<Admin />}></Route>
+                    <Route path={routes.tutorial} element={<TutorialDoc />}></Route>
                   </Routes>
                 </HashRouter>
               </div>
