@@ -377,8 +377,9 @@ export default function ParallelSankeyPlot() {
             ])
             .on("start brush end", (event, key) => {
                 if (event.sourceEvent === null || frozenAxesRef.current.has(key)) return false;
+                console.log("Brushed", event, key);
                 brushed(event, key);
-            });
+            })
 
         // Apply brush to axis groups
         chart.selectAll(".axis")
@@ -400,7 +401,9 @@ export default function ParallelSankeyPlot() {
             }
 
             selectionsRef.current = currentSelections;
-            updateSelections(selectionsRef.current, SELECTION_SOURCES.PARALLEL);
+            if (event.type !== "end") {
+                updateSelections(selectionsRef.current, SELECTION_SOURCES.PARALLEL);
+            }
         }
     }
 
@@ -558,6 +561,7 @@ export default function ParallelSankeyPlot() {
 
     const deleteSelectedEntities = () => {
         deleteEntities(selectedEntities.map(entity => entity.id));
+        clearBrushSelection();
     }
 
     const confirmSelection = () => {
