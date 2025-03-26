@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button, Typography, Snackbar, Alert, Select, MenuItem } from '@mui/material';
+import { Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button, Typography, Snackbar, Alert, Select, MenuItem, TextField } from '@mui/material';
 import { TASK_SETTINGS, ELICITATION_SPACE, FEEDBACK_MODE, WorkspaceContext } from '../contexts/WorkspaceContext';
 import axios from 'axios';
 
 const Admin = () => {
-    const { taskId, space, feedback, setTaskId, setSpace, setFeedback, loadRecord, setLoadRecord } = useContext(WorkspaceContext);
+    const { userName, taskId, space, feedback, setUserName, setTaskId, setSpace, setFeedback, loadRecord, setLoadRecord } = useContext(WorkspaceContext);
     const [notification, setNotification] = useState(null);
     const [records, setRecords] = useState([]);
     const [selectedRecordName, setSelectedRecordName] = useState("");
@@ -33,6 +33,7 @@ const Admin = () => {
     const handleSaveSettings = () => {
         axios
             .post(window.BACKEND_ADDRESS + '/admin/study-settings', {
+                user_name: userName,
                 task_id: taskId,
                 elicitation_space: space,
                 feedback_mode: feedback,
@@ -52,8 +53,15 @@ const Admin = () => {
     }
 
     return (
-        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, p: 3 }}>
+        <Box sx={{ boxSizing: "border-box", width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, p: 5 }}>
             <Typography variant="h4">Study Settings</Typography>
+            
+            <TextField
+                label="User Name"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+            />
+
             <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: 2 }}>
                 {/* Load Record */}
                 <FormControl

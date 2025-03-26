@@ -29,12 +29,12 @@ export default function ModelPanel() {
     }
 
     return (
-        <Box spacing={3}>
+        <Box sx={{ width: '100%', height: '100%' }}>
             {/* Scenario info */}
-            <Box className="context-container">
+            {/* <Box className="context-container">
                 <Typography variant="h6" gutterBottom>Scenario</Typography>
-                <Typography sx={{ maxHeight: '200px', overflowY: 'auto' }}>{TASK_SETTINGS[taskId]?.scenario}</Typography>
-            </Box>
+                <Typography variant='body1' sx={{ maxHeight: '150px', overflowY: 'auto' }}>{TASK_SETTINGS[taskId]?.scenario}</Typography>
+            </Box> */}
 
             {/* Model info */}
             <Box className="context-container">
@@ -118,54 +118,55 @@ export default function ModelPanel() {
                 </Dialog>
             </Box>
 
-            {space === ELICITATION_SPACE.PARAMETER &&
-                <Box className="context-container">
-                    <Typography variant='h6' gutterBottom>Parameters</Typography>
-                    {Object.entries(parametersDict).map(([paraName, parameter]) => (
-                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={paraName}>
-                            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{paraName}</Typography>
+            <Box className="context-container">
+                <Typography variant='h6' gutterBottom>Parameters</Typography>
+                {Object.entries(parametersDict).map(([paraName, parameter]) => (
+                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={paraName}>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{paraName}</Typography>
+                        {space === ELICITATION_SPACE.PARAMETER &&
                             <IconButton onClick={() => {
                                 setEditingParameter(parameter);
                                 setIsEditingParameter(true);
                             }}>
                                 <Edit fontSize='small' />
                             </IconButton>
-                        </Box>
-                    ))}
+                        }
+                    </Box>
+                ))}
 
-                    <Dialog open={isEditingParameter}>
-                        <DialogTitle>Editing Parameter</DialogTitle>
-                        <DialogContent>
+                <Dialog open={isEditingParameter}>
+                    <DialogTitle>Editing Parameter</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            sx={{ m: '10px' }}
+                            label="Parameter Name"
+                            value={editingParameter?.name || ''}
+                            disabled
+                        />
+                        <Box>
                             <TextField
                                 sx={{ m: '10px' }}
-                                label="Parameter Name"
-                                value={editingParameter?.name || ''}
-                                disabled
+                                label="Min Value"
+                                type="number"
+                                value={editingParameter?.min || 0}
+                                onChange={(e) => setEditingParameter({ ...editingParameter, min: parseFloat(e.target.value) })}
                             />
-                            <Box>
-                                <TextField
-                                    sx={{ m: '10px' }}
-                                    label="Min Value"
-                                    type="number"
-                                    value={editingParameter?.min || 0}
-                                    onChange={(e) => setEditingParameter({ ...editingParameter, min: parseFloat(e.target.value) })}
-                                />
-                                <TextField
-                                    sx={{ m: '10px' }}
-                                    label="Max Value"
-                                    type="number"
-                                    value={editingParameter?.max || 100}
-                                    onChange={(e) => setEditingParameter({ ...editingParameter, max: parseFloat(e.target.value) })}
-                                />
-                            </Box>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button color='danger' onClick={() => setIsEditingParameter(false)}>Cancel</Button>
-                            <Button variant="contained" onClick={confirmEditParameter}>Confirm</Button>
-                        </DialogActions>
-                    </Dialog>
-                </Box>
-            }
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Max Value"
+                                type="number"
+                                value={editingParameter?.max || 100}
+                                onChange={(e) => setEditingParameter({ ...editingParameter, max: parseFloat(e.target.value) })}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button color='danger' onClick={() => setIsEditingParameter(false)}>Cancel</Button>
+                        <Button variant="contained" onClick={confirmEditParameter}>Confirm</Button>
+                    </DialogActions>
+                </Dialog>
+            </Box>
+
         </Box>
     )
 }

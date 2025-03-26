@@ -4,7 +4,7 @@ const routes = {
     workspace: "/workspace",
     logger: "/logger",
     admin: "/admin",
-    tutorial: "/tutorial"
+    tutorial: "/doc"
 };
 
 export default routes;

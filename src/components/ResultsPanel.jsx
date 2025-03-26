@@ -158,13 +158,16 @@ export default function ResultsPanel() {
         chart.append('g')
             .call(d3.axisLeft(yKDE));
 
+        const currentColor = "blue";
+        const previousColor = "crimson";
+
         // Plot previous KDE if it exists
         if (previousCheckResult && (showPlot === "both" || showPlot === "previous")) {
             previousCheckResult["simulated_results"].forEach((simulatedData, index) => {
                 chart.append('path')
                     .datum(simulatedData["kde"])
                     .attr('fill', 'none')
-                    .attr('stroke', 'red')
+                    .attr('stroke', previousColor)
                     .attr('stroke-width', 1)
                     .attr('d', d3.line()
                         .x(d => x(d.x))
@@ -177,7 +180,7 @@ export default function ResultsPanel() {
                 .attr("y", 20)
                 .attr("width", 15)
                 .attr("height", 2)
-                .attr("fill", "red");
+                .attr("fill", previousColor);
 
             chart.append("text")
                 .attr("x", chartWidth - 30)
@@ -194,7 +197,7 @@ export default function ResultsPanel() {
                 chart.append('path')
                     .datum(simulatedData["kde"])
                     .attr('fill', 'none')
-                    .attr('stroke', 'blue')
+                    .attr('stroke', currentColor)
                     .attr('stroke-width', 1)
                     .attr('d', d3.line()
                         .x(d => x(d.x))
@@ -207,7 +210,7 @@ export default function ResultsPanel() {
                 .attr("y", 10)
                 .attr("width", 15)
                 .attr("height", 2)
-                .attr("fill", "blue");
+                .attr("fill", currentColor);
 
             chart.append("text")
                 .attr("x", chartWidth - 30)

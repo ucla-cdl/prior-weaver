@@ -8,14 +8,19 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-
+import BookIcon from '@mui/icons-material/Book';
 export default function NavBar() {
     const { space, feedback, setTutorial, setRunTutorial } = useContext(WorkspaceContext);
     const { translationTimes } = useContext(VariableContext);
     const { currentVersion, entityHistory, finishSpecification, getUndoOperationDescription, getRedoOperationDescription, undoEntityOperation, redoEntityOperation } = useContext(EntityContext);
     const [finishSpecificationDialogOpen, setFinishSpecificationDialogOpen] = useState(false);
 
-    const handleClickTutorial = () => {
+
+    const handleClickDoc = () => {
+        window.open('#/doc', '_blank');
+    }
+
+    const handleClickUITour = () => {
         setTutorial(true);
         setRunTutorial(true);
     }
@@ -38,14 +43,24 @@ export default function NavBar() {
             px: 2
         }}>
             {/* Left section - Tutorial button */}
-            <Button
-                variant="outlined"
-                color="secondary"
-                startIcon={<HelpOutlineIcon />}
-                onClick={handleClickTutorial}
-            >
-                UI Tour
-            </Button>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                <Button
+                    variant="outlined"
+                    color="secondary"
+                    startIcon={<BookIcon />}
+                    onClick={handleClickDoc}
+                >
+                    Doc
+                </Button>
+                <Button
+                    variant="outlined"
+                    color="primary"
+                    startIcon={<HelpOutlineIcon />}
+                    onClick={handleClickUITour}
+                >
+                    UI Tour
+                </Button>
+            </Box>
 
             {/* Middle section - Undo and Redo buttons */}
             {space === ELICITATION_SPACE.OBSERVABLE &&

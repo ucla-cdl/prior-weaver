@@ -30,7 +30,7 @@ export const DISTRIBUTION_TYPES = {
 };
 
 export const VariableProvider = ({ children }) => {
-    const { taskId, model, setModel, finishParseModel, setFinishParseModel, savedEnvironment, tutorial } = useContext(WorkspaceContext);
+    const { taskId, model, setModel, finishParseModel, setFinishParseModel, savedEnvironment } = useContext(WorkspaceContext);
     const [variablesDict, setVariablesDict] = useState({});
     const [sortableVariables, setSortableVariables] = useState([]);
     const [parametersDict, setParametersDict] = useState({});

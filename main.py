@@ -80,6 +80,7 @@ class TaskIDs(str, Enum):
 
 # Store current study settings
 current_study_settings = {
+    "user_name": "admin",
     "task_id": TaskIDs.INCOME,
     "elicitation_space": ElicitationSpace.OBSERVABLE,
     "feedback_mode": FeedbackMode.FEEDBACK,
@@ -89,6 +90,7 @@ current_study_settings = {
 
 
 class AdminUpdateSettings(BaseModel):
+    user_name: Optional[str]
     task_id: Optional[str]
     elicitation_space: Optional[ElicitationSpace]
     feedback_mode: Optional[FeedbackMode]
@@ -104,6 +106,8 @@ def get_study_settings():
 @app.post('/admin/study-settings')
 def update_study_settings(settings: AdminUpdateSettings):
     # Simple API key validation - you should implement proper authentication
+    if settings.user_name is not None:
+        current_study_settings["user_name"] = settings.user_name
 
     if settings.task_id is not None:
         current_study_settings["task_id"] = settings.task_id

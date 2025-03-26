@@ -108,20 +108,10 @@ export const FEEDBACK_MODE = {
 const steps = [
     {
         target: '.left-panel',
-        content: `Define the task scenario, model, and variables.\n
-        Click the brush icon next to a variable to modify its range.`,
+        content: `Show the task scenario, model, variables, and parameters.`,
         placement: 'right',
         data: {
-            hide: [ELICITATION_SPACE.OBSERVABLE]
-        }
-    },
-    {
-        target: '.left-panel',
-        content: `Define the task scenario, model, and variables.\n
-        Click the brush icon next to a variable to modify its range. Use the add/remove icon to include or exclude it from the bivariate scatterplot.`,
-        placement: 'right',
-        data: {
-            hide: [ELICITATION_SPACE.PARAMETER]
+            hide: []
         }
     },
     {
@@ -134,8 +124,7 @@ const steps = [
     },
     {
         target: '.univariate-container',
-        content: `View the histogram representation of variable distributions.\n
-        Click on the grid in the histogram plot to draw a distribution.`,
+        content: `View the histogram representation of variable distributions.`,
         placement: 'right',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -143,8 +132,7 @@ const steps = [
     },
     {
         target: '.parameters-container',
-        content: `View the histogram representation of parameter distributions.\n\r
-        Click on the grid in the histogram plot to draw a distribution.`,
+        content: `View the histogram representation of parameter distributions.`,
         placement: 'center',
         data: {
             hide: [ELICITATION_SPACE.OBSERVABLE]
@@ -176,9 +164,7 @@ const steps = [
     },
     {
         target: '.filter-container',
-        content: `Filter the displayed entities based on their data completeness.\n\n
-        - Completed filter: Shows entities with values on all axes.\n\n
-        - Incompleted filter: Shows entities with values on some axes.`,
+        content: `Filter the displayed entities based on their data completeness.`,
         placement: 'bottom',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -186,9 +172,7 @@ const steps = [
     },
     {
         target: '.complete-filter-button',
-        content: `When the complete filter is selected:\n\n
-        - Brush on axes to select regions.\n\n
-        - Click 'Generate' to create entities within those regions.`,
+        content: `When the complete filter is selected, only entities with values on all axes are displayed.`,
         placement: 'bottom',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER],
@@ -197,8 +181,7 @@ const steps = [
     },
     {
         target: '.incomplete-filter-button',
-        content: `When the incomplete filter is selected:\n\n
-        - Click 'Select' to begin choosing two groups of entities to link together.`,
+        content: `When the incomplete filter is selected, entities with values on some axes are displayed.`,
         placement: 'bottom',
         data: {
             hide: [ELICITATION_SPACE.PARAMETER]
@@ -234,6 +217,7 @@ export const WorkspaceProvider = ({ children }) => {
     const [leftPanelOpen, setLeftPanelOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
+    const [userName, setUserName] = useState("admin");
     const [taskId, setTaskId] = useState(null);
     const [model, setModel] = useState('');
     const [space, setSpace] = useState(null);
@@ -253,6 +237,7 @@ export const WorkspaceProvider = ({ children }) => {
         axios.get(window.BACKEND_ADDRESS + '/study-settings')
             .then(response => {
                 console.log("fetching study settings", response.data);
+                setUserName(response.data.user_name);
                 setTaskId(response.data.task_id);
                 setModel(TASK_SETTINGS[response.data.task_id].defaultModel);
                 setSpace(response.data.elicitation_space);
@@ -291,6 +276,8 @@ export const WorkspaceProvider = ({ children }) => {
         setLeftPanelOpen,
         rightPanelOpen,
         setRightPanelOpen,
+        userName,
+        setUserName,
         taskId,
         setTaskId,
         model,
@@ -308,6 +295,7 @@ export const WorkspaceProvider = ({ children }) => {
         setRunTutorial,
         tutorialSteps,
         studyActive,
+        setStudyActive
     };
 
     return (

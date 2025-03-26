@@ -3,8 +3,8 @@ import { useState, useEffect, useRef, useContext } from 'react';
 import * as d3 from 'd3';
 import axios from 'axios';
 import "./ParameterPlot.css";
+import { WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext, DISTRIBUTION_TYPES } from '../contexts/VariableContext';
-
 
 const EDIT_MODES = {
     DISTRIBUTION: 'distribution',
@@ -13,7 +13,6 @@ const EDIT_MODES = {
 
 export const ParameterPlot = ({ parameter }) => {
     const { parametersDict, updateParameter, getDistributionNotation } = useContext(VariableContext);
-    const [editMode, setEditMode] = useState(EDIT_MODES.ROULETTE);
     const [showFittedDistribution, setShowFittedDistribution] = useState(false);
     const [isFitting, setIsFitting] = useState(false);
 
@@ -26,6 +25,7 @@ export const ParameterPlot = ({ parameter }) => {
         drawPlot();
         plotRoulette();
         if (parameter.selectedDistributionIdx !== null) {
+            setShowFittedDistribution(true);
             plotDistribution(parametersDict[parameter.name].distributions[parameter.selectedDistributionIdx]);
         }
     }, [parameter]);

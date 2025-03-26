@@ -6,7 +6,7 @@ import axios from 'axios';
 export const EntityContext = createContext();
 
 export const EntityProvider = ({ children }) => {
-    const { taskId, space, feedback, model, savedEnvironment, studyActive } = useContext(WorkspaceContext);
+    const { userName, taskId, space, feedback, model, savedEnvironment, studyActive } = useContext(WorkspaceContext);
     const { variablesDict, parametersDict, translationTimes, predictiveCheckResults } = useContext(VariableContext);
 
     const [entities, setEntities] = useState({});
@@ -220,6 +220,7 @@ export const EntityProvider = ({ children }) => {
     const finishSpecification = () => {
         const data = {
             finishTimeStamp: new Date().toISOString(),
+            name: `${userName}-${space}`,
             taskId: taskId,
             space: space,
             feedback: feedback,
