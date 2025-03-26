@@ -5,3 +5,5 @@ scipy
 fitter
 pandas
 scikit-learn
+pymongo
+dotenv
