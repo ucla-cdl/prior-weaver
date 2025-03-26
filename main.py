@@ -23,8 +23,9 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from bson.json_util import dumps
 
+if os.getenv("K_SERVICE") is None:  # check if running locally
+    load_dotenv()
 
-load_dotenv()
 uri = f"mongodb+srv://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_CLUSTER')}"
 client = None
 db = None

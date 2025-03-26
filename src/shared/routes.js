@@ -1,6 +1,6 @@
 const routes = {
     default: "/",
-    home: "/test",
+    home: "/home",
     workspace: "/workspace",
     logger: "/logger",
     admin: "/admin",
