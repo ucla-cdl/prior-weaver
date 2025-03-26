@@ -1,5 +1,6 @@
 import React, { createContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 
 export const WorkspaceContext = createContext();
 
@@ -96,13 +97,13 @@ export const TASK_SETTINGS = {
 };
 
 export const ELICITATION_SPACE = {
-    OBSERVABLE: "Observable Space",
-    PARAMETER: "Parameter Space"
+    OBSERVABLE: "observable",
+    PARAMETER: "parameter"
 }
 
 export const FEEDBACK_MODE = {
-    FEEDBACK: "With Feedback",
-    NO_FEEDBACK: "Without Feedback"
+    FEEDBACK: "feedback",
+    NO_FEEDBACK: "no_feedback"
 }
 
 const steps = [
@@ -214,6 +215,7 @@ const steps = [
 ];
 
 export const WorkspaceProvider = ({ children }) => {
+    const location = useLocation();
     const [leftPanelOpen, setLeftPanelOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
@@ -234,6 +236,26 @@ export const WorkspaceProvider = ({ children }) => {
     const [studyActive, setStudyActive] = useState(true);
 
     useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const exampleParam = searchParams.get('example');
+        const spaceParam = searchParams.get('space');
+
+        if (exampleParam === "true") {
+            console.log("Example Mode");
+            setStudyActive(false);
+            setTaskId("house");
+            setModel(TASK_SETTINGS["house"].defaultModel);
+            setSpace(spaceParam);
+            setFeedback(FEEDBACK_MODE.FEEDBACK);
+            fetchRecord(`${spaceParam}-example`);
+        } else {
+            console.log("Study Mode");
+            setStudyActive(true);
+            fetchStudySettings();
+        }
+    }, [location]);
+
+    const fetchStudySettings = () => {
         axios.get(window.BACKEND_ADDRESS + '/study-settings')
             .then(response => {
                 console.log("fetching study settings", response.data);
@@ -245,21 +267,25 @@ export const WorkspaceProvider = ({ children }) => {
 
                 if (response.data?.load_record) {
                     const recordName = response.data?.record_name;
-                    axios.get(window.BACKEND_ADDRESS + "/getRecord?record_name=" + recordName)
-                        .then((res) => {
-                            const record = JSON.parse(res.data.record);
-                            console.log("Loaded record:", record);
-                            setSavedEnvironment(record);
-                        })
-                        .catch(error => {
-                            console.log("No saved environment found or error loading it:", error);
-                        });
+                    fetchRecord(recordName);
                 }
             })
             .catch(error => {
                 console.log("Error fetching study settings:", error);
             });
-    }, []);
+    };
+
+    const fetchRecord = (recordName) => {
+        axios.get(window.BACKEND_ADDRESS + "/getRecord?record_name=" + recordName)
+            .then((res) => {
+                const record = JSON.parse(res.data.record);
+                console.log("Fetched record:", record);
+                setSavedEnvironment(record);
+            })
+            .catch(error => {
+                console.log("No saved environment found or error loading it:", error);
+            });
+    };
 
     useEffect(() => {
         if (tutorial) {

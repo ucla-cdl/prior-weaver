@@ -5,7 +5,7 @@ import Workspace from "./containers/Workspace";
 import Logger from "./containers/Logger";
 import Home from "./containers/Home";
 import Admin from "./containers/Admin";
-import TutorialDoc from "./containers/TutorialDoc";
+import Doc from "./containers/Doc";
 
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { VariableProvider } from "./contexts/VariableContext";
@@ -14,26 +14,25 @@ import { SelectionProvider } from "./contexts/SelectionContext";
 
 function App() {
   return (
-    <WorkspaceProvider>
-      <VariableProvider>
-        <EntityProvider>
+    <HashRouter>
+      <WorkspaceProvider>
+        <VariableProvider>
+          <EntityProvider>
           <SelectionProvider>
               <div className="App">
-                <HashRouter>
                   <Routes>
-                    <Route path={routes.default} element={<Workspace />}></Route>
                     <Route path={routes.home} element={<Home />}></Route>
                     <Route path={routes.workspace} element={<Workspace />}></Route>
                     <Route path={routes.logger} element={<Logger />}></Route>
                     <Route path={routes.admin} element={<Admin />}></Route>
-                    <Route path={routes.tutorial} element={<TutorialDoc />}></Route>
+                    <Route path={routes.doc} element={<Doc />}></Route>
                   </Routes>
-                </HashRouter>
               </div>
           </SelectionProvider>
         </EntityProvider>
       </VariableProvider>
     </WorkspaceProvider>
+    </HashRouter>
   );
 }
 

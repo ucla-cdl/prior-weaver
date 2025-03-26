@@ -1,5 +1,5 @@
 /* Main container */
-.tutorial-container {
+.doc-container {
     display: flex;
     width: 100%;
     height: 100%;
@@ -18,17 +18,23 @@
 }
 
 .sidebar-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     position: sticky;
     top: 0;
     background-color: #fff;
     z-index: 1;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 /* Main content area */
-.tutorial-content {
+.doc-content {
     width: 100%;
     height: 100%;
-    padding: 40px 40px;
+    padding: 40px 60px;
     overflow-y: auto;
     box-sizing: border-box;
     display: flex;
@@ -38,7 +44,7 @@
     gap: 25px;
 }
 
-.tutorial-title {
+.doc-title {
     margin-bottom: 32px;
     font-weight: 700;
     color: #1976d2;

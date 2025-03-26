@@ -9,12 +9,15 @@ import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import BookIcon from '@mui/icons-material/Book';
+import { useNavigate } from 'react-router-dom';
+import routes from '../shared/routes';
+
 export default function NavBar() {
     const { space, feedback, setTutorial, setRunTutorial } = useContext(WorkspaceContext);
     const { translationTimes } = useContext(VariableContext);
     const { currentVersion, entityHistory, finishSpecification, getUndoOperationDescription, getRedoOperationDescription, undoEntityOperation, redoEntityOperation } = useContext(EntityContext);
     const [finishSpecificationDialogOpen, setFinishSpecificationDialogOpen] = useState(false);
-
+    const navigate = useNavigate();
 
     const handleClickDoc = () => {
         window.open('#/doc', '_blank');
@@ -26,8 +29,13 @@ export default function NavBar() {
     }
 
     const handleConfirmFinish = () => {
-        finishSpecification();
-        setFinishSpecificationDialogOpen(false);
+        const studyActive = finishSpecification();
+        if (studyActive) {
+            setFinishSpecificationDialogOpen(false);
+        }
+        else {
+            navigate(routes.home);
+        }
     }
 
     return (

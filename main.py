@@ -68,13 +68,13 @@ def root():
 
 # ================================ ADMIN ENDPOINTS =================================
 class ElicitationSpace(str, Enum):
-    PARAMETER = "Parameter Space"
-    OBSERVABLE = "Observable Space"
+    PARAMETER = "parameter"
+    OBSERVABLE = "observable"
 
 
 class FeedbackMode(str, Enum):
-    FEEDBACK = "With Feedback"
-    NO_FEEDBACK = "Without Feedback"
+    FEEDBACK = "feedback"
+    NO_FEEDBACK = "no_feedback"
 
 
 class TaskIDs(str, Enum):

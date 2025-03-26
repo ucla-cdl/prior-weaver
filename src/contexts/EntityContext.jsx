@@ -233,27 +233,19 @@ export const EntityProvider = ({ children }) => {
             predictiveCheckResults: predictiveCheckResults,
         };
 
-        axios.post(window.BACKEND_ADDRESS + '/saveRecord', { record: data })
-            .then(response => {
-                console.log('Record saved successfully');
-                if (studyActive) {
+        if (studyActive) {
+            axios.post(window.BACKEND_ADDRESS + '/saveRecord', { record: data })
+                .then(response => {
+                    console.log('Record saved successfully');
                     window.open(window.POST_TASK_SURVEY_URL);
-                }
-            })
-            .catch(error => {
-                console.error('Error saving record:', error);
-            });
-
-        // // Create blob and download
-        // const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        // const url = window.URL.createObjectURL(blob);
-        // const link = document.createElement('a');
-        // link.href = url;
-        // link.download = 'elicitation-results.json';
-        // document.body.appendChild(link);
-        // link.click();
-        // document.body.removeChild(link);
-        // window.URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    console.error('Error saving record:', error);
+                    return false;
+                });
+        }
+        
+        return studyActive;
     }
 
     const contextValue = {

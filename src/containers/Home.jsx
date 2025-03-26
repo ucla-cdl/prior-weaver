@@ -1,55 +1,43 @@
 import { Box, Typography, Button } from "@mui/material";
 import "./Home.css";
 import ReactMarkdown from 'react-markdown'
+import { Book, QueryStats, Tune } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import routes from "../shared/routes";
+import { useEffect } from "react";
 
-export const Home = () => {
-    const title = "Bridging Knowledge Gaps Between Cognitive Goals Across Multiple Readings Of Academic Papers";
+export default function Home() {
+    const navigate = useNavigate();
+    const title = "Prior Weaver";
+    const subtitle = "A tool for supporting users constructively expressing their domain knowledge and eliciting priors for Bayesian models";
 
-    const authors = [
-        {
-            name: "Brian Roysar",
-            email: "brianroysar@ucla.edu",
-            affiliation: "University of California, Los Angeles"
-        },
-        {
-            name: "Michael Shi",
-            email: "michaelshi@g.ucla.edu",
-            affiliation: "University of California, Los Angeles"
-        },
-        {
-            name: "Ollie Pai",
-            email: "o.pai@ucla.edu",
-            affiliation: "University of California, Los Angeles"
-        },
-        {
-            name: "Yuwei Xiao",
-            email: "yuweix@ucla.edu",
-            affiliation: "University of California, Los Angeles"
-        }
-    ]
+    const description = `In Bayesian analysis, we use **prior distributions** to represent our existing knowledge or beliefs about model parameters before seeing data. This process of specifying priors is called **prior elicitation** and is crucial when data is limited or expert knowledge is key.  
+Prior elicitation requires translating domain expertise into probability distributions in a systematic way.
 
-    const description = `Reading academic papers is a fundamental yet challenging task for students and researchers.\
-    Beyond text, papers are dense with data, figures, and statistical analyses, requiring readers to extract key insights, synthesize information, and assess evidence across multiple formats.\
-    Researchers must also navigate shifting cognitive goals, switching between different reading strategies based on their evolving needs.\
-    Moreover, retaining and organizing insights over time remains a persistent challenge, often leading to redundant work and lost understanding upon revisiting papers.\
-    While various reading strategies and digital tools exist, they often fail to comprehensively support researchers in managing their reading process and structuring their acquired knowledge.\
-    To address these gaps, we propose **re:ad, an interactive reading system designed to help researchers track their reading process, manage cognitive goals, and systematically organize insights**.\
-    By providing a structured and dynamic approach to reading, re:ad aims to reduce cognitive overload and enhance the efficiency of engaging with academic literature.`;
+**Prior Weaver** helps you express your domain knowledge through an interactive visual interface and automatically translates it into appropriate prior distributions. The tool bridges the gap between domain expertise and statistical modeling, making prior elicitation accessible to both statisticians and domain experts.`;
 
     const links = [
         {
-            name: "GitHub",
-            url: "https://github.com/olliepai/re-ad"
+            name: "Documentation",
+            path: routes.doc
         },
         {
-            name: "Blog",
-            url: "https://medium.com/@xshaw2002/user-research-blog-augment-data-intensive-reading-d3fd5546ad55"
+            name: "Parameter Space Example",
+            path: `${routes.workspace}?example=true&space=parameter`
         },
         {
-            name: "Try re:ad",
-            url: "./#/paper-reader"
+            name: "Observable Space Example",
+            path: `${routes.workspace}?example=true&space=observable`
         }
     ]
+
+    useEffect(() => {
+        document.title = "Prior Weaver";
+    }, []);
+
+    const navigateTo = (path) => {
+        navigate(path);
+    }
 
     const scrollToBlock = (block) => {
         document.querySelector(block)?.scrollIntoView({ behavior: 'smooth' });
@@ -58,35 +46,25 @@ export const Home = () => {
     return (
         <Box className="home">
             <Box className="title-block" sx={{ p: 2, gap: 3 }}>
-                <img src={logo} alt="logo" style={{ width: "300px" }} />
                 <Typography variant="h3" sx={{ textAlign: "center", fontWeight: "bold" }}>
                     {title}
                 </Typography>
             </Box>
 
             <Box className="links-block" sx={{ my: 2 }}>
-                <Button className="link-button" variant="contained" onClick={() => window.open(links[0].url, "_blank")} startIcon={<GitHub />}>
-                    Documentation
+                <Button className="link-button" variant="contained" onClick={() => navigateTo(links[0].path)} startIcon={<Book />}>
+                    {links[0].name}
                 </Button>
-                <Button className="link-button" variant="contained" onClick={() => window.open(links[1].url, "_blank")} startIcon={<AutoStories />}>
-                    Parameter Space Example
+                <Button className="link-button" variant="contained" onClick={() => navigateTo(links[1].path)} startIcon={<Tune />}>
+                    {links[1].name}
                 </Button>
-                <Button className="link-button" variant="contained" onClick={() => window.open(links[2].url, "_blank")} startIcon={<img src={icon} style={{ width: "20px", height: "20px" }} />}>
-                    Observable Space Example
+                <Button className="link-button" variant="contained" onClick={() => navigateTo(links[2].path)} startIcon={<QueryStats />}>
+                    {links[2].name}
                 </Button>
             </Box>
 
             <Box className="description-block" sx={{ my: 2 }}>
-                <Typography variant="h4">
-                    <b>What is re:ad?</b>
-                </Typography>
-                <ReactMarkdown components={{
-                    p: ({ children }) => (
-                        <Typography variant="body1" sx={{ lineHeight: 2, my: 2 }}>
-                            {children}
-                        </Typography>
-                    )
-                }}>
+                <ReactMarkdown>
                     {description}
                 </ReactMarkdown>
             </Box>
