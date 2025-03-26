@@ -93,34 +93,6 @@ export const TASK_SETTINGS = {
             ]
         }
     },
-    "car": {
-        id: "car",
-        name: "Car Price Prediction",
-        scenario: "You are a data scientist examining factors that influence car prices.\
-                Specifically, you aim to assess how a car's showroom price and mileage affect its selling price.",
-        defaultModel: `model <- glm(selling_price ~ mileage + showroom_price, family = gaussian(link = "identity"))`,
-        variables: {
-            "predictor": [
-                {
-                    "name": "mileage",
-                    "unit": "k miles",
-                    "description": "The total distance the car has been driven."
-                },
-                {
-                    "name": "showroom_price",
-                    "unit": "$k",
-                    "description": "The car's current market value in thousands of dollars."
-                }
-            ],
-            "response": [
-                {
-                    "name": "selling_price",
-                    "unit": "$k",
-                    "description": "The final selling price of the car in thousands of dollars."
-                }
-            ]
-        }
-    }
 };
 
 export const ELICITATION_SPACE = {
@@ -268,7 +240,7 @@ export const WorkspaceProvider = ({ children }) => {
     const [feedback, setFeedback] = useState(null);
     const [finishParseModel, setFinishParseModel] = useState(false);
 
-    const [examplePlayground, setExamplePlayground] = useState(false);
+    const [loadRecord, setLoadRecord] = useState(false);
 
     const [tutorial, setTutorial] = useState(false);
     const [tutorialSteps, setTutorialSteps] = useState([]);
@@ -286,21 +258,13 @@ export const WorkspaceProvider = ({ children }) => {
                 setSpace(response.data.elicitation_space);
                 setFeedback(response.data.feedback_mode);
 
-                if (response.data.example_playground) {
-                    const dataURL = `./example-data-${response.data.elicitation_space === ELICITATION_SPACE.PARAMETER ? "parameter" : "observable"}.json`;
-                    fetch(dataURL, {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        }
-                    })
+                if (response.data?.load_record) {
+                    const recordName = response.data?.record_name;
+                    axios.get(window.BACKEND_ADDRESS + "/getRecord?record_name=" + recordName)
                         .then((res) => {
-                            console.log("fetching example data", res);
-                            return res.json()
-                        })
-                        .then((data) => {
-                            console.log("Loaded saved environment:", data);
-                            setSavedEnvironment(data);
+                            const record = JSON.parse(res.data.record);
+                            console.log("Loaded record:", record);
+                            setSavedEnvironment(record);
                         })
                         .catch(error => {
                             console.log("No saved environment found or error loading it:", error);
@@ -335,8 +299,8 @@ export const WorkspaceProvider = ({ children }) => {
         setSpace,
         feedback,
         setFeedback,
-        examplePlayground,
-        setExamplePlayground,
+        loadRecord,
+        setLoadRecord,
         savedEnvironment,
         tutorial,
         setTutorial,

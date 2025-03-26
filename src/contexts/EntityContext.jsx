@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { WorkspaceContext } from './WorkspaceContext';
 import { VariableContext } from './VariableContext';
-
+import axios from 'axios';
 export const EntityContext = createContext();
 
 export const EntityProvider = ({ children }) => {
@@ -25,7 +25,7 @@ export const EntityProvider = ({ children }) => {
         if (savedEnvironment) {
             setEntities(savedEnvironment.entities);
             setEntityHistory(savedEnvironment.entityHistory);
-            setCurrentVersion(savedEnvironment.entityHistory.length - 1);
+            setCurrentVersion(savedEnvironment.entityHistory?.length - 1);
 
             console.log("Loaded entities from saved environment.");
         }
@@ -232,20 +232,27 @@ export const EntityProvider = ({ children }) => {
             predictiveCheckResults: predictiveCheckResults,
         };
 
-        // Create blob and download
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'elicitation-results.json';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        axios.post(window.BACKEND_ADDRESS + '/saveRecord', { record: data })
+            .then(response => {
+                console.log('Record saved successfully');
+                if (studyActive) {
+                    window.open(window.POST_TASK_SURVEY_URL);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving record:', error);
+            });
 
-        if (studyActive) {
-            window.open(window.POST_TASK_SURVEY_URL);
-        }
+        // // Create blob and download
+        // const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        // const url = window.URL.createObjectURL(blob);
+        // const link = document.createElement('a');
+        // link.href = url;
+        // link.download = 'elicitation-results.json';
+        // document.body.appendChild(link);
+        // link.click();
+        // document.body.removeChild(link);
+        // window.URL.revokeObjectURL(url);
     }
 
     const contextValue = {

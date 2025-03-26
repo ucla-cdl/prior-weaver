@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Snackbar, Alert, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Checkbox } from '@mui/material';
+import { Box, Button, CircularProgress, Snackbar, Alert, Typography, FormControl, FormLabel, FormControlLabel, Checkbox } from '@mui/material';
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
@@ -9,7 +9,7 @@ import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContex
 
 export default function ResultsPanel() {
     const { space } = useContext(WorkspaceContext);
-    const { variablesDict, parametersDict, updateParameter, translationTimes, setTranslationTimes, predictiveCheckResults, setPredictiveCheckResults } = useContext(VariableContext);
+    const { variablesDict, parametersDict, updateParameter, translationTimes, setTranslationTimes, predictiveCheckResults, setPredictiveCheckResults, getDistributionNotation } = useContext(VariableContext);
     const { entities } = useContext(EntityContext);
 
     const [isTranslating, setIsTranslating] = useState(false);
@@ -251,8 +251,9 @@ export default function ResultsPanel() {
             flexDirection: 'column',
             alignItems: 'center'
         }}>
+            <Typography variant="h6" gutterBottom>Predictive Check Results</Typography>
             <Button
-                sx={{ my: 3 }}
+                sx={{ my: 1 }}
                 variant="contained"
                 onClick={translate}
                 disabled={(space === ELICITATION_SPACE.PARAMETER && Object.values(parametersDict).some(param => param.selectedDistributionIdx === null)) ||
@@ -262,7 +263,7 @@ export default function ResultsPanel() {
             </Button>
             {isTranslating && <CircularProgress sx={{ my: 2 }} />}
             {!isTranslating && translationTimes > 0 &&
-                <Box className='hide-plot-box' sx={{ mb: 2 }}>
+                <Box className='show-plot-box' sx={{ my: 2 }}>
                     <FormControl sx={{ border: '1px solid #bbb', borderRadius: '8px', padding: '15px' }}>
                         <FormLabel>Show: </FormLabel>
                         <Box sx={{ display: 'flex', flexDirection: 'row' }}>
@@ -277,6 +278,7 @@ export default function ResultsPanel() {
                                                 setShowPlot("both");
                                             }
                                         }}
+                                        disabled={predictiveCheckResults.length === 1}
                                     />
                                 }
                                 label="Previous"
@@ -292,6 +294,7 @@ export default function ResultsPanel() {
                                                 setShowPlot("both");
                                             }
                                         }}
+                                        disabled={predictiveCheckResults.length === 1}
                                     />
                                 }
                                 label="Current"
@@ -302,6 +305,19 @@ export default function ResultsPanel() {
                 </Box>
             }
             {!isTranslating && translationTimes > 0 && <Box sx={{ width: '100%' }} id={'predictive-check-div'}></Box>}
+            {!isTranslating && translationTimes > 0 &&
+                <Box className="prior-result-div" sx={{ my: 2, p: 2 }}>
+                    <Typography variant="h6" gutterBottom>Prior Distributions</Typography>
+                    {Object.entries(parametersDict).map(([paramName, param]) => (
+                        <Box className="prior-result-item" key={paramName} sx={{ p: 1 }}>
+                            <Typography variant="body1" color="text.primary" sx={{ mr: 1 }}>{paramName}: </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                {getDistributionNotation(param.distributions[param.selectedDistributionIdx])}
+                            </Typography>
+                        </Box>
+                    ))}
+                </Box>
+            }
 
             <Snackbar
                 open={snackbarOpen}

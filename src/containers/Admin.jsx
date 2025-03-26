@@ -1,11 +1,34 @@
-import React, { useContext, useState } from 'react';
-import { Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button, Typography, Snackbar, Alert } from '@mui/material';
+import React, { useContext, useEffect, useState } from 'react';
+import { Box, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button, Typography, Snackbar, Alert, Select, MenuItem } from '@mui/material';
 import { TASK_SETTINGS, ELICITATION_SPACE, FEEDBACK_MODE, WorkspaceContext } from '../contexts/WorkspaceContext';
 import axios from 'axios';
 
 const Admin = () => {
-    const { taskId, space, feedback, setTaskId, setSpace, setFeedback, examplePlayground, setExamplePlayground } = useContext(WorkspaceContext);
+    const { taskId, space, feedback, setTaskId, setSpace, setFeedback, loadRecord, setLoadRecord } = useContext(WorkspaceContext);
     const [notification, setNotification] = useState(null);
+    const [records, setRecords] = useState([]);
+    const [selectedRecordName, setSelectedRecordName] = useState("");
+
+    useEffect(() => {
+        document.title = "Admin";
+        axios.get(window.BACKEND_ADDRESS + '/getRecords')
+            .then((res) => {
+                console.log(res);
+                setRecords(res.data?.records);
+            })
+            .catch((error) => {
+                setNotification("Error loading records: " + error.response.data.detail);
+            });
+    }, []);
+
+    useEffect(() => {
+        if (selectedRecordName) {
+            const record = records.find((record) => record.name === selectedRecordName);
+            setTaskId(record.taskId);
+            setSpace(record.space);
+            setFeedback(record.feedback);
+        }
+    }, [selectedRecordName]);
 
     const handleSaveSettings = () => {
         axios
@@ -13,7 +36,8 @@ const Admin = () => {
                 task_id: taskId,
                 elicitation_space: space,
                 feedback_mode: feedback,
-                example_playground: examplePlayground
+                load_record: loadRecord,
+                record_name: selectedRecordName
             })
             .then(() => {
                 setNotification("Settings saved successfully!");
@@ -23,37 +47,57 @@ const Admin = () => {
             });
     }
 
-    const handleChangeExamplePlayground = (e) => {
-        setExamplePlayground(e.target.value === "true");
-        if (e.target.value === "true") {
-            setTaskId("house");
-        }
+    const handleChangeLoadRecord = (e) => {
+        setLoadRecord(e.target.value === "true");
     }
 
     return (
         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, p: 3 }}>
             <Typography variant="h4">Study Settings</Typography>
-            {/* Tutorial */}
-            <FormControl
-                sx={{
-                    position: 'relative',
-                    border: '1px solid rgba(0, 0, 0, 0.23)',
-                    borderRadius: '2px',
-                    p: 2
-                }}
-            >
-                <FormLabel id="demo-row-radio-buttons-group-label">Example Playground</FormLabel>
-                <RadioGroup
-                    row
-                    aria-labelledby="demo-row-radio-buttons-group-label"
-                    name="row-radio-buttons-group"
-                    value={examplePlayground}
-                    onChange={handleChangeExamplePlayground}
+            <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: 2 }}>
+                {/* Load Record */}
+                <FormControl
+                    sx={{
+                        position: 'relative',
+                        border: '1px solid rgba(0, 0, 0, 0.23)',
+                        borderRadius: '2px',
+                        p: 2
+                    }}
                 >
-                    <FormControlLabel value={true} control={<Radio />} label="Yes" />
-                    <FormControlLabel value={false} control={<Radio />} label="No" />
-                </RadioGroup>
-            </FormControl>
+                    <FormLabel id="demo-row-radio-buttons-group-label">Load Record</FormLabel>
+                    <RadioGroup
+                        row
+                        aria-labelledby="demo-row-radio-buttons-group-label"
+                        name="row-radio-buttons-group"
+                        value={loadRecord}
+                        onChange={handleChangeLoadRecord}
+                    >
+                        <FormControlLabel value={true} control={<Radio />} label="Yes" />
+                        <FormControlLabel value={false} control={<Radio />} label="No" />
+                    </RadioGroup>
+                </FormControl>
+                {/* Record List */}
+                <FormControl
+                    sx={{
+                        position: 'relative',
+                        border: '1px solid rgba(0, 0, 0, 0.23)',
+                        borderRadius: '2px',
+                        p: 2
+                    }}
+                >
+                    <FormLabel id="demo-row-radio-buttons-group-label">Record List</FormLabel>
+                    <Select
+                        value={selectedRecordName}
+                        onChange={(e) => setSelectedRecordName(e.target.value)}
+                        disabled={!loadRecord}
+                    >
+                        {records.map((record) => (
+                            <MenuItem key={record.name} value={record.name}>{record.name}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Box>
+
             {/* Task */}
             <FormControl
                 sx={{
@@ -72,10 +116,11 @@ const Admin = () => {
                     onChange={(e) => setTaskId(e.target.value)}
                 >
                     {Object.values(TASK_SETTINGS).map((t) => (
-                        <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} disabled={examplePlayground}/>
+                        <FormControlLabel key={t.id} value={t.id} control={<Radio />} label={t.name} disabled={loadRecord} />
                     ))}
                 </RadioGroup>
             </FormControl>
+
             {/* Conditions */}
             <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: 2 }}>
                 {/* Elicitation Space */}
@@ -96,7 +141,7 @@ const Admin = () => {
                         onChange={(e) => setSpace(e.target.value)}
                     >
                         {Object.values(ELICITATION_SPACE).map((space) => (
-                            <FormControlLabel key={space} value={space} control={<Radio />} label={space} />
+                            <FormControlLabel key={space} value={space} control={<Radio />} label={space} disabled={loadRecord} />
                         ))}
                     </RadioGroup>
                 </FormControl>
@@ -118,7 +163,7 @@ const Admin = () => {
                         onChange={(e) => setFeedback(e.target.value)}
                     >
                         {Object.values(FEEDBACK_MODE).map((feedback) => (
-                            <FormControlLabel key={feedback} value={feedback} control={<Radio />} label={feedback} />
+                            <FormControlLabel key={feedback} value={feedback} control={<Radio />} label={feedback} disabled={loadRecord} />
                         ))}
                     </RadioGroup>
                 </FormControl>

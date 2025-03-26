@@ -3,20 +3,8 @@ import { useState, useEffect, useRef, useContext } from 'react';
 import * as d3 from 'd3';
 import axios from 'axios';
 import "./ParameterPlot.css";
-import { WorkspaceContext } from '../contexts/WorkspaceContext';
-import { VariableContext } from '../contexts/VariableContext';
+import { VariableContext, DISTRIBUTION_TYPES } from '../contexts/VariableContext';
 
-const DISTRIBUTION_TYPES = {
-    'uniform': 'Uniform',
-    'norm': 'Normal',
-    't': 'Student-t',
-    'gamma': 'Gamma',
-    'beta': 'Beta',
-    'skewnorm': 'Skew Normal',
-    'lognorm': 'Log Normal',
-    'loggamma': 'Log Gamma',
-    'expon': 'Exponential',
-};
 
 const EDIT_MODES = {
     DISTRIBUTION: 'distribution',
@@ -24,7 +12,7 @@ const EDIT_MODES = {
 }
 
 export const ParameterPlot = ({ parameter }) => {
-    const { parametersDict, updateParameter } = useContext(VariableContext);
+    const { parametersDict, updateParameter, getDistributionNotation } = useContext(VariableContext);
     const [editMode, setEditMode] = useState(EDIT_MODES.ROULETTE);
     const [showFittedDistribution, setShowFittedDistribution] = useState(false);
     const [isFitting, setIsFitting] = useState(false);
@@ -80,9 +68,10 @@ export const ParameterPlot = ({ parameter }) => {
             .nice()
             .range([0, chartWidth]);
 
-        const yMax = d3.max(distribution.p);
+        const yMax = Math.min(d3.max(distribution.p), 1); 
+        const yPadding = Math.min(yMax * 0.1, 1 - yMax);
         const y = d3.scaleLinear()
-            .domain([0, yMax])
+            .domain([0, yMax + yPadding])
             .range([chartHeight, 0]);
 
         const line = d3.line()
@@ -179,32 +168,6 @@ export const ParameterPlot = ({ parameter }) => {
             }
         }
     };
-
-    const getDistributionNotation = (dist) => {
-        const params = dist.params;
-        switch (DISTRIBUTION_TYPES[dist.name]) {
-            case DISTRIBUTION_TYPES.uniform:
-                return `X ~ Uniform(a = ${params.loc}, b = ${params.loc + params.scale})`;
-            case DISTRIBUTION_TYPES.norm:
-                return `X ~ Normal(μ = ${params.loc}, σ = ${params.scale})`;
-            case DISTRIBUTION_TYPES.t:
-                return `X ~ Student-t(ν = ${params.df}, μ = ${params.loc}, σ = ${params.scale})`;
-            case DISTRIBUTION_TYPES.gamma:
-                return `X ~ Gamma(α = ${params.a}, β = ${(1 / params.scale).toFixed(2)})`;
-            case DISTRIBUTION_TYPES.beta:
-                return `X ~ Beta(${params.a}, ${params.b}, loc = ${params.loc}, scale = ${params.scale})`;
-            case DISTRIBUTION_TYPES.skewnorm:
-                return `X ~ Skew Normal(μ = ${params.loc}, σ = ${params.scale}, α = ${params.a})`;
-            case DISTRIBUTION_TYPES.lognorm:
-                return `X ~ Log-Normal(μ = ${Math.log(params.scale).toFixed(2)}, σ = ${params.s})`;
-            case DISTRIBUTION_TYPES.loggamma:
-                return `X ~ Log-Gamma(μ = ${Math.log(params.scale).toFixed(2)}, σ = ${params.s})`;
-            case DISTRIBUTION_TYPES.expon:
-                return `X ~ Exponential(λ = ${(1 / params.scale).toFixed(2)})`;
-            default:
-                return `Unknown distribution`;
-        }
-    }
 
     const fitDistribution = () => {
         setIsFitting(true);

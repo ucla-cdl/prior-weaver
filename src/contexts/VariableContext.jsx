@@ -17,6 +17,18 @@ const DEFAULT_PARAMETER_ATTRIBUTES = {
     selectedDistributionIdx: null,
 };
 
+export const DISTRIBUTION_TYPES = {
+    'uniform': 'Uniform',
+    'norm': 'Normal',
+    't': 'Student-t',
+    'gamma': 'Gamma',
+    'beta': 'Beta',
+    'skewnorm': 'Skew Normal',
+    'lognorm': 'Log Normal',
+    'loggamma': 'Log Gamma',
+    'expon': 'Exponential',
+};
+
 export const VariableProvider = ({ children }) => {
     const { taskId, model, setModel, finishParseModel, setFinishParseModel, savedEnvironment, tutorial } = useContext(WorkspaceContext);
     const [variablesDict, setVariablesDict] = useState({});
@@ -241,6 +253,32 @@ export const VariableProvider = ({ children }) => {
         }
     }
 
+    const getDistributionNotation = (dist) => {
+        const params = dist.params;
+        switch (DISTRIBUTION_TYPES[dist.name]) {
+            case DISTRIBUTION_TYPES.uniform:
+                return `X ~ Uniform(a = ${params.loc}, b = ${(params.loc + params.scale).toFixed(2)})`;
+            case DISTRIBUTION_TYPES.norm:
+                return `X ~ Normal(μ = ${params.loc}, σ = ${params.scale})`;
+            case DISTRIBUTION_TYPES.t:
+                return `X ~ Student-t(ν = ${params.df}, μ = ${params.loc}, σ = ${params.scale})`;
+            case DISTRIBUTION_TYPES.gamma:
+                return `X ~ Gamma(α = ${params.a}, β = ${(1 / params.scale).toFixed(2)})`;
+            case DISTRIBUTION_TYPES.beta:
+                return `X ~ Beta(${params.a}, ${params.b}, loc = ${params.loc}, scale = ${params.scale})`;
+            case DISTRIBUTION_TYPES.skewnorm:
+                return `X ~ Skew Normal(μ = ${params.loc}, σ = ${params.scale}, α = ${params.a})`;
+            case DISTRIBUTION_TYPES.lognorm:
+                return `X ~ Log-Normal(μ = ${Math.log(params.scale).toFixed(2)}, σ = ${params.s})`;
+            case DISTRIBUTION_TYPES.loggamma:
+                return `X ~ Log-Gamma(α = ${Math.log(params.scale).toFixed(2)}, β = ${params.c})`;
+            case DISTRIBUTION_TYPES.expon:
+                return `X ~ Exponential(λ = ${(1 / params.scale).toFixed(2)})`;
+            default:
+                return `Unknown distribution`;
+        }
+    }
+
     const contextValue = {
         variablesDict,
         setVariablesDict,
@@ -263,6 +301,7 @@ export const VariableProvider = ({ children }) => {
         setTranslationTimes,
         predictiveCheckResults,
         setPredictiveCheckResults,
+        getDistributionNotation,
     };
 
     return (

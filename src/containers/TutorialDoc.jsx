@@ -8,6 +8,10 @@ export default function TutorialDoc() {
     const { space } = useContext(WorkspaceContext);
     const [activeClip, setActiveClip] = useState(0);
 
+    useEffect(() => {
+        document.title = "Tutorial";
+    }, []);
+
     // Scroll to the clip when activeClip changes
     useEffect(() => {
         const element = document.getElementById(`clip-${activeClip}`);
@@ -151,7 +155,7 @@ export default function TutorialDoc() {
                         "- **Check predictor specifications** (range too broad or restrictive?)\n" +
                         "#### Final Tip:\n" +
                         "**The goal isn't a perfect match to your expectations but to avoid contradictions with domain knowledge. If in doubt, refine and recheck!**",
-                    url: "https://github.com/xavier-shaw/Prior-Elicitation/raw/refs/heads/main/materials/observable-prior-check.mp4"
+                    url: "https://github.com/xavier-shaw/Prior-Elicitation/raw/refs/heads/main/materials/observable-predictive-check.mp4"
                 }
             ]
         }

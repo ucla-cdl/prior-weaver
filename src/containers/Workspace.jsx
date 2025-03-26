@@ -24,6 +24,7 @@ export default function Workspace() {
     const [stepIndex, setStepIndex] = useState(0);
 
     useEffect(() => {
+        document.title = "Prior Weaver";
         console.log("Workspace mounted - Backend at ", window.BACKEND_ADDRESS);
     }, []);
 
@@ -237,10 +238,9 @@ export default function Workspace() {
                                     }}
                                 >
                                     <div className="component-container results-container">
-                                        <Typography variant="h6" gutterBottom>Results Panel</Typography>
                                         <Box sx={{
                                             boxSizing: 'border-box',
-                                            height: 'calc(100% - 32px)'
+                                            height: '100%'
                                         }}>
                                             <ResultsPanel />
                                         </Box>

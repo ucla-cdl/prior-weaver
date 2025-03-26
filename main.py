@@ -16,6 +16,19 @@ import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 
+import os
+from dotenv import load_dotenv
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from bson.json_util import dumps
+
+
+load_dotenv()
+uri = f"mongodb+srv://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_CLUSTER')}"
+client = MongoClient(uri, server_api=ServerApi('1'))
+db = client["prior_weaver"]
+collection = db["records"]
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -28,17 +41,23 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_db_client():
+    try:
+        client.admin.command('ping')
+        print("connected to MongoDB!")
+    except Exception as e:
+        print(e)
+
     print("Backend is ready")
 
 
 @app.on_event("shutdown")
 def shutdown_db_client():
+    client.close()
     print("Backend is shut down")
 
 
 @app.get('/')
 def root():
-    print("checking root")
     return {"message": "Hello World!"}
 
 
@@ -56,7 +75,6 @@ class FeedbackMode(str, Enum):
 class TaskIDs(str, Enum):
     INCOME = "income"
     SCORE = "score"
-    CAR = "car"
     HOUSE = "house"
 
 
@@ -65,7 +83,8 @@ current_study_settings = {
     "task_id": TaskIDs.INCOME,
     "elicitation_space": ElicitationSpace.OBSERVABLE,
     "feedback_mode": FeedbackMode.FEEDBACK,
-    "example_playground": False
+    "load_record": False,
+    "record_name": None
 }
 
 
@@ -73,7 +92,8 @@ class AdminUpdateSettings(BaseModel):
     task_id: Optional[str]
     elicitation_space: Optional[ElicitationSpace]
     feedback_mode: Optional[FeedbackMode]
-    example_playground: Optional[bool]
+    load_record: Optional[bool]
+    record_name: Optional[str]
 
 
 @app.get('/study-settings')
@@ -94,8 +114,11 @@ def update_study_settings(settings: AdminUpdateSettings):
     if settings.feedback_mode is not None:
         current_study_settings["feedback_mode"] = settings.feedback_mode
 
-    if settings.example_playground is not None:
-        current_study_settings["example_playground"] = settings.example_playground
+    if settings.load_record is not None:
+        current_study_settings["load_record"] = settings.load_record
+
+    if settings.record_name is not None:
+        current_study_settings["record_name"] = settings.record_name
 
     return current_study_settings
 
@@ -494,3 +517,42 @@ def fitDistribution(data: FitDistributionData = Body(...)):
         return {
             'error': 'Could not fit any distribution to the provided data'
         }
+
+
+class SaveRecordData(BaseModel):
+    record: dict
+
+
+@app.get('/getRecords')
+def getRecords():
+    records = collection.find()
+    records_list = []
+    for record in records:
+        records_list.append({
+            'name': record['name'],
+            'taskId': record['taskId'],
+            'space': record['space'],
+            'feedback': record['feedback']
+        })
+
+    return {
+        'records': records_list
+    }
+
+
+@app.get('/getRecord')
+def getRecord(record_name: str):
+    record = collection.find_one({'name': record_name})
+    
+    return {
+        'record': dumps(record)
+    }
+
+
+@app.post('/saveRecord')
+def saveRecord(data: SaveRecordData = Body(...)):
+    record = data.record
+    collection.insert_one(record)
+    return {
+        'message': 'Record saved successfully'
+    }
