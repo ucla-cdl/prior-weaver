@@ -7,6 +7,7 @@ WORKDIR /prior-elicitation-tool
 # Copy files
 COPY requirements.txt requirements.txt
 COPY main.py main.py
+COPY .env .env
 
 # Install dependencies
 RUN pip install -r requirements.txt

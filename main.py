@@ -16,7 +16,8 @@ import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 
-import os
+import os    
+import uvicorn
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -25,9 +26,9 @@ from bson.json_util import dumps
 
 load_dotenv()
 uri = f"mongodb+srv://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_CLUSTER')}"
-client = MongoClient(uri, server_api=ServerApi('1'))
-db = client["prior_weaver"]
-collection = db["records"]
+client = None
+db = None
+collection = None
 
 app = FastAPI()
 app.add_middleware(
@@ -41,11 +42,15 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_db_client():
+    global client, db, collection
     try:
+        client = MongoClient(uri, server_api=ServerApi('1'))
         client.admin.command('ping')
-        print("connected to MongoDB!")
+        db = client["prior_weaver"]
+        collection = db["records"]
+        print("Connected to MongoDB!")
     except Exception as e:
-        print(e)
+        print(f"Error connecting to MongoDB: {e}")
 
     print("Backend is ready")
 

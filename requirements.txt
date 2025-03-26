@@ -6,4 +6,4 @@ fitter
 pandas
 scikit-learn
 pymongo
-dotenv
+python-dotenv
