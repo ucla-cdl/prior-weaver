@@ -165,7 +165,8 @@ export default function Workspace() {
 
                             {space === ELICITATION_SPACE.PARAMETER &&
                                 <Box className="panel center-panel">
-                                    <Box className="component-container" sx={{ height: '100%' }}>
+                                    <Typography variant="h6" gutterBottom>Parameter Distributions</Typography>
+                                    <Box className="component-container" sx={{ height: 'calc(100% - 32px)' }}>
                                         <Box
                                             className="parameters-container"
                                             sx={{

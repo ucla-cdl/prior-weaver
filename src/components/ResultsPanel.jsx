@@ -31,43 +31,19 @@ export default function ResultsPanel() {
         }
     }, [predictiveCheckResults, showPlot]);
 
-    const readyToTranslate = () => {
-        if (space === ELICITATION_SPACE.OBSERVABLE) {
-            const incompleteEntities = Object.values(entities).some(entity => {
-                return Object.values(entity).some(value => value === null);
-            });
-
-            if (incompleteEntities) {
-                setSnackbarMessage('All entities must be completed before translating');
-                setSnackbarOpen(true);
-                return false;
-            }
-        }
-
-        if (space === ELICITATION_SPACE.PARAMETER) {
-            const incompletePriors = Object.values(parametersDict).some(param => param.selectedDistributionIdx === null);
-
-            if (incompletePriors) {
-                setSnackbarMessage('All priors must be completed before translating');
-                setSnackbarOpen(true);
-                return false;
-            }
-        }
-
-        return true;
-    };
-
     const translate = () => {
-        if (!readyToTranslate()) {
-            return;
-        }
-
-        setIsTranslating(true);
-
         if (space === ELICITATION_SPACE.OBSERVABLE) {
+            const translationEntities = Object.values(entities).filter(entity => Object.values(entity).every(value => value !== null)); // allow partial translation
+            if (translationEntities.length === 0) {
+                setSnackbarMessage('No entities to translate');
+                setSnackbarOpen(true);
+                return;
+            }
+
+            setIsTranslating(true);
             axios
                 .post(window.BACKEND_ADDRESS + "/translate", {
-                    entities: Object.values(entities),
+                    entities: translationEntities,
                     variables: Object.values(variablesDict),
                     parameters: Object.values(parametersDict),
                 })
@@ -85,6 +61,15 @@ export default function ResultsPanel() {
                 });
         }
         else if (space === ELICITATION_SPACE.PARAMETER) {
+            const incompletePriors = Object.values(parametersDict).some(param => param.selectedDistributionIdx === null);
+
+            if (incompletePriors) {
+                setSnackbarMessage('All priors must be completed before translating');
+                setSnackbarOpen(true);
+                return false;
+            }
+
+            setIsTranslating(true);
             predictiveCheck(Object.values(parametersDict).map(param => param.distributions[param.selectedDistributionIdx]));
         }
     };

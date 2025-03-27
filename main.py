@@ -80,7 +80,7 @@ class FeedbackMode(str, Enum):
 class TaskIDs(str, Enum):
     INCOME = "income"
     SCORE = "score"
-    HOUSE = "house"
+    WEIGHT = "weight"
 
 
 # Store current study settings
@@ -339,6 +339,8 @@ def fit_samples_to_distributions(samples):
 
     for dist in sum.iloc:
         fit_name = dist.name
+        if fit_name not in f.fitted_param:
+            continue
         fit_params = f.fitted_param[fit_name]
         fit_distribution = getattr(stats, fit_name)
         param_names = (fit_distribution.shapes + ", loc, scale").split(

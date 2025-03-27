@@ -176,7 +176,7 @@ export const EntityProvider = ({ children }) => {
         if (currentVersion <= 0) return "No operation to undo";
 
         const currentOperation = entityHistory[currentVersion];
-        const operation = currentOperation.operation;
+        const operation = currentOperation?.operation;
         if (operation === 'initial') return "Cannot undo initial state";
 
         const count = currentOperation.entitiesAffected.length;

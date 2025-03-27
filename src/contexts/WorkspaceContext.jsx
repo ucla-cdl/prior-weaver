@@ -5,39 +5,6 @@ import { useLocation } from 'react-router-dom';
 export const WorkspaceContext = createContext();
 
 export const TASK_SETTINGS = {
-    "house": {
-        id: "house",
-        name: "House Price Prediction",
-        scenario: "You are a data scientist analyzing the factors that influence house prices.\
-                Specifically, you aim to assess how a house's proximity to the nearest metro station, its age, and the number of nearby stores affect its selling price per square meter.",
-        defaultModel: `model <- glm(house_unit_price ~ distance_to_metro + house_age + num_stores, family = gaussian(link = "identity"))`,
-        variables: {
-            "predictor": [
-                {
-                    "name": "distance_to_metro",
-                    "unit": "km",
-                    "description": "The distance from the house to the nearest metro station."
-                },
-                {
-                    "name": "house_age",
-                    "unit": "years",
-                    "description": "The number of years since the house was built."
-                },
-                {
-                    "name": "num_stores",
-                    "unit": "stores",
-                    "description": "The number of retail stores in the surrounding area."
-                }
-            ],
-            "response": [
-                {
-                    "name": "house_unit_price",
-                    "unit": "$k/m²",
-                    "description": "The selling price of the house per square meter."
-                }
-            ]
-        }
-    },
     "income": {
         id: "income",
         name: "Income Prediction",
@@ -60,7 +27,7 @@ export const TASK_SETTINGS = {
             "response": [
                 {
                     "name": "income",
-                    "unit": "$k",
+                    "unit": "$k/yrs",
                     "description": "The individual's annual income in thousands of dollars."
                 }
             ]
@@ -70,13 +37,13 @@ export const TASK_SETTINGS = {
         id: "score",
         name: "Student Exam Score Prediction",
         scenario: "You are a data scientist investigating factors that influence student performance.\
-                Specifically, you seek to understand how the number of hours a student studies and their attendance rate affect their exam score.",
+                Specifically, you seek to understand how the number of hours a student studies per week and their attendance rate affect their exam score (out of 100 points).",
         defaultModel: `model <- glm(exam_score ~ hours_study + attendance_rate, family = gaussian(link = "identity"))`,
         variables: {
             "predictor": [
                 {
                     "name": "hours_study",
-                    "unit": "hours",
+                    "unit": "hrs/wk",
                     "description": "The number of hours the student spends studying per week."
                 },
                 {
@@ -88,12 +55,40 @@ export const TASK_SETTINGS = {
             "response": [
                 {
                     "name": "exam_score",
-                    "unit": "points",
-                    "description": "The student's exam score."
+                    "unit": "pts",
+                    "description": "The student's final exam score."
                 }
             ]
         }
     },
+    "weight": {
+        id: "weight",
+        name: "Weight Prediction",
+        scenario: "You are a data scientist analyzing the factors that influence people's weight.\
+                Specifically, you aim to assess how a person's height and exercise hours per week affect their weight.",
+        defaultModel: `model <- glm(weight ~ height + exercise_hours, family = gaussian(link = "identity"))`,
+        variables: {
+            "predictor": [
+                {
+                    "name": "height",
+                    "unit": "cm",
+                    "description": "The person's height."
+                },
+                {
+                    "name": "exercise_hours",
+                    "unit": "hrs/wk",
+                    "description": "The number of hours the person exercises per week."
+                }
+            ],
+            "response": [
+                {
+                    "name": "weight",
+                    "unit": "kg",
+                    "description": "The person's weight."
+                }
+            ]
+        }
+    }
 };
 
 export const ELICITATION_SPACE = {
