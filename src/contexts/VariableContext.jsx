@@ -7,11 +7,13 @@ export const VariableContext = createContext();
 const DEFAULT_VARIABLE_ATTRIBUTES = {
     min: 0,
     max: 100,
+    binCount: 10,
 };
 
 const DEFAULT_PARAMETER_ATTRIBUTES = {
     min: -10,
     max: 10,
+    binCount: 10,
     roulettePoints: [],
     distributions: [],
     selectedDistributionIdx: null,
@@ -34,8 +36,7 @@ export const VariableProvider = ({ children }) => {
     const [variablesDict, setVariablesDict] = useState({});
     const [sortableVariables, setSortableVariables] = useState([]);
     const [parametersDict, setParametersDict] = useState({});
-    const [biVariable1, setBiVariable1] = useState(null);
-    const [biVariable2, setBiVariable2] = useState(null);
+    const [biVariablesPairs, setBiVariablesPairs] = useState([]);
     const [translationTimes, setTranslationTimes] = useState(0);
     const [predictiveCheckResults, setPredictiveCheckResults] = useState([]);
 
@@ -53,20 +54,17 @@ export const VariableProvider = ({ children }) => {
     }, [savedEnvironment]);
 
     useEffect(() => {
-        setSortableVariables(Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum));
-        if (biVariable1 && biVariable2) {
-            setBiVariable1(variablesDict[biVariable1.name]);
-            setBiVariable2(variablesDict[biVariable2.name]);
+        const sortedVars = Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum);
+        setSortableVariables(sortedVars);
+        // Generate all pairs of variables in the required order
+        let bivariatePairs = [];
+        for (let i = 0; i < sortedVars.length - 1; i++) {
+            for (let j = i + 1; j < sortedVars.length; j++) {
+                bivariatePairs.push([sortedVars[i].name, sortedVars[j].name]);
+            }
         }
+        setBiVariablesPairs(bivariatePairs);
     }, [variablesDict]);
-
-    useEffect(() => {
-        if (finishParseModel) {
-            const vars = Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum);
-            setBiVariable1(vars.length > 1 ? vars[1] : null);
-            setBiVariable2(vars.length > 0 ? vars[0] : null);
-        }
-    }, [finishParseModel]);
 
     // Add a new variable
     const addVariable = (data) => {
@@ -85,13 +83,13 @@ export const VariableProvider = ({ children }) => {
         let finalUpdates = { ...updates };
 
         // If min or max is updated, recalculate bin edges
-        if ('min' in updates || 'max' in updates) {
+        if ('min' in updates || 'max' in updates || 'binCount' in updates) {
             const currentVar = variablesDict[name] || {};
             const newMin = updates.min ?? currentVar.min;
             const newMax = updates.max ?? currentVar.max;
+            const binCount = updates.binCount ?? currentVar.binCount;
 
             // Create 10 equally spaced bins
-            const binCount = 10;
             const step = (newMax - newMin) / binCount;
             const binEdges = Array.from({ length: binCount + 1 }, (_, i) => newMin + step * i);
 
@@ -110,13 +108,13 @@ export const VariableProvider = ({ children }) => {
         let finalUpdates = { ...updates };
 
         // If min or max is updated, recalculate bin edges
-        if ('min' in updates || 'max' in updates) {
+        if ('min' in updates || 'max' in updates || 'binCount' in updates) {
             const currentParameter = parametersDict[name] || {};
             const newMin = updates.min ?? currentParameter.min;
             const newMax = updates.max ?? currentParameter.max;
+            const binCount = updates.binCount ?? currentParameter.binCount;
 
-            // Create 10 equally spaced bins
-            const binCount = 10;
+            // Create binCount equally spaced bins
             const step = (newMax - newMin) / binCount;
             const binEdges = Array.from({ length: binCount + 1 }, (_, i) => newMin + step * i);
 
@@ -243,16 +241,6 @@ export const VariableProvider = ({ children }) => {
             });
     }
 
-    // Add variable to the bi-variable plot
-    const addToBiVarPlot = (variable) => {
-        if (biVariable1 === null) {
-            setBiVariable1(variable);
-        }
-        else if (biVariable2 === null) {
-            setBiVariable2(variable);
-        }
-    }
-
     const getDistributionNotation = (dist) => {
         const params = dist.params;
         switch (DISTRIBUTION_TYPES[dist.name]) {
@@ -285,16 +273,13 @@ export const VariableProvider = ({ children }) => {
         parametersDict,
         setParametersDict,
         updateParameter,
-        biVariable1,
-        setBiVariable1,
-        biVariable2,
-        setBiVariable2,
+        biVariablesPairs,
+        setBiVariablesPairs,
         addVariable,
         updateVariable,
         handleParseModel,
         parseVariables,
         DEFAULT_VARIABLE_ATTRIBUTES,
-        addToBiVarPlot,
         sortableVariables,
         setSortableVariables,
         translationTimes,

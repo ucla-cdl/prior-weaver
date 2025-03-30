@@ -8,7 +8,7 @@ import { Edit } from '@mui/icons-material';
 
 export default function ModelPanel() {
     const { taskId, model, space, tutorial } = useContext(WorkspaceContext)
-    const { variablesDict, updateVariable, parametersDict, updateParameter, biVariable1, setBiVariable1, biVariable2, setBiVariable2, addToBiVarPlot } = useContext(VariableContext);
+    const { variablesDict, updateVariable, parametersDict, updateParameter } = useContext(VariableContext);
 
     const [isEditingVariable, setIsEditingVariable] = useState(false);
     const [editingVariable, setEditingVariable] = useState(null);
@@ -18,12 +18,37 @@ export default function ModelPanel() {
 
     const confirmEditvariable = () => {
         let updatedVaribale = { ...editingVariable };
+        if (updatedVaribale.min === '' || updatedVaribale.max === '') {
+            alert('Min and max values are required');
+            return;
+        }
+
+        updatedVaribale.min = parseFloat(updatedVaribale.min);
+        updatedVaribale.max = parseFloat(updatedVaribale.max);
+
+        if (updatedVaribale.max <= updatedVaribale.min) {
+            alert('Max value must be greater than min value');
+            return;
+        }
+
         updateVariable(updatedVaribale.name, updatedVaribale);
         setIsEditingVariable(false);
     }
 
     const confirmEditParameter = () => {
         let updatedParameter = { ...editingParameter };
+        if (updatedParameter.min === '' || updatedParameter.max === '') {
+            alert('Min and max values are required');
+            return;
+        }
+        updatedParameter.min = parseFloat(updatedParameter.min);
+        updatedParameter.max = parseFloat(updatedParameter.max);
+
+        if (updatedParameter.max <= updatedParameter.min) {
+            alert('Max value must be greater than min value');
+            return;
+        }
+
         updateParameter(updatedParameter.name, updatedParameter);
         setIsEditingParameter(false);
     }
@@ -46,46 +71,27 @@ export default function ModelPanel() {
             <Box className="context-container">
                 <Typography variant="h6" gutterBottom>Variables</Typography>
                 {Object.entries(variablesDict).map(([varName, variable]) => (
-                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={varName}>
-                        <Typography variant="body1"><b>{varName}</b> ({variable.unitLabel})</Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center' }} key={varName}>
+                        <Typography variant="body1"><b>{varName}</b></Typography>
                         <IconButton onClick={() => {
-                            setEditingVariable(variable);
+                            setEditingVariable({ ...variable });
                             setIsEditingVariable(true);
                         }}>
                             <Edit fontSize='small' />
                         </IconButton>
-                        {space === ELICITATION_SPACE.PARAMETER ?
-                            <></>
-                            : biVariable1?.name === variable.name ? (
-                                <IconButton
-                                    onClick={() => setBiVariable1(null)}>
-                                    <RemoveCircleIcon fontSize='small' />
-                                </IconButton>
-                            ) : biVariable2?.name === variable.name ? (
-                                <IconButton
-                                    onClick={() => setBiVariable2(null)}>
-                                    <RemoveCircleIcon fontSize='small' />
-                                </IconButton>
-                            ) : (
-                                <IconButton
-                                    disabled={biVariable1 !== null && biVariable2 !== null}
-                                    onClick={() => addToBiVarPlot(variable)}>
-                                    <AddCircleIcon fontSize='small' />
-                                </IconButton>
-                            )}
                     </Box>
                 ))}
 
                 <Dialog open={isEditingVariable}>
                     <DialogTitle>Editing Variable</DialogTitle>
                     <DialogContent>
-                        <TextField
-                            sx={{ m: '10px' }}
-                            label="Variable Name"
-                            value={editingVariable?.name || ''}
-                            disabled
-                        />
                         <Box>
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Variable Name"
+                                value={editingVariable?.name || ''}
+                                disabled
+                            />
                             <TextField
                                 sx={{ m: '10px' }}
                                 label="Unit Label"
@@ -98,18 +104,26 @@ export default function ModelPanel() {
                             <TextField
                                 sx={{ m: '10px' }}
                                 label="Min Value"
-                                type="number"
-                                value={editingVariable?.min || 0}
-                                onChange={(e) => setEditingVariable({ ...editingVariable, min: parseFloat(e.target.value) })}
+                                value={editingVariable?.min !== null ? editingVariable?.min : ''}
+                                onChange={(e) => setEditingVariable({ ...editingVariable, min: e.target.value })}
                             />
                             <TextField
                                 sx={{ m: '10px' }}
                                 label="Max Value"
-                                type="number"
-                                value={editingVariable?.max || 100}
-                                onChange={(e) => setEditingVariable({ ...editingVariable, max: parseFloat(e.target.value) })}
+                                value={editingVariable?.max !== null ? editingVariable?.max : ''}
+                                onChange={(e) => setEditingVariable({ ...editingVariable, max: e.target.value })}
                             />
                         </Box>
+                        {space === ELICITATION_SPACE.OBSERVABLE && <Box>
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Bin Count"
+                                type="number"
+                                value={editingVariable?.binCount || 10}
+                                onChange={(e) => setEditingVariable({ ...editingVariable, binCount: parseInt(e.target.value) })}
+                                inputProps={{ min: 2 }}
+                            />
+                        </Box>}
                     </DialogContent>
                     <DialogActions>
                         <Button color='danger' onClick={() => setIsEditingVariable(false)}>Cancel</Button>
@@ -121,11 +135,11 @@ export default function ModelPanel() {
             <Box className="context-container">
                 <Typography variant='h6' gutterBottom>Parameters</Typography>
                 {Object.entries(parametersDict).map(([paraName, parameter]) => (
-                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} key={paraName}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center' }} key={paraName}>
                         <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{paraName}</Typography>
                         {space === ELICITATION_SPACE.PARAMETER &&
                             <IconButton onClick={() => {
-                                setEditingParameter(parameter);
+                                setEditingParameter({ ...parameter });
                                 setIsEditingParameter(true);
                             }}>
                                 <Edit fontSize='small' />
@@ -148,15 +162,26 @@ export default function ModelPanel() {
                                 sx={{ m: '10px' }}
                                 label="Min Value"
                                 type="number"
-                                value={editingParameter?.min || 0}
-                                onChange={(e) => setEditingParameter({ ...editingParameter, min: parseFloat(e.target.value) })}
+                                inputProps={{ min: -Infinity }}
+                                value={editingParameter?.min !== null ? editingParameter?.min : ''}
+                                onChange={(e) => setEditingParameter({ ...editingParameter, min: e.target.value })}
                             />
                             <TextField
                                 sx={{ m: '10px' }}
                                 label="Max Value"
                                 type="number"
-                                value={editingParameter?.max || 100}
-                                onChange={(e) => setEditingParameter({ ...editingParameter, max: parseFloat(e.target.value) })}
+                                inputProps={{ min: -Infinity }}
+                                value={editingParameter?.max !== null ? editingParameter?.max : ''}
+                                onChange={(e) => setEditingParameter({ ...editingParameter, max: e.target.value })}
+                            />
+                        </Box>
+                        <Box>
+                            <TextField
+                                sx={{ m: '10px' }}
+                                label="Bin Count"
+                                type="number"
+                                value={editingParameter?.binCount || 10}
+                                onChange={(e) => setEditingParameter({ ...editingParameter, binCount: parseInt(e.target.value) })}
                             />
                         </Box>
                     </DialogContent>

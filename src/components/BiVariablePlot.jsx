@@ -2,14 +2,12 @@ import './BiVariablePlot.css';
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import * as d3 from 'd3';
 import { Box } from '@mui/material';
-import { WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { SelectionContext, SELECTION_SOURCES } from '../contexts/SelectionContext';
 
-export default function BiVariablePlot() {
-    const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
-    const { biVariable1, biVariable2 } = useContext(VariableContext);
+export default function BiVariablePlot({ biVarName1, biVarName2 }) {
+    const { variablesDict } = useContext(VariableContext);
     const { entities } = useContext(EntityContext);
     const { activeFilter, setSelectedEntities, isHidden, selections, updateSelections, selectionsRef, selectionSource, potentialEntities } = useContext(SelectionContext);
 
@@ -22,14 +20,22 @@ export default function BiVariablePlot() {
     const xScaleRef = useRef(null);
     const yScaleRef = useRef(null);
 
-    useEffect(() => {
-        drawPlot();
-        populateEntities();
-    }, [leftPanelOpen, rightPanelOpen, biVariable1, biVariable2])
+    const [biVariable1, setBiVariable1] = useState(null);
+    const [biVariable2, setBiVariable2] = useState(null);
 
     useEffect(() => {
-        populateEntities();
-    }, [entities])
+        if (variablesDict && biVarName1 && biVarName2) {
+            setBiVariable1(variablesDict[biVarName1]);
+            setBiVariable2(variablesDict[biVarName2]);
+        }
+    }, [variablesDict, biVarName1, biVarName2]);
+
+    useEffect(() => {
+        if (biVariable1 && biVariable2) {
+            drawPlot();
+            populateEntities();
+        }
+    }, [biVariable1, biVariable2, entities])
 
     useEffect(() => {
         const fromExternal = selectionSource === SELECTION_SOURCES.PARALLEL;
@@ -40,19 +46,19 @@ export default function BiVariablePlot() {
     }, [activeFilter, selections]);
 
     const drawPlot = () => {
-        const container = d3.select("#bivariate-distribution-div");
+        const container = d3.select(`#bivariate-distribution-div-${biVarName1}-${biVarName2}`);
         container.html("");
 
         const svgWidth = container.node().clientWidth;
         const svgHeight = container.node().clientHeight;
 
         let svg = container.append("svg")
-            .attr("id", "bivariate-svg")
+            .attr("id", `bivariate-svg-${biVarName1}-${biVarName2}`)
             .attr("width", svgWidth)
             .attr("height", svgHeight)
 
         let chart = svg.append("g")
-            .attr("id", "bivariate-chart")
+            .attr("id", `bivariate-chart-${biVarName1}-${biVarName2}`)
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
         let chartWidth = svgWidth - margin.left - margin.right;
@@ -112,7 +118,7 @@ export default function BiVariablePlot() {
     }
 
     const populateEntities = () => {
-        let chart = d3.select("#bivariate-chart");
+        let chart = d3.select(`#bivariate-chart-${biVarName1}-${biVarName2}`);
         xScaleRef.current = d3.scaleLinear()
             .domain([biVariable1.min, biVariable1.max])
             .range([0, chartWidthRef.current]);
@@ -122,7 +128,7 @@ export default function BiVariablePlot() {
 
         console.log("populate entities in bivar");
 
-        const specifiedEntities = Object.values(entities).filter(d => d[biVariable1.name] !== null && d[biVariable2.name] !== null);
+        const specifiedEntities = Object.values(entities).filter(d => d[biVariable1.name] !== null && d[biVariable2.name] !== null && d[biVariable1.name] !== undefined && d[biVariable2.name] !== undefined);
 
         chart.selectAll(".bivar-dot").remove();
 
@@ -173,7 +179,7 @@ export default function BiVariablePlot() {
     }
 
     const updateHighlightedEntities = () => {
-        let chart = d3.select("#bivariate-chart");
+        let chart = d3.select(`#bivariate-chart-${biVarName1}-${biVarName2}`);
         const newSelectedEntities = [];
 
         // Update dots based on whether they fall within the brush selection
@@ -190,13 +196,13 @@ export default function BiVariablePlot() {
             const isEntityHidden = isHidden(entity);
 
             if (isEntityHidden) {
-                d3.select(`#bivar-dot-${entityId}`)
+                chart.select(`#bivar-dot-${entityId}`)
                     .classed("hidden-dot", true)
                     .classed("selection-dot", false)
                     .classed("non-selection-dot", false);
             }
             else {
-                d3.select(`#bivar-dot-${entityId}`)
+                chart.select(`#bivar-dot-${entityId}`)
                     .classed("hidden-dot", false)
                     .classed("selection-dot", active)
                     .classed("non-selection-dot", !active);
@@ -225,13 +231,23 @@ export default function BiVariablePlot() {
 
         chart.selectAll(".non-selection-dot").raise();
         chart.selectAll(".selection-dot").raise();
+        chart.selectAll(".potential-dot").raise();
 
         return newSelectedEntities;
     }
 
     return (
-        <Box sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Box id='bivariate-distribution-div' sx={{ height: '100%', width: '100%' }}></Box>
+        <Box
+            id={`bivariate-distribution-div-${biVarName1}-${biVarName2}`}
+            sx={{
+                boxSizing: 'border-box',
+                height: '100%',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+            }}
+        >
         </Box >
     )
 }

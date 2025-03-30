@@ -9,11 +9,13 @@ import "./VariablePlot.css";
 export default function VariablePlot({ variable }) {
     const { entities, addEntities, updateEntities, getEntitiesCntDifference } = useContext(EntityContext);
     const { selectedEntities } = useContext(SelectionContext);
-    const svgWidth = 300;
+
+    const svgWidthRef = useRef(0);
     const svgHeightRef = useRef(0);
-    const marginX = 40;
+    const marginLeft = 40;
+    const marginRight = 10;
     const marginTop = 25;
-    const marginBottom = 55;
+    const marginBottom = 37;
     const labelOffset = 35;
 
     useEffect(() => {
@@ -33,6 +35,8 @@ export default function VariablePlot({ variable }) {
         const container = d3.select(`#univariate-container-${variable.name}`);
         container.html("");
 
+        const svgWidth = container.node().clientWidth;
+        svgWidthRef.current = svgWidth;
         const svgHeight = container.node().clientHeight;
         svgHeightRef.current = svgHeight;
 
@@ -48,9 +52,9 @@ export default function VariablePlot({ variable }) {
         let svg = d3.select(`#univariate-svg-${variable.name}`);
         svg.html("");
         let chart = svg.append("g")
-            .attr("transform", `translate(${marginX}, ${marginTop})`);
+            .attr("transform", `translate(${marginLeft}, ${marginTop})`);
 
-        let chartWidth = svgWidth - marginX * 2;
+        let chartWidth = svgWidthRef.current - marginLeft - marginRight;
         let chartHeight = svgHeightRef.current - marginTop - marginBottom;
 
         const [currentCnt, difference] = getEntitiesCntDifference(variable.name);
@@ -59,8 +63,8 @@ export default function VariablePlot({ variable }) {
             .attr("text-anchor", "middle")
             .attr("transform", `translate(${chartWidth / 2}, ${- marginTop / 2})`)
             .style("font-size", "14px")
-            .style("fill", difference > 0 ? "red" : "#666")  
-            .text(`Total Entities: ${currentCnt} ${difference > 0 ? `(-${difference})` : ""}`);
+            .style("fill", difference > 0 ? "red" : "#666")
+            .text(`# of Data Points: ${currentCnt} ${difference > 0 ? `(-${difference})` : ""}`);
 
         let xScale = d3.scaleLinear()
             .domain([variable.min, variable.max])
@@ -111,7 +115,7 @@ export default function VariablePlot({ variable }) {
         // Add Y axis label
         chart
             .append("g")
-            .attr('transform', `translate(${- marginX / 2}, ${chartHeight / 2})`)
+            .attr('transform', `translate(${- marginLeft / 2}, ${chartHeight / 2})`)
             .append("text")
             .attr("text-anchor", "middle")
             .attr('transform', 'rotate(-90)')
@@ -213,7 +217,12 @@ export default function VariablePlot({ variable }) {
     }
 
     return (
-        <Box id={`univariate-container-${variable.name}`} sx={{ height: '100%', boxSizing: 'border-box' }}>
+        <Box id={`univariate-container-${variable.name}`}
+            sx={{
+                boxSizing: 'border-box', minWidth: '33.3%', height: '100%', display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+            }}>
         </Box>
     );
 };

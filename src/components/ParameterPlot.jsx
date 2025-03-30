@@ -11,8 +11,10 @@ const EDIT_MODES = {
     ROULETTE: 'roulette'
 }
 
-export const ParameterPlot = ({ parameter }) => {
+export const ParameterPlot = ({ paraName }) => {
     const { parametersDict, updateParameter, getDistributionNotation } = useContext(VariableContext);
+
+    const [parameter, setParameter] = useState(null);
     const [showFittedDistribution, setShowFittedDistribution] = useState(false);
     const [isFitting, setIsFitting] = useState(false);
 
@@ -22,11 +24,19 @@ export const ParameterPlot = ({ parameter }) => {
     const labelOffset = 35;
 
     useEffect(() => {
-        drawPlot();
-        plotRoulette();
-        if (parameter.selectedDistributionIdx !== null) {
-            setShowFittedDistribution(true);
-            plotDistribution(parametersDict[parameter.name].distributions[parameter.selectedDistributionIdx]);
+        if (parametersDict && paraName) {
+            setParameter(parametersDict[paraName]);
+        }
+    }, [parametersDict, paraName]);
+
+    useEffect(() => {
+        if (parameter) {
+            drawPlot();
+            plotRoulette();
+            if (parameter.selectedDistributionIdx !== null) {
+                setShowFittedDistribution(true);
+                plotDistribution(parametersDict[parameter.name].distributions[parameter.selectedDistributionIdx]);
+            }
         }
     }, [parameter]);
 
@@ -68,7 +78,7 @@ export const ParameterPlot = ({ parameter }) => {
             .nice()
             .range([0, chartWidth]);
 
-        const yMax = Math.min(d3.max(distribution.p), 1); 
+        const yMax = Math.min(d3.max(distribution.p), 1);
         const yPadding = Math.min(yMax * 0.1, 1 - yMax);
         const y = d3.scaleLinear()
             .domain([0, yMax + yPadding])
@@ -197,29 +207,29 @@ export const ParameterPlot = ({ parameter }) => {
 
     return (
         <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-            <Box 
+            <Box
                 className="parameter-operation-container"
-                sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                     gap: 2,
                     width: '40%',
                     height: '100%'
                 }}>
-                <Typography variant="h6">{parameter.name}</Typography>
-                {showFittedDistribution && parametersDict[parameter.name] && (
+                <Typography variant="h6">{paraName}</Typography>
+                {showFittedDistribution && parameter && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                         <Select
-                            value={parametersDict[parameter.name].selectedDistributionIdx}
+                            value={parameter?.selectedDistributionIdx}
                             onChange={(e) => onSelectDistribution(e.target.value)}
                         >
-                            {parametersDict[parameter.name].distributions.map((dist, idx) => (
+                            {parameter?.distributions.map((dist, idx) => (
                                 <MenuItem key={idx} value={idx}>{DISTRIBUTION_TYPES[dist.name]}</MenuItem>
                             ))}
                         </Select>
                         <Typography variant="body2" color="text.secondary">
-                            {getDistributionNotation(parametersDict[parameter.name].distributions[parametersDict[parameter.name].selectedDistributionIdx])}
+                            {getDistributionNotation(parameter?.distributions[parameter?.selectedDistributionIdx])}
                         </Typography>
                     </Box>
                 )}
@@ -231,15 +241,15 @@ export const ParameterPlot = ({ parameter }) => {
                         size="small"
                         variant="contained"
                         onClick={fitDistribution}
-                        disabled={parameter.roulettePoints.length === 0}
+                        disabled={parameter?.roulettePoints?.length === 0}
                     >
                         Fit Distribution
                     </Button>
                 )}
             </Box>
 
-            <Box 
-                id={`parameter-container-${parameter.name}`} 
+            <Box
+                id={`parameter-container-${paraName}`}
                 sx={{
                     width: '60%',
                     height: '100%',
