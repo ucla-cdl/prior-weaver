@@ -322,7 +322,7 @@ export default function ParallelSankeyPlot() {
                 .attr("id", `entity_path_${entity["id"]}`)
                 .attr("d", d => line(
                     sortableVariables
-                        .filter(variable => d[variable.name] !== null)
+                        .filter(variable => d[variable.name] !== null && d[variable.name] !== undefined)
                         .map(variable => [variable.name, d[variable.name]])
                 ))
         });
@@ -384,7 +384,8 @@ export default function ParallelSankeyPlot() {
 
     const getPotentialLinkEntities = () => {
         const potentialSelectedEntitiesByAxis = new Map();
-        Array.from(selectionsRef.current.keys()).forEach(key => {
+        const selectionEntries = Array.from(selectionsRef.current);
+        Array.from(Object.keys(variablesDict)).forEach(key => {
             potentialSelectedEntitiesByAxis.set(key, []);
         });
 
@@ -394,7 +395,6 @@ export default function ParallelSankeyPlot() {
             let isSelected = false;
             const axesWithValues = [];
             
-            const selectionEntries = Array.from(selectionsRef.current);
             isSelected = true;
             for (let i = 0; i < selectionEntries.length; i++) {
                 const [varName, range] = selectionEntries[i];
@@ -416,28 +416,30 @@ export default function ParallelSankeyPlot() {
                 axesWithValues.forEach(key => {
                     potentialSelectedEntitiesByAxis.get(key).push({
                         entityId: entityId,
-                        axisCount: Object.values(entity).filter(value => value !== null).length,
+                        axisCount: Object.entries(entity).filter(([key, value]) => key !== "id" && value !== null).length,
                         entity: entity
                     });
                 });
             }
         })
 
-        // Find minimum entities count across all selections
-        
-        const minCount = Math.min(...Array.from(potentialSelectedEntitiesByAxis.values()).map(entities => entities.length));
-        console.log("Potential selected entities by axis: ", potentialSelectedEntitiesByAxis, "Min count: ", minCount);
-
+        // Find the minimum count of entities across all axes that have active selections
+        const minCount = Array.from(potentialSelectedEntitiesByAxis.entries())
+            .filter(([axis, _]) => selectionsRef.current.has(axis))
+            .map(([_, axisEntities]) => axisEntities.length)
+            .reduce((min, count) => Math.min(min, count), Infinity) || 0;
         let groups = [];
         const skipAxes = new Set();
-        potentialSelectedEntitiesByAxis.forEach((axisEntities, axis) => {
+        
+        for (const [axis, axisEntities] of potentialSelectedEntitiesByAxis) {
             // If entities on this axis are already be selected, skip it
             if (skipAxes.has(axis)) {
-                return;
+                continue;
             }
 
             // Keep the entities with the most axis counts
             const maxAxisCount = Math.max(...axisEntities.map(axisEntity => axisEntity.axisCount));
+            console.log("axis: ", axis, "Max axis count: ", maxAxisCount);
             let keepEntities = axisEntities.filter(axisEntity => {
                 return axisEntity.axisCount === maxAxisCount;
             });
@@ -451,7 +453,7 @@ export default function ParallelSankeyPlot() {
             // Take only up to minCount
             if (minCount === 0 || keepEntities.length === 0) {
                 potentialSelectedEntitiesByAxis.set(axis, []);
-                return;
+                continue;
             }
 
             keepEntities = keepEntities.slice(0, minCount);
@@ -464,11 +466,11 @@ export default function ParallelSankeyPlot() {
             });
 
             potentialSelectedEntitiesByAxis.set(axis, keepEntities);
-        });
+        }
 
-        potentialSelectedEntitiesByAxis.forEach((axisEntities, axis) => {
-            if (skipAxes.has(axis)) {
-                return;
+        for (const [axis, axisEntities] of potentialSelectedEntitiesByAxis) {
+            if (skipAxes.has(axis) || !selectionsRef.current.has(axis)) {
+                continue;
             }
 
             groups.push(axisEntities.map(axisEntity => {
@@ -477,8 +479,10 @@ export default function ParallelSankeyPlot() {
                     entity: axisEntity.entity
                 }
             }));
-        });
+        }
 
+        console.log("Potential selected entities by axis: ", potentialSelectedEntitiesByAxis);
+        console.log("Groups: ", groups);
         return groups;
     }
 
@@ -491,9 +495,7 @@ export default function ParallelSankeyPlot() {
         const entitiesToDeleteIds = [];
 
         // For each group, create connections between entities
-        console.log("Groups: ", groups);
         let skip = groups.some(group => group.length === 0);
-
         if (skip || groups.length < 2) {
             setPotentialEntities([]);
             setEntitiesToDeleteIds([]);
@@ -536,7 +538,10 @@ export default function ParallelSankeyPlot() {
             // Check if there are any gaps between consecutive variables
             const filteredVariables = sortableVariables.filter(variable => entity[variable.name] !== null && entity[variable.name] !== undefined);
             const sequenceNums = filteredVariables.map(variable => variable.sequenceNum);
-            hasGaps = sequenceNums.some((num, index) => num !== index);
+            hasGaps = sequenceNums.some((num, index, arr) => {
+                if (index === 0) return false;
+                return Math.abs(num - arr[index - 1]) !== 1;
+            });
 
             if (hasGaps) {
                 return;
