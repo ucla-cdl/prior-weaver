@@ -11,3 +11,12 @@
 .non-fill-grid-cell:hover {
     fill: #dd4d37;
 }
+
+.potential-connection {
+    pointer-events: none;
+}
+
+.partial-connected-entity {
+    stroke: #ff9900;
+    stroke-width: 3px;
+}

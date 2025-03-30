@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect, useContext } from 'react';
 import * as d3 from 'd3';
 import { Box, Paper } from '@mui/material';
 import { EntityContext } from "../contexts/EntityContext";
-import { SelectionContext, SELECTION_TYPE } from "../contexts/SelectionContext";
+import { SelectionContext } from "../contexts/SelectionContext";
 import "./VariablePlot.css";
 
 // Define the Variable Component
 export default function VariablePlot({ variable }) {
     const { entities, addEntities, updateEntities, getEntitiesCntDifference } = useContext(EntityContext);
-    const { selectedEntities, selectionGroup1Entities, selectionGroup2Entities, selectionType } = useContext(SelectionContext);
+    const { selectedEntities } = useContext(SelectionContext);
     const svgWidth = 300;
     const svgHeightRef = useRef(0);
     const marginX = 40;
@@ -184,15 +184,9 @@ export default function VariablePlot({ variable }) {
     const updateHighlightedEntities = () => {
         let chart = d3.select(`#univariate-svg-${variable.name}`);
 
-        // Return early if either group has values for this variable
-        if (selectionGroup1Entities?.some(entity => entity[variable.name] !== null)) return;
-        if (selectionGroup2Entities?.some(entity => entity[variable.name] !== null)) return;
-
         // Clear any existing highlights
         chart.selectAll("rect")
-            .classed("highlight-grid-cell", false)
-            .classed("group-1-cell", false)
-            .classed("group-2-cell", false);
+            .classed("highlight-grid-cell", false);
 
         // Group selected entities by bin
         let binCounts = new Array(variable.binEdges.length - 1).fill(0);
@@ -213,9 +207,7 @@ export default function VariablePlot({ variable }) {
         for (let bin = 0; bin < variable.binEdges.length - 1; bin++) {
             for (let grid = 1; grid <= binCounts[bin]; grid++) {
                 chart.select(`#${variable.name}-${bin}-${grid}`)
-                    .classed("highlight-grid-cell", true)
-                    .classed("group-1-cell", selectionType === SELECTION_TYPE.GROUP_1)
-                    .classed("group-2-cell", selectionType === SELECTION_TYPE.GROUP_2);
+                    .classed("highlight-grid-cell", true);
             }
         }
     }

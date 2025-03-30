@@ -18,19 +18,16 @@
     stroke: #ddd;
 }
 
-.group-1-dot {
-    fill: plum;
-}
-
-.group-2-dot {
-    fill: green;
-}
-
 /* Entity paths */
 .entity-path {
     fill: none;
     stroke-width: 1;
     stroke-opacity: 0.6;
+}
+
+.potential-connection {
+    stroke-dasharray: 5,5;
+    stroke: orange;
 }
 
 .brush-non-selection {
@@ -43,30 +40,6 @@
 
 .hidden-selection {
     stroke: #ddd;
-}
-
-.group-1-selection {
-    stroke: plum;
-}
-
-.group-2-selection {
-    stroke: green;
-}
-
-/* Axis */
-.frozen-axis {
-    text {
-        fill: #999 !important;
-    }
-
-    line, path {
-        stroke: #999 !important;
-    }
-
-    .selection, .overlay, .handle {
-        pointer-events: none;
-        cursor: not-allowed;
-    }
 }
 
 /* Axis Boundaries */

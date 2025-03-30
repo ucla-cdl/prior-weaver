@@ -5,13 +5,13 @@ import { Box } from '@mui/material';
 import { WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
-import { SelectionContext, SELECTION_SOURCES, SELECTION_TYPE } from '../contexts/SelectionContext';
+import { SelectionContext, SELECTION_SOURCES } from '../contexts/SelectionContext';
 
 export default function BiVariablePlot() {
     const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
     const { biVariable1, biVariable2 } = useContext(VariableContext);
     const { entities } = useContext(EntityContext);
-    const { activeFilter, setSelectedEntities, isHidden, selections, updateSelections, selectionsRef, selectionSource, selectionGroup1Entities, selectionGroup2Entities, selectionType } = useContext(SelectionContext);
+    const { activeFilter, setSelectedEntities, isHidden, selections, updateSelections, selectionsRef, selectionSource, potentialEntities } = useContext(SelectionContext);
 
     const chartWidthRef = useRef(0);
     const chartHeightRef = useRef(0);
@@ -178,11 +178,7 @@ export default function BiVariablePlot() {
 
         // Update dots based on whether they fall within the brush selection
         Object.entries(entities).forEach(([entityId, entity]) => {
-            if (entity[biVariable1.name] === null || entity[biVariable2.name] === null) {
-                return;
-            }
-
-            if (selectionGroup1Entities.includes(entity) || selectionGroup2Entities.includes(entity)) {
+            if (entity[biVariable1.name] === null || entity[biVariable1.name] === undefined || entity[biVariable2.name] === null || entity[biVariable2.name] === undefined) {
                 return;
             }
 
@@ -197,22 +193,34 @@ export default function BiVariablePlot() {
                 d3.select(`#bivar-dot-${entityId}`)
                     .classed("hidden-dot", true)
                     .classed("selection-dot", false)
-                    .classed("non-selection-dot", false)
-                    .classed("group-1-dot", false)
-                    .classed("group-2-dot", false);
+                    .classed("non-selection-dot", false);
             }
             else {
                 d3.select(`#bivar-dot-${entityId}`)
                     .classed("hidden-dot", false)
                     .classed("selection-dot", active)
-                    .classed("non-selection-dot", !active)
-                    .classed("group-1-dot", active && selectionType === SELECTION_TYPE.GROUP_1)
-                    .classed("group-2-dot", active && selectionType === SELECTION_TYPE.GROUP_2);
+                    .classed("non-selection-dot", !active);
 
                 if (active) {
                     newSelectedEntities.push(entity);
                 }
             }
+        });
+
+        // Add potential entities
+        chart.selectAll(".potential-dot").remove();
+        potentialEntities.forEach(entity => {
+            if (entity[biVariable1.name] === null || entity[biVariable1.name] === undefined || entity[biVariable2.name] === null || entity[biVariable2.name] === undefined) {
+                return;
+            }
+
+            chart.append("circle")
+                .datum(entity)
+                .attr("id", `bivar-dot-${entity.id}`)
+                .attr("class", "bivar-dot potential-dot")
+                .attr("cx", d => xScaleRef.current(d[biVariable1.name]))
+                .attr("cy", d => yScaleRef.current(d[biVariable2.name]))
+                .attr("r", dotRadius)
         });
 
         chart.selectAll(".non-selection-dot").raise();

@@ -13,12 +13,6 @@ export const FILTER_TYPES = {
     INCOMPLETE: "incomplete"
 }
 
-export const SELECTION_TYPE = {
-    NORMAL: "normal",
-    GROUP_1: "group_1",
-    GROUP_2: "group_2"
-}
-
 export const SelectionProvider = ({ children }) => {    
     const { variablesDict } = useContext(VariableContext);
 
@@ -27,9 +21,7 @@ export const SelectionProvider = ({ children }) => {
     const [selectionSource, setSelectionSource] = useState(null);
     const selectionsRef = useRef(new Map());
     const [selectedEntities, setSelectedEntities] = useState([]);
-    const [selectionGroup1Entities, setSelectionGroup1Entities] = useState([]);
-    const [selectionGroup2Entities, setSelectionGroup2Entities] = useState([]);
-    const [selectionType, setSelectionType] = useState(SELECTION_TYPE.NORMAL);
+    const [potentialEntities, setPotentialEntities] = useState([]);
 
     const updateSelections = (newSelections, source) => {
         setSelectionSource(source);
@@ -37,7 +29,7 @@ export const SelectionProvider = ({ children }) => {
     };
 
     const isHidden = (entity) => {
-        const isComplete = Object.values(variablesDict).every(variable => entity[variable.name] !== null);
+        const isComplete = Object.values(variablesDict).every(variable => entity[variable.name] !== null && entity[variable.name] !== undefined);
 
         // COMPLETE mode: hide incomplete entities
         if (activeFilter === FILTER_TYPES.COMPLETE) {
@@ -61,12 +53,8 @@ export const SelectionProvider = ({ children }) => {
         selectionSource,
         isHidden,
         selectionsRef,
-        selectionGroup1Entities,
-        selectionGroup2Entities,
-        setSelectionGroup1Entities,
-        setSelectionGroup2Entities,
-        selectionType,
-        setSelectionType
+        potentialEntities,
+        setPotentialEntities
     }
 
     return (

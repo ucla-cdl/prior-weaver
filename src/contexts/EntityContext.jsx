@@ -20,6 +20,8 @@ export const EntityProvider = ({ children }) => {
     }]);
     const [currentVersion, setCurrentVersion] = useState(0);
 
+    const [potentialEntities, setPotentialEntities] = useState({});
+
     // Load entities from saved environment if available
     useEffect(() => {
         if (savedEnvironment) {

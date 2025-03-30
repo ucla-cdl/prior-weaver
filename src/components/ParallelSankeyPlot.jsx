@@ -29,7 +29,7 @@ export default function ParallelSankeyPlot() {
     const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
     const { variablesDict, updateVariable, sortableVariables } = useContext(VariableContext);
     const { entities, addEntities, deleteEntities, combineEntities } = useContext(EntityContext);
-    const { activeFilter, setActiveFilter, selections, selectedEntities, setSelectedEntities, isHidden, selectionsRef, updateSelections, selectionSource, selectionGroup1Entities, selectionGroup2Entities, setSelectionGroup1Entities, setSelectionGroup2Entities, selectionType, setSelectionType } = useContext(SelectionContext);
+    const { activeFilter, setActiveFilter, selections, selectedEntities, setSelectedEntities, isHidden, selectionsRef, updateSelections, selectionSource, potentialEntities, setPotentialEntities } = useContext(SelectionContext);
 
     const marginTop = 20;
     const marginBottom = 10;
@@ -43,17 +43,9 @@ export default function ParallelSankeyPlot() {
     const chartHeightRef = useRef(0);
     const valueAxesRef = useRef(new Map());
     const variableAxesRef = useRef(null);
-
     const [draggedItem, setDraggedItem] = useState(null);
-    const frozenAxesRef = useRef(new Set());
 
-    const SELECTION_STEPS = {
-        INITIAL: 0,
-        SELECT_G1: 1,
-        SELECT_G2: 2,
-        LINK: 3
-    }
-    const [selectionStep, setSelectionStep] = useState(SELECTION_STEPS.INITIAL);
+    const [entitiesToDeleteIds, setEntitiesToDeleteIds] = useState([]);
 
     useEffect(() => {
         drawPlot();
@@ -66,6 +58,8 @@ export default function ParallelSankeyPlot() {
 
     useEffect(() => {
         const fromExternal = selectionSource === SELECTION_SOURCES.BIVARIATE;
+
+        // In normal mode, update highlighted entities based on brush
         const newSelectedEntities = updateHighlightedEntities(fromExternal);
         if (!fromExternal) {
             setSelectedEntities(newSelectedEntities);
@@ -283,54 +277,26 @@ export default function ParallelSankeyPlot() {
         setActiveFilter(filterType);
     }
 
-    const clearBrushSelection = (reset = false) => {
-        console.log("Clear brush selection", reset);
+    const clearBrushSelection = () => {
         const chart = d3.select("#pcp");
 
         // Clear brush selection
         const brushes = chart.selectAll(".brush");
-        if (!reset && selectionStep === SELECTION_STEPS.SELECT_G1) {
-            const selectedAxes = Object.keys(selectedEntities[0]).filter(key => key !== "id" && selectedEntities[0][key] !== null);
-
-            brushes.each(function (d) {
-                if (selectedAxes.includes(d)) {
-                    // Change the axis color to indicate it's frozen
-                    d3.selectAll(`#axis-${d}`)
-                        .classed("frozen-axis", true);
-
-                    const axisX = variableAxesRef.current(d);
-                    chart.append("text")
-                        .attr("class", "frozen-indicator")
-                        .attr("x", axisX + 15)
-                        .attr("y", marginTop - 5)
-                        .attr("dy", ".35em")
-                        .text("🔒")
-                        .style("font-size", "12px");
-
-                    frozenAxesRef.current.add(d);
-                }
-                else {
-                    d3.select(this).call(d3.brush().move, null);
-                }
-            });
-        } else {
-            brushes.call(d3.brush().move, null);
-            chart.selectAll(".selection-count-label").remove();
-            chart.selectAll(".frozen-indicator").remove();
-            chart.selectAll(".axis").classed("frozen-axis", false);
-            frozenAxesRef.current.clear();
-        }
+        brushes.call(d3.brush().move, null);
+        chart.selectAll(".selection-count-label").remove();
 
         selectionsRef.current = new Map();
         updateSelections(selectionsRef.current, SELECTION_SOURCES.PARALLEL);
 
         // Clear selected entities
         setSelectedEntities([]);
+        setPotentialEntities([]);
+        setEntitiesToDeleteIds([]);
+        chart.selectAll(".potential-dot").remove();
+        chart.selectAll(".potential-connection").remove();
     }
 
     const populateEntities = () => {
-        console.log("Populate entities in PCP", entities);
-
         const chart = d3.select("#pcp");
 
         const line = d3.line()
@@ -348,7 +314,6 @@ export default function ParallelSankeyPlot() {
                     .attr("cx", variableAxesRef.current(key))
                     .attr("cy", valueAxesRef.current.get(key)(value))
                     .attr("r", 4)
-
             });
 
             chart.append("path")
@@ -370,16 +335,20 @@ export default function ParallelSankeyPlot() {
         const chart = d3.select("#pcp");
         const brushWidth = 50;
 
+        // Clear any existing brushes before creating new ones
+        chart.selectAll(".brush").remove();
+        chart.selectAll(".selection-count-label").remove();
+
         const brush = d3.brushY()
             .extent([
                 [-(brushWidth / 2), marginTop],
                 [brushWidth / 2, chartHeightRef.current]
             ])
             .on("start brush end", (event, key) => {
-                if (event.sourceEvent === null || frozenAxesRef.current.has(key)) return false;
-                console.log("Brushed", event, key);
+                if (event.sourceEvent === null) return false;
+
                 brushed(event, key);
-            })
+            });
 
         // Apply brush to axis groups
         chart.selectAll(".axis")
@@ -389,6 +358,7 @@ export default function ParallelSankeyPlot() {
             .call(brush)
             .call(brush.move, null);
 
+        // Original brushed function stays the same
         function brushed(event, key) {
             const { selection } = event;
             const currentSelections = new Map(selectionsRef.current);
@@ -404,7 +374,209 @@ export default function ParallelSankeyPlot() {
             if (event.type !== "end") {
                 updateSelections(selectionsRef.current, SELECTION_SOURCES.PARALLEL);
             }
+            else {
+                if (selection === null) {
+                    updateSelections(selectionsRef.current, SELECTION_SOURCES.PARALLEL);
+                }
+            }
         }
+    }
+
+    const getPotentialLinkEntities = () => {
+        const potentialSelectedEntitiesByAxis = new Map();
+        Array.from(selectionsRef.current.keys()).forEach(key => {
+            potentialSelectedEntitiesByAxis.set(key, []);
+        });
+
+        Object.entries(entities).forEach(([entityId, entity]) => {
+            if (isHidden(entity)) return false;
+
+            let isSelected = false;
+            const axesWithValues = [];
+            
+            const selectionEntries = Array.from(selectionsRef.current);
+            isSelected = true;
+            for (let i = 0; i < selectionEntries.length; i++) {
+                const [varName, range] = selectionEntries[i];
+                const [max, min] = range;
+                
+                if (entity[varName] !== null && entity[varName] !== undefined) {
+                    // If the entity has value on the selected axis but not in the range, it is not selected
+                    if (entity[varName] >= min && entity[varName] <= max) {
+                        axesWithValues.push(varName);
+                    }
+                    else {
+                        isSelected = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isSelected) {
+                axesWithValues.forEach(key => {
+                    potentialSelectedEntitiesByAxis.get(key).push({
+                        entityId: entityId,
+                        axisCount: Object.values(entity).filter(value => value !== null).length,
+                        entity: entity
+                    });
+                });
+            }
+        })
+
+        // Find minimum entities count across all selections
+        
+        const minCount = Math.min(...Array.from(potentialSelectedEntitiesByAxis.values()).map(entities => entities.length));
+        console.log("Potential selected entities by axis: ", potentialSelectedEntitiesByAxis, "Min count: ", minCount);
+
+        let groups = [];
+        const skipAxes = new Set();
+        potentialSelectedEntitiesByAxis.forEach((axisEntities, axis) => {
+            // If entities on this axis are already be selected, skip it
+            if (skipAxes.has(axis)) {
+                return;
+            }
+
+            // Keep the entities with the most axis counts
+            const maxAxisCount = Math.max(...axisEntities.map(axisEntity => axisEntity.axisCount));
+            let keepEntities = axisEntities.filter(axisEntity => {
+                return axisEntity.axisCount === maxAxisCount;
+            });
+
+            // Shuffle the array to randomize selection
+            for (let i = keepEntities.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [keepEntities[i], keepEntities[j]] = [keepEntities[j], keepEntities[i]];
+            }
+
+            // Take only up to minCount
+            if (minCount === 0 || keepEntities.length === 0) {
+                potentialSelectedEntitiesByAxis.set(axis, []);
+                return;
+            }
+
+            keepEntities = keepEntities.slice(0, minCount);
+
+            // Record the axes that have partial entities on it
+            Object.entries(keepEntities[0].entity).forEach(([key, value]) => {
+                if (key !== "id" && key !== axis && value !== null) {
+                    skipAxes.add(key);
+                }
+            });
+
+            potentialSelectedEntitiesByAxis.set(axis, keepEntities);
+        });
+
+        potentialSelectedEntitiesByAxis.forEach((axisEntities, axis) => {
+            if (skipAxes.has(axis)) {
+                return;
+            }
+
+            groups.push(axisEntities.map(axisEntity => {
+                return {
+                    id: axisEntity.entityId,
+                    entity: axisEntity.entity
+                }
+            }));
+        });
+
+        return groups;
+    }
+
+    const createPotentialEntities = (groups) => {
+        // Create potential connections (dashed lines) between entities in different axes
+        // Use an array of connection objects to store this information
+        const chart = d3.select("#pcp");
+        chart.selectAll(".potential-connection").remove();
+        const potentialEntities = [];
+        const entitiesToDeleteIds = [];
+
+        // For each group, create connections between entities
+        console.log("Groups: ", groups);
+        let skip = groups.some(group => group.length === 0);
+
+        if (skip || groups.length < 2) {
+            setPotentialEntities([]);
+            setEntitiesToDeleteIds([]);
+            return;
+        }
+
+        while (groups[0].length !== 0) {
+            // Create a new potential connection by selecting one entity from each group
+            const potentialEntity = {};
+
+            groups.forEach(group => {
+                if (group.length === 0) return;
+                // Select an entity from this group
+                const randomIndex = Math.floor(Math.random() * group.length);
+                const selectedEntity = group[randomIndex].entity;
+
+                // Remove the selected entity from the group to prevent reuse
+                group.splice(randomIndex, 1);
+
+                entitiesToDeleteIds.push(selectedEntity.id);
+                // Add each axis value from this entity to the connection
+                Object.entries(selectedEntity).forEach(([axis, value]) => {
+                    if (axis !== "id" && value !== null) {
+                        potentialEntity[axis] = value;
+                    }
+                });
+            });
+
+            // Add this connection to our connections array
+            potentialEntities.push(potentialEntity);
+        }
+
+        // Add dashed lines to visualize potential connections
+        const line = d3.line()
+            .x(([key]) => variableAxesRef.current(key))
+            .y(([key, value]) => valueAxesRef.current.get(key)(value));
+
+        let hasGaps = false;
+        potentialEntities.forEach((entity, i) => {
+            // Check if there are any gaps between consecutive variables
+            const filteredVariables = sortableVariables.filter(variable => entity[variable.name] !== null && entity[variable.name] !== undefined);
+            const sequenceNums = filteredVariables.map(variable => variable.sequenceNum);
+            hasGaps = sequenceNums.some((num, index) => num !== index);
+
+            if (hasGaps) {
+                return;
+            }
+
+            // Add dashed line
+            chart.append("path")
+                .datum(entity)
+                .attr("class", "entity-path potential-connection")
+                .attr("d", d => line(
+                    filteredVariables
+                        .map(variable => [variable.name, d[variable.name]])
+                ))
+        });
+
+        if (hasGaps) {
+            setPotentialEntities([]);
+            setEntitiesToDeleteIds([]);
+            return;
+        }
+
+        // Store potential entities for later creation
+        setPotentialEntities(potentialEntities);
+        setEntitiesToDeleteIds(entitiesToDeleteIds);
+    }
+
+    const createConnections = () => {
+        // Remove original entities and add new combined ones
+        combineEntities(entitiesToDeleteIds, potentialEntities);
+
+        // Reset UI
+        clearBrushSelection();
+        setPotentialEntities([]);
+        setEntitiesToDeleteIds([]);
+    }
+
+    const handleLink = () => {
+        createConnections();
+        clearBrushSelection();
+        setPotentialEntities([]);
     }
 
     const updateHighlightedEntities = (fromExternal = false) => {
@@ -413,41 +585,26 @@ export default function ParallelSankeyPlot() {
         const countsByAxis = new Map();
         Array.from(selectionsRef.current.keys()).forEach(axis => countsByAxis.set(axis, 0));
 
-        // First get all entities that would be selected based on current brush
-        const potentialSelectedEntities = Object.entries(entities).filter(([entityId, entity]) => {
-            if (selectionGroup1Entities.includes(entity) || selectionGroup2Entities.includes(entity)) return false;
-            if (isHidden(entity)) return false;
-
-            return selectionsRef.current.size !== 0 && Array.from(selectionsRef.current).every(([key, [max, min]]) => {
-                if (entity[key] === null) return false;
-                return entity[key] >= min && entity[key] <= max;
-            });
-        }).map(([id, entity]) => ({ id, entity }));
-
-        let selectedEntitiesForHighlight = potentialSelectedEntities;
-        // When group 1 have partial connected entities, select entities with more non-null values
-        if (selectionStep === SELECTION_STEPS.SELECT_G1) {
-            const mostNonNullCnt = Math.max(...potentialSelectedEntities.map(d => Object.values(d.entity).filter(value => value !== null).length));
-            selectedEntitiesForHighlight = potentialSelectedEntities.filter(d => Object.values(d.entity).filter(value => value !== null).length === mostNonNullCnt);
+        let selectedEntitiesForHighlight = [];
+        if (activeFilter === FILTER_TYPES.INCOMPLETE) {
+            let groups = getPotentialLinkEntities();
+            selectedEntitiesForHighlight = groups.flat();
+            createPotentialEntities(groups);
         }
-        // When group 2 have more entities than group 1, randomly select subset
-        else if (selectionStep === SELECTION_STEPS.SELECT_G2 &&
-            potentialSelectedEntities.length > selectionGroup1Entities.length) {
-            // Randomly select entities to match group 1 size
-            const shuffled = [...potentialSelectedEntities];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            selectedEntitiesForHighlight = shuffled.slice(0, selectionGroup1Entities.length);
+        else if (activeFilter === FILTER_TYPES.COMPLETE) {
+            const potentialSelectedEntities = Object.entries(entities).filter(([entityId, entity]) => {
+                return selectionsRef.current.size !== 0 && Array.from(selectionsRef.current).every(([key, [max, min]]) => {
+                    if (entity[key] === null) return false;
+                    return entity[key] >= min && entity[key] <= max;
+                });
+            }).map(([id, entity]) => ({ id, entity }));
+
+            selectedEntitiesForHighlight = potentialSelectedEntities;
         }
 
         // Create a Set of selected entity IDs for quick lookup
         const selectedEntityIds = new Set(selectedEntitiesForHighlight.map(item => item.id));
-
         Object.entries(entities).forEach(([entityId, entity]) => {
-            if (selectionGroup1Entities.includes(entity) || selectionGroup2Entities.includes(entity)) return;
-
             const isEntityHidden = isHidden(entity);
             const isSelected = selectedEntityIds.has(entityId);
 
@@ -455,27 +612,21 @@ export default function ParallelSankeyPlot() {
                 d3.select(`#entity_path_${entityId}`)
                     .classed("hidden-selection", true)
                     .classed("brush-non-selection", false)
-                    .classed("brush-selection", false)
-                    .classed("group-1-selection", false)
-                    .classed("group-2-selection", false);
+                    .classed("brush-selection", false);
 
                 Object.entries(entity).forEach(([key, value]) => {
                     if (key !== "id" && value !== null) {
                         d3.select(`#dot_${entityId}_${key}`)
                             .classed("hidden-entity-dot", true)
                             .classed("selected-entity-dot", false)
-                            .classed("unselected-entity-dot", false)
-                            .classed("group-1-dot", false)
-                            .classed("group-2-dot", false);
+                            .classed("unselected-entity-dot", false);
                     }
                 });
             } else {
                 d3.select(`#entity_path_${entityId}`)
                     .classed("hidden-selection", false)
                     .classed("brush-non-selection", !isSelected)
-                    .classed("brush-selection", isSelected)
-                    .classed("group-1-selection", isSelected && selectionStep === SELECTION_STEPS.SELECT_G1)
-                    .classed("group-2-selection", isSelected && selectionStep === SELECTION_STEPS.SELECT_G2);
+                    .classed("brush-selection", isSelected);
 
                 if (isSelected) {
                     newSelectedEntities.push(entity);
@@ -486,9 +637,7 @@ export default function ParallelSankeyPlot() {
                         d3.select(`#dot_${entityId}_${key}`)
                             .classed("hidden-entity-dot", false)
                             .classed("selected-entity-dot", isSelected)
-                            .classed("unselected-entity-dot", !isSelected)
-                            .classed("group-1-dot", isSelected && selectionStep === SELECTION_STEPS.SELECT_G1)
-                            .classed("group-2-dot", isSelected && selectionStep === SELECTION_STEPS.SELECT_G2);
+                            .classed("unselected-entity-dot", !isSelected);
 
                         if (isSelected) {
                             countsByAxis.set(key, countsByAxis.get(key) + 1);
@@ -499,28 +648,15 @@ export default function ParallelSankeyPlot() {
         });
 
         // Update count labels for each axis
+        chart.selectAll(".selection-count-label").remove();
         countsByAxis.forEach((count, axis) => {
-            // Remove existing label
-            chart.select(`#count-label-${axis}`).remove();
-            chart.select(`#brush-selection-overlay-${axis}`).remove();
             // Add new label if there's a selection
             if (selectionsRef.current.has(axis)) {
                 const axisX = variableAxesRef.current(axis);
                 const axisY = valueAxesRef.current.get(axis);
                 const [selectionY1, selectionY2] = selectionsRef.current.get(axis);
 
-                // Add overlay rectangle matching corresponding brush selection
-                if (fromExternal) {
-                    // chart.append("rect")
-                    //     .attr("id", `brush-selection-overlay-${axis}`)
-                    //     .attr("class", "brush-selection-overlay")
-                    //     .attr("x", axisX - 25)
-                    //     .attr("y", axisY(Math.max(selectionY1, selectionY2)))
-                    //     .attr("width", 50)
-                    //     .attr("height", Math.abs(axisY(selectionY1) - axisY(selectionY2)))
-                    //     .attr("opacity", 0.2);
-                }
-                else {
+                if (!fromExternal) {
                     const labelY = (selectionY1 + selectionY2) / 2; // Middle of brush selection
                     chart.append("text")
                         .attr("id", `count-label-${axis}`)
@@ -535,6 +671,7 @@ export default function ParallelSankeyPlot() {
         });
 
         chart.selectAll(".unselected-entity-dot").raise();
+        chart.selectAll(".potential-connection").raise();
         chart.selectAll(".selected-entity-dot").raise();
         chart.selectAll(".selection-count-label").raise();
         chart.selectAll(".axis-handle").raise();
@@ -562,115 +699,6 @@ export default function ParallelSankeyPlot() {
     const deleteSelectedEntities = () => {
         deleteEntities(selectedEntities.map(entity => entity.id));
         clearBrushSelection();
-    }
-
-    const confirmSelection = () => {
-        if (selectionStep === SELECTION_STEPS.LINK) {
-            connectEntities();
-            return;
-        }
-
-        switch (selectionStep) {
-            case SELECTION_STEPS.INITIAL:
-                setSelectionType(SELECTION_TYPE.GROUP_1);
-                break;
-            case SELECTION_STEPS.SELECT_G1:
-                if (selectedEntities.length === 0) {
-                    setWarningMessage("Please select entities for Group 1");
-                    return;
-                }
-                setSelectionGroup1Entities(selectedEntities);
-                setSelectionType(SELECTION_TYPE.GROUP_2);
-                clearBrushSelection();
-                break;
-            case SELECTION_STEPS.SELECT_G2:
-                if (selectedEntities.length === 0) {
-                    setWarningMessage("Please select entities for Group 2");
-                    return;
-                }
-                setSelectionGroup2Entities(selectedEntities);
-                setSelectionType(SELECTION_TYPE.NORMAL);
-                clearBrushSelection();
-                break;
-            default:
-                setSelectionType(SELECTION_TYPE.NORMAL);
-                break;
-        }
-
-        setSelectionStep((prev) => prev + 1);
-    }
-
-    const resetSelection = () => {
-        setSelectionStep(SELECTION_STEPS.INITIAL);
-        setSelectionGroup1Entities([]);
-        setSelectionGroup2Entities([]);
-        clearBrushSelection(true);
-        setSelectionType(SELECTION_TYPE.NORMAL);
-    }
-
-    const connectEntities = () => {
-        const entities1 = [...selectionGroup1Entities];
-        const entities2 = [...selectionGroup2Entities];
-
-        // Return if either group is empty
-        if (entities1.length === 0 || entities2.length === 0) {
-            return;
-        }
-
-        // Check if groups have equal length
-        if (entities1.length !== entities2.length) {
-            setWarningMessage("Both selection groups must have the same number of entities");
-            return;
-        }
-
-        const newEntities = [];
-        const entitiesToDelete = [];
-
-        // Combine all pairs
-        while (entities1.length > 0) {
-            // Randomly select one entity from each group without replacement
-            const randomIndex1 = Math.floor(Math.random() * entities1.length);
-            const randomIndex2 = Math.floor(Math.random() * entities2.length);
-            const randomEntity1 = entities1.splice(randomIndex1, 1)[0];
-            const randomEntity2 = entities2.splice(randomIndex2, 1)[0];
-
-            // Combine the entities
-            let combinedEntityData = {};
-            Object.keys(variablesDict).forEach((varName) => {
-                const value1 = randomEntity1[varName];
-                const value2 = randomEntity2[varName];
-
-                if (value1) {
-                    combinedEntityData[varName] = value1;
-                } else if (value2) {
-                    combinedEntityData[varName] = value2;
-                } else {
-                    combinedEntityData[varName] = null;
-                }
-            });
-
-            newEntities.push(combinedEntityData);
-            entitiesToDelete.push(randomEntity1.id, randomEntity2.id);
-        }
-
-        // Use the new combineEntities function instead of separate delete and add
-        combineEntities(entitiesToDelete, newEntities);
-
-        // After connection is complete, reset the step
-        resetSelection();
-    }
-
-    const getLinkButtonColor = () => {
-        switch (selectionStep) {
-            case SELECTION_STEPS.INITIAL:
-                return 'primary';
-            case SELECTION_STEPS.SELECT_G1:
-                return 'secondary';
-            case SELECTION_STEPS.SELECT_G2:
-                return 'success';
-            case SELECTION_STEPS.LINK:
-                return 'primary';
-        }
     }
 
     const handleDragStart = (event) => {
@@ -751,22 +779,11 @@ export default function ParallelSankeyPlot() {
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                 <Button
                                     size='small'
-                                    variant={selectionStep === SELECTION_STEPS.INITIAL ? 'outlined' : 'contained'}
-                                    color={getLinkButtonColor()}
-                                    onClick={confirmSelection}
+                                    variant='contained'
+                                    disabled={potentialEntities.length === 0}
+                                    onClick={handleLink}
                                 >
-                                    {selectionStep === SELECTION_STEPS.INITIAL ? 'Start Selection' :
-                                        selectionStep === SELECTION_STEPS.SELECT_G1 ? 'Confirm Group 1' :
-                                            selectionStep === SELECTION_STEPS.SELECT_G2 ? 'Confirm Group 2' :
-                                                selectionStep === SELECTION_STEPS.LINK ? 'Link' :
-                                                "Selection Finished"}
-                                </Button>
-                                <Button
-                                    size='small'
-                                    variant='outlined'
-                                    onClick={resetSelection}
-                                >
-                                    Reset
+                                    Link
                                 </Button>
                             </Box>
                         </Box>
