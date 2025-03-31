@@ -38,10 +38,12 @@ export default function BiVariablePlot({ biVarName1, biVarName2 }) {
     }, [biVariable1, biVariable2, entities])
 
     useEffect(() => {
-        const fromExternal = selectionSource === SELECTION_SOURCES.PARALLEL;
-        const newSelectedEntities = updateHighlightedEntities();
-        if (!fromExternal) {
-            setSelectedEntities(newSelectedEntities);
+        if (biVariable1 && biVariable2) {
+            const fromExternal = selectionSource === SELECTION_SOURCES.PARALLEL;
+            const newSelectedEntities = updateHighlightedEntities();
+            if (!fromExternal) {
+                setSelectedEntities(newSelectedEntities);
+            }
         }
     }, [activeFilter, selections]);
 

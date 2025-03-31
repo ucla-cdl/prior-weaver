@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useContext } from 'react';
 import * as d3 from 'd3';
 import axios from 'axios';
 import "./ParameterPlot.css";
-import { WorkspaceContext } from '../contexts/WorkspaceContext';
 import { VariableContext, DISTRIBUTION_TYPES } from '../contexts/VariableContext';
 
 const EDIT_MODES = {
@@ -132,7 +131,10 @@ export const ParameterPlot = ({ paraName }) => {
         // Draw axes
         chart.append('g')
             .attr('transform', `translate(0,${chartHeight})`)
-            .call(d3.axisBottom(xScale));
+            .call(d3.axisBottom(xScale)
+                .tickValues(parameter.binEdges)
+                .tickFormat(d3.format("d"))
+            )
 
         // Add X axis label
         chart.append("text")
@@ -196,7 +198,6 @@ export const ParameterPlot = ({ paraName }) => {
             })
             .finally(() => {
                 setIsFitting(false);
-                setShowFittedDistribution(true);
             });
     };
 

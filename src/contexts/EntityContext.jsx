@@ -20,8 +20,6 @@ export const EntityProvider = ({ children }) => {
     }]);
     const [currentVersion, setCurrentVersion] = useState(0);
 
-    const [potentialEntities, setPotentialEntities] = useState({});
-
     // Load entities from saved environment if available
     useEffect(() => {
         if (savedEnvironment) {
@@ -181,7 +179,7 @@ export const EntityProvider = ({ children }) => {
         const operation = currentOperation?.operation;
         if (operation === 'initial') return "Cannot undo initial state";
 
-        const count = currentOperation.entitiesAffected.length;
+        const count = currentOperation?.entitiesAffected?.length;
 
         switch (operation) {
             case 'add':
@@ -200,10 +198,10 @@ export const EntityProvider = ({ children }) => {
     const getRedoOperationDescription = () => {
         if (currentVersion >= entityHistory.length - 1) return "No operation to redo";
         const nextOperation = entityHistory[currentVersion + 1];
-        const operation = nextOperation.operation;
+        const operation = nextOperation?.operation;
         if (operation === 'initial') return "Cannot redo initial state";
 
-        const count = nextOperation.entitiesAffected.length;
+        const count = nextOperation?.entitiesAffected?.length;
 
         switch (operation) {
             case 'add':

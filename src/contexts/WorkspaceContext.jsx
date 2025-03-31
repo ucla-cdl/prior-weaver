@@ -238,11 +238,10 @@ export const WorkspaceProvider = ({ children }) => {
         if (exampleParam === "true") {
             console.log("Example Mode");
             setStudyActive(false);
-            setTaskId("house");
-            setModel(TASK_SETTINGS["house"].defaultModel);
+            setTaskId("income");
+            setModel(TASK_SETTINGS["income"].defaultModel);
             setSpace(spaceParam);
             setFeedback(FEEDBACK_MODE.FEEDBACK);
-            fetchRecord(`${spaceParam}-example`);
         } else {
             console.log("Study Mode");
             setStudyActive(true);

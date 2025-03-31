@@ -175,15 +175,18 @@ export default function ModelPanel() {
                                 onChange={(e) => setEditingParameter({ ...editingParameter, max: e.target.value })}
                             />
                         </Box>
-                        <Box>
-                            <TextField
-                                sx={{ m: '10px' }}
-                                label="Bin Count"
-                                type="number"
-                                value={editingParameter?.binCount || 10}
-                                onChange={(e) => setEditingParameter({ ...editingParameter, binCount: parseInt(e.target.value) })}
-                            />
-                        </Box>
+                        {space === ELICITATION_SPACE.PARAMETER &&
+                            <Box>
+                                <TextField
+                                    sx={{ m: '10px' }}
+                                    label="Bin Count"
+                                    type="number"
+                                    value={editingParameter?.binCount || 10}
+                                    onChange={(e) => setEditingParameter({ ...editingParameter, binCount: parseInt(e.target.value) })}
+                                    inputProps={{ min: 2 }}
+                                />
+                            </Box>
+                        }
                     </DialogContent>
                     <DialogActions>
                         <Button color='danger' onClick={() => setIsEditingParameter(false)}>Cancel</Button>

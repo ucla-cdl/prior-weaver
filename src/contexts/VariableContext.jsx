@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { TASK_SETTINGS, WorkspaceContext } from './WorkspaceContext';
 import axios from 'axios';
 
@@ -34,7 +34,7 @@ export const DISTRIBUTION_TYPES = {
 export const VariableProvider = ({ children }) => {
     const { taskId, model, setModel, finishParseModel, setFinishParseModel, savedEnvironment } = useContext(WorkspaceContext);
     const [variablesDict, setVariablesDict] = useState({});
-    const [sortableVariables, setSortableVariables] = useState([]);
+    const sortableVariablesRef = useRef([]);
     const [parametersDict, setParametersDict] = useState({});
     const [biVariablesPairs, setBiVariablesPairs] = useState([]);
     const [translationTimes, setTranslationTimes] = useState(0);
@@ -55,7 +55,7 @@ export const VariableProvider = ({ children }) => {
 
     useEffect(() => {
         const sortedVars = Object.values(variablesDict).sort((a, b) => a.sequenceNum - b.sequenceNum);
-        setSortableVariables(sortedVars);
+        sortableVariablesRef.current = sortedVars;
         // Generate all pairs of variables in the required order
         let bivariatePairs = [];
         for (let i = 0; i < sortedVars.length - 1; i++) {
@@ -280,8 +280,7 @@ export const VariableProvider = ({ children }) => {
         handleParseModel,
         parseVariables,
         DEFAULT_VARIABLE_ATTRIBUTES,
-        sortableVariables,
-        setSortableVariables,
+        sortableVariablesRef,
         translationTimes,
         setTranslationTimes,
         predictiveCheckResults,

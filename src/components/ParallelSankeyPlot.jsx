@@ -27,7 +27,7 @@ const FILTER_TYPES = {
 
 export default function ParallelSankeyPlot() {
     const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
-    const { variablesDict, updateVariable, sortableVariables } = useContext(VariableContext);
+    const { variablesDict, updateVariable, sortableVariablesRef } = useContext(VariableContext);
     const { entities, addEntities, deleteEntities, combineEntities } = useContext(EntityContext);
     const { activeFilter, setActiveFilter, selections, selectedEntities, setSelectedEntities, isHidden, selectionsRef, updateSelections, selectionSource, potentialEntities, setPotentialEntities } = useContext(SelectionContext);
 
@@ -54,7 +54,7 @@ export default function ParallelSankeyPlot() {
 
     useEffect(() => {
         populateEntities();
-    }, [entities]);
+    }, [entities, sortableVariablesRef.current]);
 
     useEffect(() => {
         const fromExternal = selectionSource === SELECTION_SOURCES.BIVARIATE;
@@ -194,7 +194,7 @@ export default function ParallelSankeyPlot() {
                     .on("end", function (event) {
                         const handle = d3.select(this);
                         const newY = Math.min(Math.max(0, event.y), chartHeight);
-                        const newValue = newValueAxes.get(d).scale.invert(newY);
+                        const newValue = parseFloat(newValueAxes.get(d).scale.invert(newY).toFixed(2));
 
                         // Determine if this is min or max handle based on y position
                         const [currentMin, currentMax] = newValueAxes.get(d).originalDomain;
@@ -297,6 +297,7 @@ export default function ParallelSankeyPlot() {
     }
 
     const populateEntities = () => {
+        console.log("Populating entities in PCP");
         const chart = d3.select("#pcp");
 
         const line = d3.line()
@@ -307,7 +308,7 @@ export default function ParallelSankeyPlot() {
         chart.selectAll(".entity-dot").remove();
 
         Object.values(entities).forEach(entity => {
-            Object.entries(entity).filter(([key, value]) => key !== "id" && value !== null).forEach(([key, value]) => {
+            Object.entries(entity).filter(([key, value]) => key !== "id" && value !== null && value !== undefined).forEach(([key, value]) => {
                 chart.append("circle")
                     .attr("class", "entity-dot")
                     .attr("id", `dot_${entity["id"]}_${key}`)
@@ -321,7 +322,7 @@ export default function ParallelSankeyPlot() {
                 .attr("class", "entity-path")
                 .attr("id", `entity_path_${entity["id"]}`)
                 .attr("d", d => line(
-                    sortableVariables
+                    sortableVariablesRef.current
                         .filter(variable => d[variable.name] !== null && d[variable.name] !== undefined)
                         .map(variable => [variable.name, d[variable.name]])
                 ))
@@ -536,7 +537,7 @@ export default function ParallelSankeyPlot() {
         let hasGaps = false;
         potentialEntities.forEach((entity, i) => {
             // Check if there are any gaps between consecutive variables
-            const filteredVariables = sortableVariables.filter(variable => entity[variable.name] !== null && entity[variable.name] !== undefined);
+            const filteredVariables = sortableVariablesRef.current.filter(variable => entity[variable.name] !== null && entity[variable.name] !== undefined);
             const sequenceNums = filteredVariables.map(variable => variable.sequenceNum);
             hasGaps = sequenceNums.some((num, index, arr) => {
                 if (index === 0) return false;
@@ -714,10 +715,10 @@ export default function ParallelSankeyPlot() {
         const { active, over } = event;
 
         if (active.id !== over.id) {
-            const oldIndex = sortableVariables.findIndex(item => item.name === active.id);
-            const newIndex = sortableVariables.findIndex(item => item.name === over.id);
+            const oldIndex = sortableVariablesRef.current.findIndex(item => item.name === active.id);
+            const newIndex = sortableVariablesRef.current.findIndex(item => item.name === over.id);
 
-            const newItems = arrayMove(sortableVariables, oldIndex, newIndex);
+            const newItems = arrayMove(sortableVariablesRef.current, oldIndex, newIndex);
             newItems.forEach((item, index) => {
                 updateVariable(item.name, {
                     "sequenceNum": index
@@ -825,11 +826,11 @@ export default function ParallelSankeyPlot() {
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <SortableContext
-                    items={sortableVariables}
+                    items={sortableVariablesRef.current}
                     strategy={verticalListSortingStrategy}
                 >
                     <Box id='sortable-container' sx={{ width: '100%', minHeight: '40px', display: 'flex', flexDirection: 'row', position: 'relative' }}>
-                        {variableAxesRef.current && sortableVariables.map(item => {
+                        {variableAxesRef.current && sortableVariablesRef.current.map(item => {
                             const axisPosition = variableAxesRef.current(item.name) + marginLeft;
 
                             return (
