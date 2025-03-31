@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import routes from "../shared/routes";
 import { useEffect } from "react";
 
+
 export default function Home() {
     const navigate = useNavigate();
     const title = "Prior Weaver";

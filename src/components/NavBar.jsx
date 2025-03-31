@@ -3,7 +3,6 @@ import { Box, IconButton, Typography, Tooltip, Button, Dialog, DialogTitle, Dial
 import { ELICITATION_SPACE, FEEDBACK_MODE, USER_MODE, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { VariableContext } from '../contexts/VariableContext';
-// Import necessary icons
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
@@ -17,15 +16,62 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 const TASKS = {
     [ELICITATION_SPACE.OBSERVABLE]: [
         "The population is aging, so Age distribution should have a mean around 45 and be right-skewed.",
+        "Younger generations are more likely to attain higher education due to advancements in the education system.",
         "Higher education levels are less common, so Education Years may follow a left-skewed distribution, with most people having 12-16 years of education.",
+        "Individuals in their 40s with higher education are likely to have the highest incomes.",
         "Income distribution is typically right-skewed, with a long tail for high earners due to wealth inequality.",
-        "There is a minimum wage, meaning Income has a lower bound, possibly with a spike at lower income levels.",
-        "Individuals in their 40s with higher education are likely to have the highest incomes."
     ],
     [ELICITATION_SPACE.PARAMETER]: [
         "The effect of age on income may vary, suggesting the age coefficient should have moderate uncertainty, modeled with a normal distribution.",
         "Education has a positive impact on income, so the coefficient for Education Years should have a high positive mean.",
         "The intercept (baseline income) should be positive, reflecting a minimum expected income even for individuals with no education or work experience."
+    ]
+}
+
+const GUIDELINES = {
+    [ELICITATION_SPACE.OBSERVABLE]: [
+        {
+            title: "Define Variable Ranges",
+            description: "Set realistic ranges for both predictor and response variables based on domain knowledge."
+        },
+        {
+            title: "Express Knowledge about Variable",
+            description: "- Drawing on histograms to express your distributional knowledge about variables." + "\n" + "- Exploring and Creating data patterns on Scatterplot and Parallel Coordinates Plot to express your relational knowledge about variables."
+        },
+        {
+            title: "Translate Knowledge to Prior Distributions",
+            description: "Transform your expressed knowledge into formal probability distributions (i.e., prior distribution choices)."
+        },
+        {
+            title: "Decide Prior Distribution Choice",
+            description: "Perform a prior predictive checking to assess whether the results align with your domain knowledge, and choose the most suitable priors."
+        },
+        {
+            title: "Refine the Priors",
+            description: "If the results are not satisfactory, revisit steps 1-5 and adjust the priors as needed."
+        }
+    ],
+    [ELICITATION_SPACE.PARAMETER]: [
+        {
+            title: "Define Variable and Parameter Ranges",
+            description: "Set realistic ranges for both model variables and model parameters based on domain knowledge."
+        },
+        {
+            title: "Express Knowledge about Parameters",
+            description: "Draw on the histograms to express your beliefs about the parameter values."
+        },
+        {
+            title: "Translate Knowledge to Prior Distributions",
+            description: "Fit the sketched histograms into formal probability distributions (i.e., prior distribution choices)."
+        },
+        {
+            title: "Decide Prior Distribution Choice",
+            description: "Perform a prior predictive checking to assess whether the results align with your domain knowledge, and choose the most suitable priors."
+        },
+        {
+            title: "Refine the Priors",
+            description: "If the results are not satisfactory, revisit steps 1-4 and adjust the priors as needed."
+        }
     ]
 }
 
@@ -35,6 +81,7 @@ export default function NavBar() {
     const { currentVersion, entityHistory, finishSpecification, getUndoOperationDescription, getRedoOperationDescription, undoEntityOperation, redoEntityOperation } = useContext(EntityContext);
     const [finishSpecificationDialogOpen, setFinishSpecificationDialogOpen] = useState(false);
     const [taskMenuAnchor, setTaskMenuAnchor] = useState(null);
+    const [guideMenuAnchor, setGuideMenuAnchor] = useState(null);
     const navigate = useNavigate();
 
     const handleClickDoc = () => {
@@ -87,6 +134,30 @@ export default function NavBar() {
                 >
                     UI Tour
                 </Button> */}
+                {userMode === USER_MODE.EXAMPLE && 
+                    <Button
+                        variant={guideMenuAnchor ? "contained" : "outlined"}
+                        color="success"
+                        startIcon={<HelpOutlineIcon />}
+                        onClick={(e) => setGuideMenuAnchor(e.currentTarget)}
+                        endIcon={guideMenuAnchor ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    >
+                        Guide
+                    </Button>
+                }
+                {/* Guide Menu */}
+                <Menu
+                    anchorEl={guideMenuAnchor}
+                    open={Boolean(guideMenuAnchor)}
+                    onClose={() => setGuideMenuAnchor(null)}
+                >
+                    {Object.entries(GUIDELINES[space]).map(([idx, guide], index) => (
+                        <MenuItem sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: '400px', alignItems: 'flex-start' }} key={index} onClick={() => setGuideMenuAnchor(null)}>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', whiteSpace: 'normal', wordWrap: 'break-word' }}>{index + 1}. {guide.title}</Typography>
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line', wordWrap: 'break-word' }}>{guide.description}</Typography>
+                        </MenuItem>
+                    ))}
+                </Menu>
                 {userMode === USER_MODE.EXAMPLE &&
                     <Button
                         variant={taskMenuAnchor ? "contained" : "outlined"}
@@ -94,7 +165,7 @@ export default function NavBar() {
                         onClick={(e) => setTaskMenuAnchor(e.currentTarget)}
                         endIcon={taskMenuAnchor ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     >
-                        Tasks
+                        Task
                     </Button>
                 }
                 {/* Task Menu */}
