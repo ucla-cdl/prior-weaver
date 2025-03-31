@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { WorkspaceContext } from './WorkspaceContext';
+import { WorkspaceContext, USER_MODE } from './WorkspaceContext';
 import { VariableContext } from './VariableContext';
 import axios from 'axios';
 export const EntityContext = createContext();
 
 export const EntityProvider = ({ children }) => {
-    const { userName, taskId, space, feedback, model, savedEnvironment, studyActive } = useContext(WorkspaceContext);
+    const { userName, taskId, space, feedback, model, savedEnvironment, userMode } = useContext(WorkspaceContext);
     const { variablesDict, parametersDict, translationTimes, predictiveCheckResults } = useContext(VariableContext);
 
     const [entities, setEntities] = useState({});
@@ -233,7 +233,7 @@ export const EntityProvider = ({ children }) => {
             predictiveCheckResults: predictiveCheckResults,
         };
 
-        if (studyActive) {
+        if (userMode === USER_MODE.STUDY) {
             axios.post(window.BACKEND_ADDRESS + '/saveRecord', { record: data })
                 .then(response => {
                     console.log('Record saved successfully');
@@ -241,11 +241,8 @@ export const EntityProvider = ({ children }) => {
                 })
                 .catch(error => {
                     console.error('Error saving record:', error);
-                    return false;
                 });
         }
-        
-        return studyActive;
     }
 
     const contextValue = {

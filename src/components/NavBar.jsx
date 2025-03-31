@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
-import { Box, IconButton, Typography, Tooltip, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
-import { ELICITATION_SPACE, FEEDBACK_MODE, WorkspaceContext } from '../contexts/WorkspaceContext';
+import { Box, IconButton, Typography, Tooltip, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Menu, MenuItem, Divider } from '@mui/material';
+import { ELICITATION_SPACE, FEEDBACK_MODE, USER_MODE, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { VariableContext } from '../contexts/VariableContext';
 // Import necessary icons
@@ -11,12 +11,30 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import BookIcon from '@mui/icons-material/Book';
 import { useNavigate } from 'react-router-dom';
 import routes from '../shared/routes';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+
+const TASKS = {
+    [ELICITATION_SPACE.OBSERVABLE]: [
+        "The population is aging, so Age distribution should have a mean around 45 and be right-skewed.",
+        "Higher education levels are less common, so Education Years may follow a left-skewed distribution, with most people having 12-16 years of education.",
+        "Income distribution is typically right-skewed, with a long tail for high earners due to wealth inequality.",
+        "There is a minimum wage, meaning Income has a lower bound, possibly with a spike at lower income levels.",
+        "Individuals in their 40s with higher education are likely to have the highest incomes."
+    ],
+    [ELICITATION_SPACE.PARAMETER]: [
+        "The effect of age on income may vary, suggesting the age coefficient should have moderate uncertainty, modeled with a normal distribution.",
+        "Education has a positive impact on income, so the coefficient for Education Years should have a high positive mean.",
+        "The intercept (baseline income) should be positive, reflecting a minimum expected income even for individuals with no education or work experience."
+    ]
+}
 
 export default function NavBar() {
-    const { space, feedback, setTutorial, setRunTutorial } = useContext(WorkspaceContext);
+    const { space, feedback, setTutorial, setRunTutorial, userMode } = useContext(WorkspaceContext);
     const { translationTimes } = useContext(VariableContext);
     const { currentVersion, entityHistory, finishSpecification, getUndoOperationDescription, getRedoOperationDescription, undoEntityOperation, redoEntityOperation } = useContext(EntityContext);
     const [finishSpecificationDialogOpen, setFinishSpecificationDialogOpen] = useState(false);
+    const [taskMenuAnchor, setTaskMenuAnchor] = useState(null);
     const navigate = useNavigate();
 
     const handleClickDoc = () => {
@@ -29,9 +47,10 @@ export default function NavBar() {
     }
 
     const handleConfirmFinish = () => {
-        const studyActive = finishSpecification();
-        if (studyActive) {
+        finishSpecification();
+        if (userMode === USER_MODE.STUDY) {
             setFinishSpecificationDialogOpen(false);
+            window.open(window.POST_TASK_SURVEY_URL);
         }
         else {
             navigate(routes.home);
@@ -60,14 +79,36 @@ export default function NavBar() {
                 >
                     Doc
                 </Button>
-                <Button
+                {/* <Button
                     variant="outlined"
                     color="primary"
                     startIcon={<HelpOutlineIcon />}
                     onClick={handleClickUITour}
                 >
                     UI Tour
-                </Button>
+                </Button> */}
+                {userMode === USER_MODE.EXAMPLE &&
+                    <Button
+                        variant={taskMenuAnchor ? "contained" : "outlined"}
+                        color="primary"
+                        onClick={(e) => setTaskMenuAnchor(e.currentTarget)}
+                        endIcon={taskMenuAnchor ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    >
+                        Tasks
+                    </Button>
+                }
+                {/* Task Menu */}
+                <Menu
+                    anchorEl={taskMenuAnchor}
+                    open={Boolean(taskMenuAnchor)}
+                    onClose={() => setTaskMenuAnchor(null)}
+                >
+                    {Object.entries(TASKS[space]).map(([task, description], index) => (
+                        <MenuItem sx={{ maxWidth: '400px' }} key={index} onClick={() => setTaskMenuAnchor(null)}>
+                            <Typography variant="body2" sx={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>{index + 1}. {description}</Typography>
+                        </MenuItem>
+                    ))}
+                </Menu>
             </Box>
 
             {/* Middle section - Undo and Redo buttons */}

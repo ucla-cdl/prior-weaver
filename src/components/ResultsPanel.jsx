@@ -33,7 +33,7 @@ export default function ResultsPanel() {
 
     const translate = () => {
         if (space === ELICITATION_SPACE.OBSERVABLE) {
-            const translationEntities = Object.values(entities).filter(entity => Object.values(entity).every(value => value !== null && value !== undefined)); // allow partial translation
+            const translationEntities = Object.values(entities).filter(entity => Object.keys(variablesDict).every(varName => entity[varName] !== null && entity[varName] !== undefined)); // allow partial translation
             if (translationEntities.length === 0) {
                 setSnackbarMessage('No entities to translate');
                 setSnackbarOpen(true);

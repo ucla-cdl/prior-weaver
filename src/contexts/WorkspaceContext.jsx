@@ -101,6 +101,12 @@ export const FEEDBACK_MODE = {
     NO_FEEDBACK: "no_feedback"
 }
 
+export const USER_MODE = {
+    NORMAL: "normal",
+    EXAMPLE: "example",
+    STUDY: "study"
+}
+
 const steps = [
     {
         target: '.left-panel',
@@ -215,6 +221,7 @@ export const WorkspaceProvider = ({ children }) => {
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
     const [userName, setUserName] = useState("admin");
+    const [userMode, setUserMode] = useState(USER_MODE.NORMAL);
     const [taskId, setTaskId] = useState(null);
     const [model, setModel] = useState('');
     const [space, setSpace] = useState(null);
@@ -228,8 +235,6 @@ export const WorkspaceProvider = ({ children }) => {
     const [runTutorial, setRunTutorial] = useState(true);
     const [savedEnvironment, setSavedEnvironment] = useState(null);
 
-    const [studyActive, setStudyActive] = useState(true);
-
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const exampleParam = searchParams.get('example');
@@ -237,14 +242,14 @@ export const WorkspaceProvider = ({ children }) => {
 
         if (exampleParam === "true") {
             console.log("Example Mode");
-            setStudyActive(false);
+            setUserMode(USER_MODE.EXAMPLE);
             setTaskId("income");
             setModel(TASK_SETTINGS["income"].defaultModel);
             setSpace(spaceParam);
             setFeedback(FEEDBACK_MODE.FEEDBACK);
         } else {
             console.log("Study Mode");
-            setStudyActive(true);
+            setUserMode(USER_MODE.STUDY);
             fetchStudySettings();
         }
     }, [location]);
@@ -260,6 +265,7 @@ export const WorkspaceProvider = ({ children }) => {
                 setFeedback(response.data.feedback_mode);
 
                 if (response.data?.load_record) {
+                    setUserMode(USER_MODE.NORMAL);
                     const recordName = response.data?.record_name;
                     fetchRecord(recordName);
                 }
@@ -314,8 +320,8 @@ export const WorkspaceProvider = ({ children }) => {
         runTutorial,
         setRunTutorial,
         tutorialSteps,
-        studyActive,
-        setStudyActive
+        userMode,
+        setUserMode
     };
 
     return (
