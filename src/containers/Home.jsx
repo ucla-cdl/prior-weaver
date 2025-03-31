@@ -1,4 +1,4 @@
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Divider } from "@mui/material";
 import "./Home.css";
 import ReactMarkdown from 'react-markdown'
 import { Book, QueryStats, Tune } from "@mui/icons-material";
@@ -6,7 +6,20 @@ import { useNavigate } from "react-router-dom";
 import routes from "../shared/routes";
 import { useEffect } from "react";
 
-
+const VIDEOS = [
+    {
+        name: "Introduction to Prior Weaver",
+        url: "https://drive.google.com/file/d/1n4ELXYR4Lj2ml54A07S8ggVXhz_qwZRR/preview"
+    },
+    {
+        name: "Parameter Space Elicitation",
+        url: "https://drive.google.com/file/d/1AQPU-HcmTAM2G-4ZQaKMYVbc5vDDsDNr/preview"
+    },
+    {
+        name: "Observable Space Elicitation",
+        url: "https://drive.google.com/file/d/1mc16TP6yxPydDvPeWPMqL0vtq9g7TKma/preview"
+    }
+]
 export default function Home() {
     const navigate = useNavigate();
     const title = "Prior Weaver";
@@ -69,6 +82,14 @@ Prior elicitation requires translating domain expertise into probability distrib
                     {description}
                 </ReactMarkdown>
             </Box>
+
+            {VIDEOS.map((video, index) => (
+                <Box className="video-block" sx={{ my: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <Typography variant="h4">{video.name}</Typography>
+                    <iframe src={video.url} className="video-container"></iframe>
+                    <Divider sx={{ my: 2, width: "100%", color: "black", border: "1px solid black" }} />
+                </Box>
+            ))}
         </Box>
     )
 }
