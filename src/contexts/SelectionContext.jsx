@@ -9,14 +9,14 @@ export const SELECTION_SOURCES = {
 };
 
 export const FILTER_TYPES = {
-    COMPLETE: "complete",
-    INCOMPLETE: "incomplete"
+    INCOMPLETE: "incomplete",
+    COMPLETE: "complete"
 }
 
 export const SelectionProvider = ({ children }) => {    
     const { variablesDict } = useContext(VariableContext);
 
-    const [activeFilter, setActiveFilter] = useState(FILTER_TYPES.COMPLETE);
+    const [activeFilter, setActiveFilter] = useState(FILTER_TYPES.INCOMPLETE);
     const [selections, setSelections] = useState(new Map());
     const [selectionSource, setSelectionSource] = useState(null);
     const selectionsRef = useRef(new Map());

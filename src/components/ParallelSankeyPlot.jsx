@@ -1,17 +1,18 @@
 import React, { useState, useRef, useEffect, forwardRef, useContext } from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
-import { Alert, Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Radio, RadioGroup, Snackbar, Switch, ToggleButton, Typography } from '@mui/material';
+import { Alert, Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Radio, RadioGroup, Snackbar, Switch, ToggleButton, Typography, Tooltip, Input, InputLabel, TextField } from '@mui/material';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { DndContext, closestCenter, DragOverlay, useSensors, useSensor, PointerSensor } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import "./ParallelSankeyPlot.css";
-import { WorkspaceContext } from '../contexts/WorkspaceContext';
+import { WorkspaceContext, UI_CLIPS } from '../contexts/WorkspaceContext';
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { SelectionContext, SELECTION_SOURCES, SELECTION_TYPE } from '../contexts/SelectionContext';
+import { Help } from '@mui/icons-material';
 
 /**
  * Define interaction types
@@ -395,12 +396,12 @@ export default function ParallelSankeyPlot() {
 
             let isSelected = false;
             const axesWithValues = [];
-            
+
             isSelected = true;
             for (let i = 0; i < selectionEntries.length; i++) {
                 const [varName, range] = selectionEntries[i];
                 const [max, min] = range;
-                
+
                 if (entity[varName] !== null && entity[varName] !== undefined) {
                     // If the entity has value on the selected axis but not in the range, it is not selected
                     if (entity[varName] >= min && entity[varName] <= max) {
@@ -431,7 +432,7 @@ export default function ParallelSankeyPlot() {
             .reduce((min, count) => Math.min(min, count), Infinity) || 0;
         let groups = [];
         const skipAxes = new Set();
-        
+
         for (const [axis, axisEntities] of potentialSelectedEntitiesByAxis) {
             // If entities on this axis are already be selected, skip it
             if (skipAxes.has(axis)) {
@@ -765,52 +766,97 @@ export default function ParallelSankeyPlot() {
                         onChange={(event) => changeFilterMode(event.target.value)}
                     >
                         <FormControlLabel
-                            className='complete-filter-button'
-                            value={FILTER_TYPES.COMPLETE}
-                            control={<Radio />}
-                            label="Completed"
-                        />
-                        <FormControlLabel
                             className='incomplete-filter-button'
                             value={FILTER_TYPES.INCOMPLETE}
                             control={<Radio />}
                             label="Incompleted"
+                        />
+                        <FormControlLabel
+                            className='complete-filter-button'
+                            value={FILTER_TYPES.COMPLETE}
+                            control={<Radio />}
+                            label="Completed"
                         />
                     </RadioGroup>
                 </Box>
 
                 <Box className="filter-function-container" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mx: 1, gap: 1 }}>
                     {activeFilter === FILTER_TYPES.INCOMPLETE && (
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                <Button
-                                    size='small'
-                                    variant='contained'
-                                    disabled={potentialEntities.length === 0}
-                                    onClick={handleLink}
-                                >
-                                    Link
-                                </Button>
-                            </Box>
+                        <Box sx={{ mx: 2, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                            <Button
+                                size='small'
+                                variant='contained'
+                                disabled={potentialEntities.length === 0}
+                                onClick={handleLink}
+                            >
+                                Link
+                            </Button>
+                            <Tooltip
+                                title={
+                                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>{UI_CLIPS.link.description}</Typography>
+                                        <iframe
+                                            className='video-container'
+                                            src={UI_CLIPS.link.url}
+                                            allow="autoplay; loop; muted"
+                                            allowFullScreen
+                                        />
+                                    </Box>
+                                }
+                                arrow
+                                placement="right"
+                                PopperProps={{
+                                    sx: { maxWidth: 1000, minWidth: 500, zIndex: 150000 }
+                                }}
+                            >
+                                <Help size="small" />
+                            </Tooltip>
                         </Box>
                     )}
 
                     {activeFilter === FILTER_TYPES.COMPLETE && (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <Button
-                                size='small'
-                                sx={{ mb: 1 }}
-                                variant='outlined'
-                                onClick={generateRandomEntities}>
-                                Generate
-                            </Button>
-                            <input
-                                type="number"
-                                value={generatedNum}
-                                onChange={(e) => setGeneratedNum(Number(e.target.value))}
-                                min="1"
-                                style={{ width: '60px', textAlign: 'center' }}
-                            />
+                        <Box sx={{ mx: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                <Button
+                                    size='small'
+                                    sx={{ mb: 1 }}
+                                    variant='outlined'
+                                    disabled={selectionsRef.current.size === 0}
+                                    onClick={generateRandomEntities}
+                                >
+                                    Generate
+                                </Button>
+                                <Tooltip
+                                    title={
+                                        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                            <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>{UI_CLIPS.generate.description}</Typography>
+                                            <iframe
+                                                className='video-container'
+                                                src={UI_CLIPS.generate.url}
+                                                allow="autoplay; loop; muted"
+                                                allowFullScreen
+                                            />
+                                        </Box>
+                                    }
+                                    arrow
+                                    placement="right"
+                                    PopperProps={{
+                                        sx: { maxWidth: 1000, minWidth: 500, zIndex: 150000 }
+                                    }}
+                                >
+                                    <Help size="small" />
+                                </Tooltip>
+                            </Box>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="body2">Num: </Typography>
+                                <input
+                                    type="number"
+                                    value={generatedNum}
+                                    onChange={(e) => setGeneratedNum(Number(e.target.value))}
+                                    min="1"
+                                    style={{ maxWidth: '50px', textAlign: 'center' }}
+                                />
+                            </Box>
                         </Box>
                     )}
 

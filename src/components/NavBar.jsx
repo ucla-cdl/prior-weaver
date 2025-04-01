@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import routes from '../shared/routes';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { Brightness1 } from '@mui/icons-material';
 
 const TASKS = {
     [ELICITATION_SPACE.OBSERVABLE]: [
@@ -118,6 +119,7 @@ export default function NavBar() {
         }}>
             {/* Left section - Tutorial button */}
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                <Brightness1 sx={{ color: userMode === USER_MODE.STUDY ? 'green' : 'purple' }} />
                 <Button
                     variant="outlined"
                     color="secondary"
@@ -134,17 +136,15 @@ export default function NavBar() {
                 >
                     UI Tour
                 </Button> */}
-                {userMode === USER_MODE.EXAMPLE && 
-                    <Button
-                        variant={guideMenuAnchor ? "contained" : "outlined"}
-                        color="success"
-                        startIcon={<HelpOutlineIcon />}
-                        onClick={(e) => setGuideMenuAnchor(e.currentTarget)}
-                        endIcon={guideMenuAnchor ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    >
-                        Guide
-                    </Button>
-                }
+                <Button
+                    variant={guideMenuAnchor ? "contained" : "outlined"}
+                    color="success"
+                    startIcon={<HelpOutlineIcon />}
+                    onClick={(e) => setGuideMenuAnchor(e.currentTarget)}
+                    endIcon={guideMenuAnchor ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                >
+                    Guide
+                </Button>
                 {/* Guide Menu */}
                 <Menu
                     anchorEl={guideMenuAnchor}
@@ -153,7 +153,7 @@ export default function NavBar() {
                 >
                     {Object.entries(GUIDELINES[space]).map(([idx, guide], index) => (
                         <MenuItem sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: '400px', alignItems: 'flex-start' }} key={index} onClick={() => setGuideMenuAnchor(null)}>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold', whiteSpace: 'normal', wordWrap: 'break-word' }}>{index + 1}. {guide.title}</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold', whiteSpace: 'normal', wordWrap: 'break-word' }}>{index + 1}. {guide.title}</Typography>
                             <Typography variant="body2" sx={{ whiteSpace: 'pre-line', wordWrap: 'break-word' }}>{guide.description}</Typography>
                         </MenuItem>
                     ))}
@@ -176,7 +176,7 @@ export default function NavBar() {
                 >
                     {Object.entries(TASKS[space]).map(([task, description], index) => (
                         <MenuItem sx={{ maxWidth: '400px' }} key={index} onClick={() => setTaskMenuAnchor(null)}>
-                            <Typography variant="body2" sx={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>{index + 1}. {description}</Typography>
+                            <Typography variant="body1" sx={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>{index + 1}. {description}</Typography>
                         </MenuItem>
                     ))}
                 </Menu>

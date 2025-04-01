@@ -1,7 +1,7 @@
 import { Box, Typography, Button, Divider } from "@mui/material";
 import "./Home.css";
 import ReactMarkdown from 'react-markdown'
-import { Book, QueryStats, Tune } from "@mui/icons-material";
+import { Book, QueryStats, Star, Tune } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import routes from "../shared/routes";
 import { useEffect } from "react";
@@ -9,15 +9,15 @@ import { useEffect } from "react";
 const VIDEOS = [
     {
         name: "Introduction to Prior Weaver",
-        url: "https://drive.google.com/file/d/1n4ELXYR4Lj2ml54A07S8ggVXhz_qwZRR/preview"
+        url: "https://drive.google.com/file/d/1n4ELXYR4Lj2ml54A07S8ggVXhz_qwZRR/preview?autopause=0&autoplay=1&loop=1"
     },
     {
         name: "Parameter Space Elicitation",
-        url: "https://drive.google.com/file/d/1AQPU-HcmTAM2G-4ZQaKMYVbc5vDDsDNr/preview"
+        url: "https://drive.google.com/file/d/1AQPU-HcmTAM2G-4ZQaKMYVbc5vDDsDNr/preview?autopause=0&autoplay=1&loop=1"
     },
     {
         name: "Observable Space Elicitation",
-        url: "https://drive.google.com/file/d/1mc16TP6yxPydDvPeWPMqL0vtq9g7TKma/preview"
+        url: "https://drive.google.com/file/d/1mc16TP6yxPydDvPeWPMqL0vtq9g7TKma/preview?autopause=0&autoplay=1&loop=1"
     }
 ]
 export default function Home() {
@@ -42,6 +42,10 @@ Prior elicitation requires translating domain expertise into probability distrib
         {
             name: "Observable Space Example",
             path: `${routes.workspace}?example=true&space=observable`
+        },
+        {
+            name: "Workspace",
+            path: routes.workspace
         }
     ]
 
@@ -75,6 +79,9 @@ Prior elicitation requires translating domain expertise into probability distrib
                 <Button className="link-button" variant="contained" onClick={() => navigateTo(links[2].path)} startIcon={<QueryStats />}>
                     {links[2].name}
                 </Button>
+                <Button className="link-button" variant="contained" onClick={() => navigateTo(links[3].path)} startIcon={<Star />}>
+                    {links[3].name}
+                </Button>
             </Box>
 
             <Box className="description-block" sx={{ my: 2 }}>
@@ -85,9 +92,9 @@ Prior elicitation requires translating domain expertise into probability distrib
 
             {VIDEOS.map((video, index) => (
                 <Box className="video-block" sx={{ my: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                    <Typography variant="h4">{video.name}</Typography>
+                    <Typography sx={{ my: 2, fontWeight: "bold" }} variant="h4"><u>{video.name}</u></Typography>
                     <iframe src={video.url} className="video-container"></iframe>
-                    <Divider sx={{ my: 2, width: "100%", color: "black", border: "1px solid black" }} />
+                    <Divider sx={{ my: 3, width: "100%", color: "black", border: "1px solid black" }} />
                 </Box>
             ))}
         </Box>

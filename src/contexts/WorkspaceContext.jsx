@@ -4,6 +4,35 @@ import { useLocation } from 'react-router-dom';
 
 export const WorkspaceContext = createContext();
 
+export const UI_CLIPS = {
+    univariate: {
+        description: "Click on the Histogram to draw the ditribution, and Click on a grid to remove a data point.",
+        url: "https://drive.google.com/file/d/1YM8PC-45qCYDFpiswWvXOuN0ZqM--S3R/preview",
+    },
+    bivariate: {
+        description: "Click and Drag to select a region to explore data patterns.",
+        url: "https://drive.google.com/file/d/1Uz1AIxrczuJ-nwNOB5Jb38GSXEkqNGYY/preview"
+    },
+    link: {
+        description: "1. Click and Drag to select regions for the data points you want to link.\n" +
+            "2. System will priortize selecting entities that are closer to complete.\n" +
+            "3. System will also auto-match to the minimum number of entities that are selected on all axes.\n" +
+            "4. Preview the link with the Orange dashed line.",
+        url: "https://drive.google.com/file/d/1GUG4jEfDyR4gntk2L3mjtLoHESUfn3yo/preview"
+    },
+    generate: {
+        description: "1. Click and Drag to select regions for the data points you want to generate.\n" +
+            "2. Specify the number of data points you want to generate and click on the 'Generate' button.\n" +
+            "3. System will randomly generate data points within the selected region.",
+        url: "https://drive.google.com/file/d/1WAmEv4lqwvV7Ys0eZEQS8Zp8woGkrGIY/preview"
+    },
+    parameter_roulette: {
+        description: "1. Click on the Histogram to draw the ditribution, and Click on a grid to remove a data point.\n" +
+            "2. Click on the 'Fit Distribution' button and select the desired distribution to fit the histogram.",
+        url: "https://drive.google.com/file/d/11rJx2baLVBaeoXd9FQ0eQLiJtUInDTg1/preview"
+    }
+}
+
 export const TASK_SETTINGS = {
     "income": {
         id: "income",

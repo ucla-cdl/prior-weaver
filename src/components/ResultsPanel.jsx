@@ -231,6 +231,18 @@ export default function ResultsPanel() {
             });
     }
 
+    const checkTranslationDisabled = () => {
+        if (space === ELICITATION_SPACE.PARAMETER) {
+            return Object.values(parametersDict).some(param => param.selectedDistributionIdx === null);
+        }
+        else if (space === ELICITATION_SPACE.OBSERVABLE) {
+            const completedEntities = Object.values(entities).filter(entity => Object.keys(variablesDict).every(varName => entity[varName] !== null && entity[varName] !== undefined));
+            return completedEntities.length === 0;
+        }
+
+        return false;
+    }
+
     return (
         <Box id='results-panel' sx={{
             width: '100%',
@@ -244,8 +256,7 @@ export default function ResultsPanel() {
                 sx={{ my: 1 }}
                 variant="contained"
                 onClick={translate}
-                disabled={(space === ELICITATION_SPACE.PARAMETER && Object.values(parametersDict).some(param => param.selectedDistributionIdx === null)) ||
-                    (space === ELICITATION_SPACE.OBSERVABLE && (Object.values(entities).length === 0))}
+                disabled={checkTranslationDisabled}
             >
                 {space === ELICITATION_SPACE.OBSERVABLE ? "Translate" : "Check"}
             </Button>

@@ -41,3 +41,11 @@
     transform: rotate(360deg);
   }
 }
+
+.video-container {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: 1px solid black;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
