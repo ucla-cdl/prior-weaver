@@ -32,10 +32,11 @@ export const EntityProvider = ({ children }) => {
     }, [savedEnvironment]);
 
     // Record the operation of the entity
-    const recordEntityOperation = (operation, entitiesAffected, data, description, newEntities) => {
+    const recordEntityOperation = (operation, source, entitiesAffected, data, description, newEntities) => {
         const historyEntry = {
             timestamp: new Date().toISOString(),
             operation: operation,
+            source: source,
             entitiesAffected: entitiesAffected,
             data: data,
             description: description,
@@ -70,7 +71,7 @@ export const EntityProvider = ({ children }) => {
     };
 
     // Update the entity operations to pass the new entities state
-    const addEntities = (entitiesData, description = "") => {
+    const addEntities = (entitiesData, source, description = "") => {
         console.log("add entities", entitiesData);
         setEntities((prev) => {
             let newEntities = { ...prev };
@@ -93,26 +94,26 @@ export const EntityProvider = ({ children }) => {
             });
 
             // Record the operation with the new entities state
-            recordEntityOperation('add', newEntityIds, entitiesData, description, newEntities);
+            recordEntityOperation('add', source, newEntityIds, entitiesData, description, newEntities);
 
             return newEntities;
         });
     }
 
     // Delete the entities
-    const deleteEntities = (entitiesIDs, description = "") => {
+    const deleteEntities = (entitiesIDs, source, description = "") => {
         console.log("delete entities", entitiesIDs);
         let newEntities = { ...entities };
         entitiesIDs.forEach((entityID) => {
             delete newEntities[entityID];
         });
 
-        recordEntityOperation('delete', entitiesIDs, null, description, newEntities);
+        recordEntityOperation('delete', source, entitiesIDs, null, description, newEntities);
         setEntities(newEntities);
     }
 
     // Update the entities
-    const updateEntities = (entitiesIDs, entitiesData, description = "") => {
+    const updateEntities = (entitiesIDs, entitiesData, source, description = "") => {
         console.log("update entities", entitiesIDs, entitiesData);
         let newEntities = { ...entities };
         entitiesIDs.forEach((entityID, i) => {
@@ -129,12 +130,12 @@ export const EntityProvider = ({ children }) => {
             }
         });
 
-        recordEntityOperation('update', entitiesIDs, entitiesData, description, newEntities);
+        recordEntityOperation('update', source, entitiesIDs, entitiesData, description, newEntities);
         setEntities(newEntities);
     }
 
     // Combine the entities
-    const combineEntities = (entitiesToDelete, entitiesData, description = "") => {
+    const combineEntities = (entitiesToDelete, entitiesData, source, description = "") => {
         // Delete the original entities
         let newEntities = { ...entities };
         entitiesToDelete.forEach(entityId => {
@@ -152,7 +153,7 @@ export const EntityProvider = ({ children }) => {
             newEntityIds.push(newEntityId);
         });
 
-        recordEntityOperation('combine', entitiesToDelete, entitiesData, description, newEntities);
+        recordEntityOperation('combine', source, entitiesToDelete, entitiesData, description, newEntities);
         setEntities(newEntities);
     }
 
@@ -257,6 +258,7 @@ export const EntityProvider = ({ children }) => {
         undoEntityOperation,
         redoEntityOperation,
         getEntitiesCntDifference,
+        recordEntityOperation,
         getUndoOperationDescription,
         getRedoOperationDescription,
         finishSpecification

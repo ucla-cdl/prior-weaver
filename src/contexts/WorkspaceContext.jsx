@@ -66,7 +66,7 @@ export const TASK_SETTINGS = {
         id: "score",
         name: "Student Exam Score Prediction",
         scenario: "You are a data scientist investigating factors that influence student performance.\
-                Specifically, you seek to understand how the number of hours a student studies per week and their attendance rate affect their exam score (out of 100 points).",
+                Specifically, you seek to understand how the number of hours a student studies per week and their attendance rate (out of 100%) affect their exam score (out of 100 points).",
         defaultModel: `model <- glm(exam_score ~ hours_study + attendance_rate, family = gaussian(link = "identity"))`,
         variables: {
             "predictor": [
@@ -78,14 +78,14 @@ export const TASK_SETTINGS = {
                 {
                     "name": "attendance_rate",
                     "unit": "%",
-                    "description": "The percentage of classes the student attended."
+                    "description": "The percentage of classes the student attended (out of 100%)"
                 }
             ],
             "response": [
                 {
                     "name": "exam_score",
                     "unit": "pts",
-                    "description": "The student's final exam score."
+                    "description": "The student's final exam score (out of 100 points)."
                 }
             ]
         }

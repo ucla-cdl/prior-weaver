@@ -572,7 +572,8 @@ export default function ParallelSankeyPlot() {
 
     const createConnections = () => {
         // Remove original entities and add new combined ones
-        combineEntities(entitiesToDeleteIds, potentialEntities);
+        const linkType = selectionsRef.current.size === Object.keys(variablesDict).length ? "complete" : "partial";
+        combineEntities(entitiesToDeleteIds, potentialEntities, "multivariate", linkType);
 
         // Reset UI
         clearBrushSelection();
@@ -699,12 +700,15 @@ export default function ParallelSankeyPlot() {
             newEntitiesData.push(entityData);
         }
 
+        const generatedAxesCnt = selectionsRef.current.size;
+        const generationType = generatedAxesCnt === 1 ? "individual" : generatedAxesCnt === Object.keys(variablesDict).length ? "complete" : "partial";
         clearBrushSelection();
-        addEntities(newEntitiesData);
+        addEntities(newEntitiesData, "multivariate", generationType);
     }
 
     const deleteSelectedEntities = () => {
-        deleteEntities(selectedEntities.map(entity => entity.id));
+        const deleteType = selectionsRef.current.size === 1 ? "individual" : "complete";
+        deleteEntities(selectedEntities.map(entity => entity.id), "multivariate", deleteType);
         clearBrushSelection();
     }
 

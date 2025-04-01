@@ -144,7 +144,8 @@ export default function VariablePlot({ variable }) {
                                     [variable.name]: Math.random() * (variable.binEdges[bin + 1] - variable.binEdges[bin]) + variable.binEdges[bin]
                                 });
                             }
-                            addEntities(newEntitiesData);
+                            const addType = deltaHeight === 1 ? "single" : "multiple";
+                            addEntities(newEntitiesData, "univariate", addType);
                         }
                         // if clicked count is smaller than or equal to previous, then update values of existing entities
                         else {
@@ -154,6 +155,7 @@ export default function VariablePlot({ variable }) {
                                 updatedEntities = binInfos[bin].entities.slice(-1);
                             }
 
+                            const updateType = deltaHeight === 0 ? "single" : "multiple";
                             updateEntities(
                                 updatedEntities.map(entity => entity.id),
                                 updatedEntities.map(entity => {
@@ -177,7 +179,9 @@ export default function VariablePlot({ variable }) {
 
                                     // Otherwise just update the specific variable
                                     return { [variable.name]: null };
-                                })
+                                }),
+                                "univariate",
+                                updateType
                             );
                         }
                     });

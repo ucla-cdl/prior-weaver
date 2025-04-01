@@ -184,7 +184,7 @@ export default function NavBar() {
             </Box>
 
             {/* Middle section - Undo and Redo buttons */}
-            {space === ELICITATION_SPACE.OBSERVABLE &&
+            {/* {space === ELICITATION_SPACE.OBSERVABLE &&
                 <Box className="version-operation-container" sx={{ display: 'flex', gap: 1 }}>
                     <Tooltip title={getUndoOperationDescription()}>
                         <span>
@@ -213,7 +213,7 @@ export default function NavBar() {
                         </span>
                     </Tooltip>
                 </Box>
-            }
+            } */}
 
             {/* Right section - Finish button */}
             <Button

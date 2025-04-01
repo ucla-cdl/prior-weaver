@@ -10,7 +10,7 @@ import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContex
 export default function ResultsPanel() {
     const { space } = useContext(WorkspaceContext);
     const { variablesDict, parametersDict, updateParameter, translationTimes, setTranslationTimes, predictiveCheckResults, setPredictiveCheckResults, getDistributionNotation } = useContext(VariableContext);
-    const { entities } = useContext(EntityContext);
+    const { entities, recordEntityOperation } = useContext(EntityContext);
 
     const [isTranslating, setIsTranslating] = useState(false);
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
@@ -57,6 +57,7 @@ export default function ResultsPanel() {
                         });
                     });
 
+                    recordEntityOperation('translate', "observable", null, response.data.priors_results, `${translationTimes}`, { ...entities });
                     predictiveCheck(Object.values(priorsResults).map(dists => dists[0]));
                 });
         }
@@ -82,6 +83,7 @@ export default function ResultsPanel() {
             })
             .then((response) => {
                 console.log("predictive check", response.data);
+                recordEntityOperation('check', "predictive check", null, response.data.check_results, `${translationTimes}`, { ...entities });
                 setIsTranslating(false);
                 setTranslationTimes(prev => prev + 1);
                 setPredictiveCheckResults(prev => [...prev, response.data.check_results]);
@@ -217,7 +219,7 @@ export default function ResultsPanel() {
                 .attr("x", chartWidth - 50)
                 .attr("y", 10)
                 .attr("class", "legend-rect current-rect");
-                
+
 
             chart.append("text")
                 .attr("x", chartWidth - 30)

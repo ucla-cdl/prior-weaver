@@ -4,14 +4,11 @@ import * as d3 from 'd3';
 import axios from 'axios';
 import "./ParameterPlot.css";
 import { VariableContext, DISTRIBUTION_TYPES } from '../contexts/VariableContext';
-
-const EDIT_MODES = {
-    DISTRIBUTION: 'distribution',
-    ROULETTE: 'roulette'
-}
+import { EntityContext } from '../contexts/EntityContext';
 
 export const ParameterPlot = ({ paraName }) => {
     const { parametersDict, updateParameter, getDistributionNotation } = useContext(VariableContext);
+    const { entities, recordEntityOperation } = useContext(EntityContext);
 
     const [parameter, setParameter] = useState(null);
     const [showFittedDistribution, setShowFittedDistribution] = useState(false);
@@ -196,7 +193,10 @@ export const ParameterPlot = ({ paraName }) => {
                             binInfos[bin].points = binInfos[bin].points.slice(0, grid);
                         }
 
-                        updateParameter(parameter.name, { roulettePoints: binInfos.map(d => d.points).flat() });
+                        const updateType = deltaHeight > 0 ? 'add' : 'remove';
+                        const newRoulettePoints = binInfos.map(d => d.points).flat();
+                        recordEntityOperation('update', `parameter ${parameter.name}`, null, newRoulettePoints, updateType, { ...entities });
+                        updateParameter(parameter.name, { roulettePoints: newRoulettePoints });
                     });
             }
         }
@@ -211,6 +211,8 @@ export const ParameterPlot = ({ paraName }) => {
             })
             .then((response) => {
                 console.log(response.data);
+                recordEntityOperation('fit', `parameter ${parameter.name}`, null, response.data.distributions, `distribution fitting`, { ...entities });
+                recordEntityOperation('select', `parameter ${parameter.name}`, null, response.data.distributions[0], `distribution selection`, { ...entities });
                 updateParameter(parameter.name, {
                     distributions: response.data.distributions,
                     selectedDistributionIdx: 0
@@ -223,6 +225,7 @@ export const ParameterPlot = ({ paraName }) => {
     };
 
     const onSelectDistribution = (idx) => {
+        recordEntityOperation('select', `parameter ${parameter.name}`, null, parametersDict[parameter.name].distributions[idx], `distribution selection`, { ...entities });
         updateParameter(parameter.name, { selectedDistributionIdx: idx });
         plotDistribution(parametersDict[parameter.name].distributions[idx]);
     }
