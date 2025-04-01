@@ -18,20 +18,20 @@ function App() {
       <WorkspaceProvider>
         <VariableProvider>
           <EntityProvider>
-          <SelectionProvider>
+            <SelectionProvider>
               <div className="App">
-                  <Routes>
-                    <Route path={routes.home} element={<Home />}></Route>
-                    <Route path={routes.workspace} element={<Workspace />}></Route>
-                    <Route path={routes.logger} element={<Logger />}></Route>
-                    <Route path={routes.admin} element={<Admin />}></Route>
-                    <Route path={routes.doc} element={<Doc />}></Route>
-                  </Routes>
+                <Routes>
+                  <Route path={routes.home} element={<Home />}></Route>
+                  <Route path={routes.workspace} element={<Workspace />}></Route>
+                  <Route path={routes.logger} element={<Logger />}></Route>
+                  <Route path={routes.admin} element={<Admin />}></Route>
+                  <Route path={routes.doc} element={<Doc />}></Route>
+                </Routes>
               </div>
-          </SelectionProvider>
-        </EntityProvider>
-      </VariableProvider>
-    </WorkspaceProvider>
+            </SelectionProvider>
+          </EntityProvider>
+        </VariableProvider>
+      </WorkspaceProvider>
     </HashRouter>
   );
 }

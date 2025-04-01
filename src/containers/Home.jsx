@@ -2,7 +2,7 @@ import { Box, Typography, Button, Divider } from "@mui/material";
 import "./Home.css";
 import ReactMarkdown from 'react-markdown'
 import { Book, QueryStats, Star, Tune } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import routes from "../shared/routes";
 import { useEffect } from "react";
 
@@ -21,14 +21,19 @@ const VIDEOS = [
     }
 ]
 export default function Home() {
+    const location = useLocation();
     const navigate = useNavigate();
     const title = "Prior Weaver";
     const subtitle = "A tool for supporting users constructively expressing their domain knowledge and eliciting priors for Bayesian models";
 
-    const description = `In Bayesian analysis, we use **prior distributions** to represent our existing knowledge or beliefs about model parameters before seeing data. This process of specifying priors is called **prior elicitation** and is crucial when data is limited or expert knowledge is key.  
-Prior elicitation requires translating domain expertise into probability distributions in a systematic way.
-
-**Prior Weaver** helps you express your domain knowledge through an interactive visual interface and automatically translates it into appropriate prior distributions. The tool bridges the gap between domain expertise and statistical modeling, making prior elicitation accessible to both statisticians and domain experts.`;
+    const description = "A central aspect of Bayesian analysis is incorporating prior knowledge—assumptions about the modeled domain before observing data. " +
+        "Formally, this knowledge is represented as **prior distributions (or simply, priors)**, which define probability distributions over model parameters. " +
+        "However, specifying priors can be challenging, as it requires domain expertise that statisticians may not always possess.\n\n" +
+        "One approach to addressing this challenge is **prior elicitation**, where statisticians work with domain experts to (1) gather their domain knowledge " + 
+        "and (2) translate it into probability distributions, (3) ultimately selecting an appropriate prior.\n\n" + 
+        "Conversely, domain experts who wish to apply their knowledge in Bayesian analysis may find it difficult to conduct prior elicitation **independently** without the help from statisticians.\n\n" +
+        "To bridge this gap, we introduce ***PriorWeaver*, an interactive system designed to help domain experts express their knowledge and derive appropriate prior distributions for Bayesian models.** " +
+        "*PriorWeaver* makes prior elicitation more accessible, facilitating collaboration between statisticians and domain experts while ensuring that domain knowledge is effectively integrated into Bayesian models.";
 
     const links = [
         {
@@ -51,7 +56,11 @@ Prior elicitation requires translating domain expertise into probability distrib
 
     useEffect(() => {
         document.title = "Prior Weaver";
-    }, []);
+        if (sessionStorage.getItem('needReload')) {
+            sessionStorage.removeItem('needReload');
+            window.location.reload();
+        }
+    }, [location]);
 
     const navigateTo = (path) => {
         navigate(path);
@@ -85,9 +94,7 @@ Prior elicitation requires translating domain expertise into probability distrib
             </Box>
 
             <Box className="description-block" sx={{ my: 2 }}>
-                <ReactMarkdown>
-                    {description}
-                </ReactMarkdown>
+                <ReactMarkdown children={description} />
             </Box>
 
             {VIDEOS.map((video, index) => (

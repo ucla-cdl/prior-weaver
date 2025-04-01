@@ -101,6 +101,7 @@ export default function NavBar() {
             window.open(window.POST_TASK_SURVEY_URL);
         }
         else {
+            sessionStorage.setItem('needReload', true);
             navigate(routes.home);
         }
     }
