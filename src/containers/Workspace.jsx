@@ -67,7 +67,7 @@ export default function Workspace() {
                             <Box
                                 className="panel left-panel"
                                 sx={{
-                                    width: space === ELICITATION_SPACE.PARAMETER ? '20vw !important' : '10vw',
+                                    width: space === ELICITATION_SPACE.PARAMETER ? '15vw !important' : '10vw',
                                     display: leftPanelOpen ? 'block' : 'none',
                                     position: 'relative'
                                 }}

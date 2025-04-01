@@ -1,5 +1,5 @@
 import { Box, Button, CircularProgress, Snackbar, Alert, Typography, FormControl, FormLabel, FormControlLabel, Checkbox } from '@mui/material';
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 import * as d3 from 'd3';
 import "./ResultsPanel.css";
@@ -15,9 +15,9 @@ export default function ResultsPanel() {
     const [isTranslating, setIsTranslating] = useState(false);
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
-    const svgHeight = 250;
-    const margin = { top: 10, bottom: 40, left: 40, right: 20, };
-    const labelOffset = 35;
+    const svgHeight = 280;
+    const margin = { top: 10, bottom: 60, left: 60, right: 20, };
+    const labelOffset = 45;
 
     const [showPlot, setShowPlot] = useState("both");
 
@@ -137,35 +137,50 @@ export default function ResultsPanel() {
         // Create the x-axis
         chart.append('g')
             .attr('transform', `translate(0, ${chartHeight})`)
-            .call(d3.axisBottom(x));
+            .call(d3.axisBottom(x))
+            .selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em");
 
         // Create the y-axis for the kde
         chart.append('g')
             .call(d3.axisLeft(yKDE));
 
-        const currentColor = "blue";
-        const previousColor = "crimson";
+        // add y axis label
+        chart.append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', -labelOffset)
+            .attr('x', -chartHeight / 2)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '12px')
+            .text('Density');
 
         // Plot previous KDE if it exists
         if (previousCheckResult && (showPlot === "both" || showPlot === "previous")) {
             previousCheckResult["simulated_results"].forEach((simulatedData, index) => {
                 chart.append('path')
                     .datum(simulatedData["kde"])
-                    .attr('fill', 'none')
-                    .attr('stroke', previousColor)
-                    .attr('stroke-width', 1)
+                    .attr('class', 'kde-line previous-kde')
                     .attr('d', d3.line()
                         .x(d => x(d.x))
                         .y(d => yKDE(d.density)));
             });
 
+            const previousRepKDE = previousCheckResult["avg_kde_result"];
+            chart.append('path')
+                .datum(previousRepKDE)
+                .attr('class', 'kde-line previous-kde avg-kde')
+                .attr('d', d3.line()
+                    .x(d => x(d.x))
+                    .y(d => yKDE(d.density)));
+
             // Add legend for previous results
             chart.append("rect")
                 .attr("x", chartWidth - 50)
                 .attr("y", 20)
-                .attr("width", 15)
-                .attr("height", 2)
-                .attr("fill", previousColor);
+                .attr("class", "legend-rect previous-rect");
 
             chart.append("text")
                 .attr("x", chartWidth - 30)
@@ -181,21 +196,28 @@ export default function ResultsPanel() {
                 // Plot current KDE
                 chart.append('path')
                     .datum(simulatedData["kde"])
-                    .attr('fill', 'none')
-                    .attr('stroke', currentColor)
-                    .attr('stroke-width', 1)
+                    .attr('class', 'kde-line current-kde')
                     .attr('d', d3.line()
                         .x(d => x(d.x))
                         .y(d => yKDE(d.density)));
             });
 
+            const repKDE = results["avg_kde_result"];
+            // Plot current KDE
+            chart.append('path')
+                .datum(repKDE)
+                .attr('class', 'kde-line current-kde avg-kde')
+                .attr('d', d3.line()
+                    .x(d => x(d.x))
+                    .y(d => yKDE(d.density)));
+
+
             // Add legend for current results
             chart.append("rect")
                 .attr("x", chartWidth - 50)
                 .attr("y", 10)
-                .attr("width", 15)
-                .attr("height", 2)
-                .attr("fill", currentColor);
+                .attr("class", "legend-rect current-rect");
+                
 
             chart.append("text")
                 .attr("x", chartWidth - 30)
@@ -211,6 +233,7 @@ export default function ResultsPanel() {
             .attr('x', chartWidth / 2)
             .attr('y', chartHeight + labelOffset)
             .attr('text-anchor', 'middle')
+            .style('font-size', '14px')
             .text(`${responseVar.name} (${responseVar.unitLabel})`);
     }
 
@@ -231,7 +254,7 @@ export default function ResultsPanel() {
             });
     }
 
-    const checkTranslationDisabled = () => {
+    const checkTranslationDisabled = useCallback(() => {
         if (space === ELICITATION_SPACE.PARAMETER) {
             return Object.values(parametersDict).some(param => param.selectedDistributionIdx === null);
         }
@@ -239,9 +262,7 @@ export default function ResultsPanel() {
             const completedEntities = Object.values(entities).filter(entity => Object.keys(variablesDict).every(varName => entity[varName] !== null && entity[varName] !== undefined));
             return completedEntities.length === 0;
         }
-
-        return false;
-    }
+    }, [space, parametersDict, entities]);
 
     return (
         <Box id='results-panel' sx={{
@@ -256,7 +277,7 @@ export default function ResultsPanel() {
                 sx={{ my: 1 }}
                 variant="contained"
                 onClick={translate}
-                disabled={checkTranslationDisabled}
+                disabled={checkTranslationDisabled()}
             >
                 {space === ELICITATION_SPACE.OBSERVABLE ? "Translate" : "Check"}
             </Button>

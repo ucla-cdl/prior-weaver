@@ -19,8 +19,8 @@ export const ParameterPlot = ({ paraName }) => {
 
     const svgHeightRef = useRef(0);
     const svgWidthRef = useRef(0);
-    const margin = { top: 10, bottom: 40, left: 40, right: 40 };
-    const labelOffset = 35;
+    const margin = { top: 20, bottom: 60, left: 60, right: 80 };
+    const labelOffset = 45;
 
     useEffect(() => {
         if (parametersDict && paraName) {
@@ -92,6 +92,16 @@ export const ParameterPlot = ({ paraName }) => {
             .attr('transform', `translate(${chartWidth}, 0)`)
             .call(d3.axisRight(y));
 
+        // Add y-axis label
+        chart.append("g")
+            .attr("transform", `translate(${chartWidth + labelOffset}, ${chartHeight / 2})`)
+            .append("text")
+            .attr("text-anchor", "middle")
+            .attr('transform', 'rotate(-90)')
+            .style("font-size", "14px")
+            .style("font-family", "Times New Roman")
+            .text(`Probability`);
+
         // Distribution curve
         chart.append('path')
             .datum(distribution.x
@@ -143,8 +153,19 @@ export const ParameterPlot = ({ paraName }) => {
             .style("font-size", "14px")
             .text(`${parameter.name}`);
 
+        // Add y-axis
         chart.append('g')
             .call(d3.axisLeft(yScale));
+
+        // Add y-axis label
+        chart.append("g")
+            .attr("transform", `translate(${- margin.left / 2}, ${chartHeight / 2})`)
+            .append("text")
+            .attr("text-anchor", "middle")
+            .attr('transform', 'rotate(-90)')
+            .style("font-size", "14px")
+            .style("font-family", "Times New Roman")
+            .text(`Count`);
 
         // Draw grid cells for roulette interface
         for (let grid = 1; grid <= maxY; grid++) {

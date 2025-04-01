@@ -24,3 +24,35 @@
     justify-content: space-between;
     border-bottom: 1px solid #bbb;
 }
+
+.kde-line {
+    fill: none;
+    stroke-width: 0.5;
+    opacity: 0.4;
+}
+
+.current-kde {
+    stroke: blue;
+}
+
+.previous-kde {
+    stroke: crimson;
+}
+
+.avg-kde {
+    stroke-width: 2;
+    opacity: 1;
+}
+
+.legend-rect {
+    width: 15px;
+    height: 4px;
+}
+
+.previous-rect {
+    fill: crimson;
+}
+
+.current-rect {
+    fill: blue;
+}

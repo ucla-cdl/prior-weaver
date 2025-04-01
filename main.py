@@ -452,13 +452,15 @@ def prior_predictive_check(predictors, response, prior_distributions, num_checks
         simulated_results.append(simu_results)
 
     # Extend min/max range for smooth kde
-    padding_ratio = 0.15
+    padding_ratio = 0.1
     padding = (max_simulated_response_val -
                min_simulated_response_val) * padding_ratio
     x_min = min_simulated_response_val - padding
     x_max = max_simulated_response_val + padding
+    x_values = np.linspace(x_min, x_max, 100)
 
     max_density_val = 0
+    avg_kde = []
     for check_index in range(num_checks):
         simu_results = simulated_results[check_index]
         response_values = [simu_data[response['name']]
@@ -466,8 +468,8 @@ def prior_predictive_check(predictors, response, prior_distributions, num_checks
 
         # Fit KDE to the simulated response values
         kde = stats.gaussian_kde(response_values)
-        x_values = np.linspace(x_min, x_max, 100)
         density_values = kde(x_values)
+        avg_kde.append(density_values)
 
         max_density_val = max(max_density_val, max(density_values))
 
@@ -475,11 +477,16 @@ def prior_predictive_check(predictors, response, prior_distributions, num_checks
         simu_results['kde'] = [
             {'x': x_values[i], 'density': density_values[i]} for i in range(len(x_values))]
 
+    avg_kde = np.mean(avg_kde, axis=0)
+    avg_kde_result = [
+        {'x': x_values[i], 'density': avg_kde[i]} for i in range(len(x_values))]
+
     results = {
         'min_response_val': x_min,
         'max_response_val': x_max,
         'max_density_val': max_density_val,
-        'simulated_results': simulated_results
+        'simulated_results': simulated_results,
+        'avg_kde_result': avg_kde_result
     }
 
     return results

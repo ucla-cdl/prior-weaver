@@ -9,15 +9,15 @@ import { useEffect } from "react";
 const VIDEOS = [
     {
         name: "Introduction to Prior Weaver",
-        url: "https://drive.google.com/file/d/1n4ELXYR4Lj2ml54A07S8ggVXhz_qwZRR/preview?autopause=0&autoplay=1&loop=1"
+        url: "https://drive.google.com/file/d/1n4ELXYR4Lj2ml54A07S8ggVXhz_qwZRR/preview"
     },
     {
         name: "Parameter Space Elicitation",
-        url: "https://drive.google.com/file/d/1AQPU-HcmTAM2G-4ZQaKMYVbc5vDDsDNr/preview?autopause=0&autoplay=1&loop=1"
+        url: "https://drive.google.com/file/d/1AQPU-HcmTAM2G-4ZQaKMYVbc5vDDsDNr/preview"
     },
     {
         name: "Observable Space Elicitation",
-        url: "https://drive.google.com/file/d/1mc16TP6yxPydDvPeWPMqL0vtq9g7TKma/preview?autopause=0&autoplay=1&loop=1"
+        url: "https://drive.google.com/file/d/1mc16TP6yxPydDvPeWPMqL0vtq9g7TKma/preview"
     }
 ]
 export default function Home() {

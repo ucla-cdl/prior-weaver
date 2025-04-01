@@ -23,14 +23,14 @@
 }
 
 .center-panel {
-    width: 70vw;
+    width: 65vw;
     height: 95vh;
     border-left: 1px solid #ddd;
     border-right: 1px solid #ddd;
 }
 
 .right-panel {
-    width: 20vw;
+    width: 25vw;
     height: 95vh;
     border-left: 1px solid #ddd;
 }
