@@ -35,6 +35,7 @@ export const EntityProvider = ({ children }) => {
     const recordEntityOperation = (operation, source, entitiesAffected, data, description, newEntities) => {
         const historyEntry = {
             timestamp: new Date().toISOString(),
+            version: translationTimes,
             operation: operation,
             source: source,
             entitiesAffected: entitiesAffected,
