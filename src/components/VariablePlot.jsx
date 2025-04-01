@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect, useContext } from 'react';
 import * as d3 from 'd3';
 import { Box, Paper } from '@mui/material';
 import { EntityContext } from "../contexts/EntityContext";
+import { VariableContext } from "../contexts/VariableContext";
 import { SelectionContext } from "../contexts/SelectionContext";
 import "./VariablePlot.css";
 
 // Define the Variable Component
 export default function VariablePlot({ variable }) {
+    const { variablesDict } = useContext(VariableContext);
     const { entities, addEntities, updateEntities, getEntitiesCntDifference } = useContext(EntityContext);
     const { selectedEntities } = useContext(SelectionContext);
 
@@ -149,10 +151,16 @@ export default function VariablePlot({ variable }) {
                         }
                         // if clicked count is smaller than or equal to previous, then update values of existing entities
                         else {
-                            let updatedEntities = binInfos[bin].entities.slice(grid); // remove based on FIFO
+                            const individualEntities = binInfos[bin].entities.filter(e => Object.entries(e).filter(([key, value]) => key !== "id" && value !== null).length === 1);
+                            if (individualEntities.length === 0) {
+                                alert('No individual entities can be removed. Please remove entities in the parallel coordinates plot.');
+                                return;
+                            }
+
+                            let updatedEntities = individualEntities.slice(grid); // remove based on FIFO
                             if (deltaHeight === 0) {
                                 // remove current entity
-                                updatedEntities = binInfos[bin].entities.slice(-1);
+                                updatedEntities = individualEntities.slice(-1);
                             }
 
                             const updateType = deltaHeight === 0 ? "single" : "multiple";
