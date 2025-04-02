@@ -1,10 +1,11 @@
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid2, IconButton, TextField, Typography } from '@mui/material';
 import React, { useContext, useState } from 'react';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
+import ReactMarkdown from 'react-markdown';
 import { VariableContext } from '../contexts/VariableContext';
 import { TASK_SETTINGS, ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { Edit } from '@mui/icons-material';
+import { InlineMath, BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 
 export default function ModelPanel() {
     const { taskId, model, space, tutorial } = useContext(WorkspaceContext)
@@ -64,7 +65,7 @@ export default function ModelPanel() {
             {/* Model info */}
             <Box className="context-container">
                 <Typography variant="h6" gutterBottom>Model</Typography>
-                <Typography>{model}</Typography>
+                <p style={{ fontSize: '0.8rem' }}><InlineMath math={model} /></p>
             </Box>
 
             {/* Variable List */}
@@ -136,8 +137,8 @@ export default function ModelPanel() {
                 <Typography variant='h6'>Parameters</Typography>
                 <Typography variant='body2'>(also known as Coefficients)</Typography>
                 {Object.entries(parametersDict).map(([paraName, parameter]) => (
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center' }} key={paraName}>
-                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{paraName}</Typography>
+                    <Box sx={{ my: 1, display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center' }} key={paraName}>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}><InlineMath math={`\\alpha_{${paraName}}`} /></Typography>
                         {space === ELICITATION_SPACE.PARAMETER &&
                             <IconButton onClick={() => {
                                 setEditingParameter({ ...parameter });

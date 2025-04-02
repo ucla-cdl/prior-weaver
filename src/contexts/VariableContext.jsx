@@ -11,8 +11,8 @@ const DEFAULT_VARIABLE_ATTRIBUTES = {
 };
 
 const DEFAULT_PARAMETER_ATTRIBUTES = {
-    min: -10,
-    max: 10,
+    min: -2,
+    max: 2,
     binCount: 10,
     roulettePoints: [],
     distributions: [],
@@ -70,7 +70,7 @@ export const VariableProvider = ({ children }) => {
     const addVariable = (data) => {
         updateVariable(data.name, data);
 
-        const paramName = `p_${data.name}`;
+        const paramName = data.name;
         updateParameter(paramName, {
             name: paramName,
             relatedVar: data.name,

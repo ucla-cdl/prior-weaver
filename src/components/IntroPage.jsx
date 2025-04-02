@@ -3,6 +3,7 @@ import { WorkspaceContext, TASK_SETTINGS } from "../contexts/WorkspaceContext";
 import { useContext } from "react";
 import { VariableContext } from "../contexts/VariableContext";
 import "./IntroPage.css";
+import { InlineMath } from 'react-katex';
 
 export default function IntroPage() {
     const { taskId, model } = useContext(WorkspaceContext);
@@ -28,7 +29,7 @@ export default function IntroPage() {
                     </Typography>
                     <Box sx={{ my: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
                         {taskId && Object.entries(TASK_SETTINGS[taskId]?.variables)?.map(([type, variables]) => (
-                            <Box key={type} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <Box key={type} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', borderBottom: '1px solid #ddd', pb: 1 }}>
                                 <Typography sx={{ my: 1 }} variant='h5'>
                                     {type === "response" ? "Target Variable" : "Predictor Variables"}
                                 </Typography>
@@ -39,18 +40,9 @@ export default function IntroPage() {
                                 ))}
                             </Box>
                         ))}
-                        <Box sx={{ my: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                            <Typography variant='h5'>Model Code</Typography>
-                            <TextField
-                                id="stan-code"
-                                label="R Code"
-                                multiline
-                                rows={3}
-                                variant="outlined"
-                                fullWidth
-                                value={model}
-                            // onChange={(e) => setModel(e.target.value)}
-                            />
+                        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <Typography variant='h5'>Model</Typography>
+                            <h4><InlineMath math={model} /></h4>
                         </Box>
                     </Box>
                 </Box>

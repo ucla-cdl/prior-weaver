@@ -6,7 +6,7 @@ import "./ResultsPanel.css";
 import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
-
+import { InlineMath } from 'react-katex';
 export default function ResultsPanel() {
     const { space } = useContext(WorkspaceContext);
     const { variablesDict, parametersDict, updateParameter, translationTimes, setTranslationTimes, predictiveCheckResults, setPredictiveCheckResults, getDistributionNotation } = useContext(VariableContext);
@@ -331,8 +331,8 @@ export default function ResultsPanel() {
                 <Box className="prior-result-div" sx={{ my: 2, p: 2 }}>
                     <Typography variant="h6" gutterBottom>Prior Distributions</Typography>
                     {Object.entries(parametersDict).map(([paramName, param]) => (
-                        <Box className="prior-result-item" key={paramName} sx={{ p: 1 }}>
-                            <Typography variant="body1" color="text.primary" sx={{ mr: 1 }}>{paramName}: </Typography>
+                        <Box className="prior-result-item" key={paramName} sx={{ p: 1, display: 'flex', flexDirection: 'row', alignItems: 'space-between' }}>
+                            <Typography variant="body1" color="text.primary" sx={{ mr: 1, borderRight: '1px solid #bbb', pr: 1 }}><InlineMath math={`\\alpha_{${paramName}}`} /></Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
                                 {getDistributionNotation(param.distributions[param.selectedDistributionIdx])}
                             </Typography>

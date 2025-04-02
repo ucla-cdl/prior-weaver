@@ -39,7 +39,7 @@ export const TASK_SETTINGS = {
         name: "Income Prediction",
         scenario: "You are a social scientist studying the factors that influence income levels in the U.S.\
                 Specifically, you want to evaluate how an individual's age and years of education impact their annual income.",
-        defaultModel: `model <- glm(income ~ age + education, family = gaussian(link = "identity"))`,
+        defaultModel: `\\text{income} \\sim \\alpha_{age} \\times \\text{age} + \\alpha_{education} \\times \\text{education} + \\alpha_{intercept}`,
         variables: {
             "predictor": [
                 {
@@ -67,7 +67,7 @@ export const TASK_SETTINGS = {
         name: "Student Exam Score Prediction",
         scenario: "You are a data scientist investigating factors that influence student performance.\
                 Specifically, you seek to understand how the number of hours a student studies per week and their attendance rate (out of 100%) affect their exam score (out of 100 points).",
-        defaultModel: `model <- glm(exam_score ~ hours_study + attendance_rate, family = gaussian(link = "identity"))`,
+        defaultModel: `\\text{exam_score} \\sim \\alpha_{hours_study} \\times \\text{hours_study} + \\alpha_{attendance_rate} \\times \\text{attendance_rate} + \\alpha_{intercept}`,
         variables: {
             "predictor": [
                 {
@@ -95,7 +95,7 @@ export const TASK_SETTINGS = {
         name: "Weight Prediction",
         scenario: "You are a data scientist analyzing the factors that influence adult people's weight.\
                 Specifically, you aim to assess how adult's height and exercise hours per week affect their weight.",
-        defaultModel: `model <- glm(weight ~ height + exercise_hours, family = gaussian(link = "identity"))`,
+        defaultModel: `\\text{weight} \\sim \\alpha_{height} \\times \\text{height} + \\alpha_{exercise_hours} \\times \\text{exercise_hours} + \\alpha_{intercept}`,
         variables: {
             "predictor": [
                 {

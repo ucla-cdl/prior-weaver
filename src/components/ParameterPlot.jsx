@@ -1,10 +1,12 @@
 import { Box, FormControl, IconButton, InputLabel, MenuItem, Select, Slider, ToggleButton, Typography, RadioGroup, FormControlLabel, Radio, Button, CircularProgress } from "@mui/material";
 import { useState, useEffect, useRef, useContext } from 'react';
 import * as d3 from 'd3';
+import ReactDOM from 'react-dom';
 import axios from 'axios';
 import "./ParameterPlot.css";
 import { VariableContext, DISTRIBUTION_TYPES } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
+import { InlineMath } from 'react-katex';
 
 export const ParameterPlot = ({ paraName }) => {
     const { parametersDict, updateParameter, getDistributionNotation } = useContext(VariableContext);
@@ -148,11 +150,20 @@ export const ParameterPlot = ({ paraName }) => {
             .style("text-anchor", "start")
 
         // Add X axis label
-        chart.append("text")
-            .attr("text-anchor", "middle")
-            .attr("transform", `translate(${chartWidth / 2}, ${chartHeight + labelOffset})`)
-            .style("font-size", "14px")
-            .text(`${parameter.name}`);
+        chart.append("foreignObject")
+            .attr("width", 200)
+            .attr("height", 50)
+            .attr("x", chartWidth / 2 - 100)
+            .attr("y", chartHeight + labelOffset - 20)
+            .append("xhtml:div")
+            .style("text-align", "center")
+            .html(`<div id="parameter-x-axis-label-${parameter.name}"></div>`);
+
+        // Use ReactDOM to render the InlineMath component into the foreignObject
+        const xAxisLabel = document.getElementById(`parameter-x-axis-label-${parameter.name}`);
+        if (xAxisLabel) {
+            ReactDOM.render(<InlineMath math={`\\alpha_{${parameter.name}}`} />, xAxisLabel);
+        }
 
         // Add y-axis
         chart.append('g')
@@ -246,7 +257,7 @@ export const ParameterPlot = ({ paraName }) => {
                     width: '40%',
                     height: '100%'
                 }}>
-                <Typography variant="h6">{paraName}</Typography>
+                <Typography variant="h6"><InlineMath math={`\\alpha_{${paraName}}`} /></Typography>
                 {showFittedDistribution && parameter && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                         <Select
