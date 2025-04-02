@@ -140,8 +140,12 @@ export const ParameterPlot = ({ paraName }) => {
             .attr('transform', `translate(0,${chartHeight})`)
             .call(d3.axisBottom(xScale)
                 .tickValues(parameter.binEdges)
-                .tickFormat(d3.format("d"))
-            )
+                .tickFormat(d => {
+                    return Number(d.toFixed(2)).toString();
+                }))
+            .selectAll(".tick text")
+            .attr("transform", "rotate(30)")
+            .style("text-anchor", "start")
 
         // Add X axis label
         chart.append("text")

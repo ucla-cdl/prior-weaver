@@ -13,7 +13,7 @@ export default function BiVariablePlot({ biVarName1, biVarName2 }) {
 
     const chartWidthRef = useRef(0);
     const chartHeightRef = useRef(0);
-    const margin = { top: 10, right: 10, bottom: 40, left: 40 };
+    const margin = { top: 10, right: 15, bottom: 40, left: 40 };
     const dotRadius = 5;
     const titleOffset = 30;
 
@@ -80,11 +80,11 @@ export default function BiVariablePlot({ biVarName1, biVarName2 }) {
             .attr('transform', `translate(0, ${chartHeight})`)
             .call(d3.axisBottom(xScale)
                 .tickValues(biVariable1.binEdges)
-                .tickSize(-chartHeight))  // Extend the tick lines across the width of the chart
-            .selectAll(".tick line")
-            .style("stroke", "lightgray")  // Set the color of the grid lines
-            .style("stroke-opacity", 0.7)  // Set the opacity of the grid lines
-            .style("shape-rendering", "crispEdges"); // Prevent anti-aliasing for crisp grid lines
+                .tickSize(-chartHeight)
+                .tickFormat(d3.format("d")))
+            .selectAll(".tick text")
+            .attr("transform", "rotate(30)")
+            .style("text-anchor", "start")
 
         // X axis title
         chart.append("text")
@@ -99,11 +99,10 @@ export default function BiVariablePlot({ biVarName1, biVarName2 }) {
             .attr("transform", `translate(0, 0)`)
             .call(d3.axisLeft(yScale)
                 .tickValues(biVariable2.binEdges)
-                .tickSize(-chartWidth))  // Extend the tick lines across the width of the chart
-            .selectAll(".tick line")
-            .style("stroke", "lightgray")  // Set the color of the grid lines
-            .style("stroke-opacity", 0.7)  // Set the opacity of the grid lines
-            .style("shape-rendering", "crispEdges"); // Prevent anti-aliasing for crisp grid lines
+                .tickSize(-chartWidth))
+            .selectAll(".tick text")
+            .attr("transform", "rotate(-30)")
+            .style("text-anchor", "end")
 
         // Y axis title
         chart.append("text")
@@ -113,6 +112,12 @@ export default function BiVariablePlot({ biVarName1, biVarName2 }) {
             .attr("y", -titleOffset)
             .style("font-size", "14px")
             .text(`${biVariable2.name} (${biVariable2.unitLabel})`);
+
+        // Draw grid lines
+        chart.selectAll(".tick line")
+            .style("stroke", "lightgray")  // Set the color of the grid lines
+            .style("stroke-opacity", 0.7)  // Set the opacity of the grid lines
+            .style("shape-rendering", "crispEdges"); // Prevent anti-aliasing for crisp grid lines
 
         chart.selectAll(".tick text")
             .style("font-size", 12)

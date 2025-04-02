@@ -91,9 +91,9 @@ export default function VariablePlot({ variable }) {
             .attr('transform', `translate(0, ${chartHeight})`)
             .call(d3.axisBottom(xScale)
                 .tickValues(variable.binEdges)
-                .tickFormat(d3.format("d"))
-            )
+                .tickFormat(d3.format("d")))
             .selectAll(".tick text")
+            .attr("transform", "rotate(30)")
             .style("font-size", 12)
             .style("font-family", "Times New Roman");
 

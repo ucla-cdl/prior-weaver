@@ -72,7 +72,7 @@ export default function ModelPanel() {
                 <Typography variant="h6" gutterBottom>Variables</Typography>
                 {Object.entries(variablesDict).map(([varName, variable]) => (
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center' }} key={varName}>
-                        <Typography variant="body1"><b>{varName}</b></Typography>
+                        <Typography variant="body1"><b>{varName} {space === ELICITATION_SPACE.PARAMETER ? `(${variable.unitLabel})` : ''}</b></Typography>
                         <IconButton onClick={() => {
                             setEditingVariable({ ...variable });
                             setIsEditingVariable(true);
@@ -133,7 +133,8 @@ export default function ModelPanel() {
             </Box>
 
             <Box className="context-container">
-                <Typography variant='h6' gutterBottom>Parameters</Typography>
+                <Typography variant='h6'>Parameters</Typography>
+                <Typography variant='body2'>(also known as Coefficients)</Typography>
                 {Object.entries(parametersDict).map(([paraName, parameter]) => (
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center' }} key={paraName}>
                         <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{paraName}</Typography>

@@ -44,12 +44,12 @@ export const TASK_SETTINGS = {
             "predictor": [
                 {
                     "name": "age",
-                    "unit": "years",
+                    "unit": "yrs",
                     "description": "The individual's age."
                 },
                 {
                     "name": "education",
-                    "unit": "years",
+                    "unit": "yrs",
                     "description": "The total number of years the individual has spent in formal education."
                 }
             ],
@@ -93,27 +93,27 @@ export const TASK_SETTINGS = {
     "weight": {
         id: "weight",
         name: "Weight Prediction",
-        scenario: "You are a data scientist analyzing the factors that influence people's weight.\
-                Specifically, you aim to assess how a person's height and exercise hours per week affect their weight.",
+        scenario: "You are a data scientist analyzing the factors that influence adult people's weight.\
+                Specifically, you aim to assess how adult's height and exercise hours per week affect their weight.",
         defaultModel: `model <- glm(weight ~ height + exercise_hours, family = gaussian(link = "identity"))`,
         variables: {
             "predictor": [
                 {
                     "name": "height",
                     "unit": "cm",
-                    "description": "The person's height."
+                    "description": "The adult's height."
                 },
                 {
                     "name": "exercise_hours",
                     "unit": "hrs/wk",
-                    "description": "The number of hours the person exercises per week."
+                    "description": "The number of hours the adult exercises per week."
                 }
             ],
             "response": [
                 {
                     "name": "weight",
                     "unit": "kg",
-                    "description": "The person's weight."
+                    "description": "The adult's weight."
                 }
             ]
         }

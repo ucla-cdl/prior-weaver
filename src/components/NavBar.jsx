@@ -100,10 +100,8 @@ export default function NavBar() {
             setFinishSpecificationDialogOpen(false);
             window.open(window.POST_TASK_SURVEY_URL);
         }
-        else {
-            sessionStorage.setItem('needReload', true);
-            navigate(routes.home);
-        }
+        sessionStorage.setItem('needReload', true);
+        navigate(routes.home);
     }
 
     return (
