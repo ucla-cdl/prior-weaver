@@ -13,11 +13,11 @@ const VIDEOS = [
     },
     {
         name: "Parameter Space Elicitation",
-        url: "https://drive.google.com/file/d/1AQPU-HcmTAM2G-4ZQaKMYVbc5vDDsDNr/preview"
+        url: "https://drive.google.com/file/d/16b_8gDtYGrs3XgpUkamgTZJIxdKCdT2x/preview"
     },
     {
         name: "Observable Space Elicitation",
-        url: "https://drive.google.com/file/d/1mc16TP6yxPydDvPeWPMqL0vtq9g7TKma/preview"
+        url: "https://drive.google.com/file/d/1GYB1k3Eu7W1ZA4ckI_Ky9-J-eSNUM0Rh/preview"
     }
 ]
 export default function Home() {

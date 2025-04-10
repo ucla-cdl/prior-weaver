@@ -221,6 +221,7 @@ export const EntityProvider = ({ children }) => {
 
     const finishSpecification = () => {
         const data = {
+            startTimeStamp: entityHistory[0].timestamp,
             finishTimeStamp: new Date().toISOString(),
             name: `${userName}-${space}`,
             taskId: taskId,

@@ -773,13 +773,13 @@ export default function ParallelSankeyPlot() {
                             className='incomplete-filter-button'
                             value={FILTER_TYPES.INCOMPLETE}
                             control={<Radio />}
-                            label="Incompleted"
+                            label="Incomplete"
                         />
                         <FormControlLabel
                             className='complete-filter-button'
                             value={FILTER_TYPES.COMPLETE}
                             control={<Radio />}
-                            label="Completed"
+                            label="Complete"
                         />
                     </RadioGroup>
                 </Box>
@@ -793,7 +793,7 @@ export default function ParallelSankeyPlot() {
                                 disabled={potentialEntities.length === 0}
                                 onClick={handleLink}
                             >
-                                Link
+                                Connect
                             </Button>
                             <Tooltip
                                 title={

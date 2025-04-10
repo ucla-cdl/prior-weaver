@@ -138,7 +138,7 @@ export default function ModelPanel() {
                 <Typography variant='body2'>(also known as Coefficients)</Typography>
                 {Object.entries(parametersDict).map(([paraName, parameter]) => (
                     <Box sx={{ my: 1, display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center' }} key={paraName}>
-                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}><InlineMath math={`\\alpha_{${paraName}}`} /></Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}><InlineMath math={`\\alpha_{${paraName.replace('_', '\\_')}}`} /></Typography>
                         {space === ELICITATION_SPACE.PARAMETER &&
                             <IconButton onClick={() => {
                                 setEditingParameter({ ...parameter });

@@ -67,7 +67,7 @@ export const TASK_SETTINGS = {
         name: "Student Exam Score Prediction",
         scenario: "You are a data scientist investigating factors that influence student performance.\
                 Specifically, you seek to understand how the number of hours a student studies per week and their attendance rate (out of 100%) affect their exam score (out of 100 points).",
-        defaultModel: `\\text{exam_score} \\sim \\alpha_{hours_study} \\times \\text{hours_study} + \\alpha_{attendance_rate} \\times \\text{attendance_rate} + \\alpha_{intercept}`,
+        defaultModel: `\\text{exam\\_score} \\sim \\alpha_{hours\\_study} \\times \\text{hours\\_study} + \\alpha_{attendance\\_rate} \\times \\text{attendance\\_rate} + \\alpha_{intercept}`,
         variables: {
             "predictor": [
                 {
@@ -95,7 +95,7 @@ export const TASK_SETTINGS = {
         name: "Weight Prediction",
         scenario: "You are a data scientist analyzing the factors that influence adult people's weight.\
                 Specifically, you aim to assess how adult's height and exercise hours per week affect their weight.",
-        defaultModel: `\\text{weight} \\sim \\alpha_{height} \\times \\text{height} + \\alpha_{exercise_hours} \\times \\text{exercise_hours} + \\alpha_{intercept}`,
+        defaultModel: `\\text{weight} \\sim \\alpha_{height} \\times \\text{height} + \\alpha_{exercise\\_hours} \\times \\text{exercise\\_hours} + \\alpha_{intercept}`,
         variables: {
             "predictor": [
                 {

@@ -8,6 +8,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import BookIcon from '@mui/icons-material/Book';
+import HomeIcon from '@mui/icons-material/Home';
 import { useNavigate } from 'react-router-dom';
 import routes from '../shared/routes';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -100,6 +101,12 @@ export default function NavBar() {
             setFinishSpecificationDialogOpen(false);
             window.open(window.POST_TASK_SURVEY_URL);
         }
+        else {
+            handleClickHome();
+        }
+    }
+
+    const handleClickHome = () => {
         sessionStorage.setItem('needReload', true);
         navigate(routes.home);
     }
@@ -122,11 +129,19 @@ export default function NavBar() {
                 <Button
                     variant="outlined"
                     color="secondary"
+                    startIcon={<HomeIcon />}
+                    onClick={handleClickHome}
+                >
+                    Home
+                </Button>
+                {/* <Button
+                    variant="outlined"
+                    color="secondary"
                     startIcon={<BookIcon />}
                     onClick={handleClickDoc}
                 >
                     Doc
-                </Button>
+                </Button> */}
                 {/* <Button
                     variant="outlined"
                     color="primary"
@@ -181,6 +196,15 @@ export default function NavBar() {
                 </Menu>
             </Box>
 
+            {userMode === USER_MODE.EXAMPLE &&
+                <Box sx={{ p: 1 }}>
+                    <Typography variant="body1" sx={{ color: 'brown' }}>
+                        This is an example for you to familiarize with the UI and try out the interactions.
+                        <br />
+                        You can click the "Guide" button to see the steps and the "Task" button to see example knowledge.
+                    </Typography>
+                </Box>
+            }
             {/* Middle section - Undo and Redo buttons */}
             {/* {space === ELICITATION_SPACE.OBSERVABLE &&
                 <Box className="version-operation-container" sx={{ display: 'flex', gap: 1 }}>

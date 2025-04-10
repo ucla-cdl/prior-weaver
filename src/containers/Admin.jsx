@@ -17,7 +17,7 @@ const Admin = () => {
                 setRecords(res.data?.records);
             })
             .catch((error) => {
-                setNotification("Error loading records: " + error.response.data.detail);
+                setNotification("Error loading records: " + error.response?.data?.detail);
             });
     }, []);
 
