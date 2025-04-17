@@ -1,13 +1,13 @@
-# Constructive Prior Elicitation
+# PriorWeaver: Iterative Construction of Bayesian Priors
+> [Check the webpage for detailed videos and user interfaces](https://xavier-shaw.github.io/Prior-Elicitation/).
 
-Prior specification, where an analyst incorporates knowledge from outside the dataset as a univariate distribution, is essential to Bayesian analysis. However, precisely specifying such knowledge can be labor-intensive, even for experienced statisticians, let alone novices.
+A central aspect of Bayesian analysis is incorporating **prior knowledge**—assumptions about the modeled domain before observing data. Formally, this knowledge is represented as **prior distributions** (or simply, priors), which define probability distributions over model parameters. However, specifying priors can be challenging, as it requires domain expertise that statisticians may not always possess.
 
-In order to lower the barrier of this process, we develop an interactive prior elicitation system building on a concept called *Constructive Prior Elicitation*. This concept consists of two parts: Construction and Translation.
+One approach to addressing this challenge is prior elicitation, where statisticians work with domain experts to (1) gather their domain knowledge and (2) translate it into probability distributions, (3) ultimately selecting an appropriate prior.
 
-*Construction* refers to the process where you incrementally build a synthetic dataset to represent your domain knowledge and can be interpreted as “observable priors”. 
-*Translation* refers to the process of translating the observable priors, which is in a form of dataset, to the parametric priors of the Bayesian Model.
+Conversely, domain experts who wish to apply their knowledge in Bayesian analysis may find it difficult to conduct prior elicitation independently without the help from statisticians.
 
-Our system allows users to (1) express their domain knowledge as conceptual and observable assumptions through interactive visualizations and refine them iteratively to align with their understanding of the domain, and (2) translate the expressed domain knowledge into prior distributions and incorporate them into Bayesian workflow.
+To bridge this gap, we introduce **PriorWeaver**, an interactive system designed to help domain experts express their knowledge and derive appropriate prior distributions for Bayesian models. PriorWeaver makes prior elicitation more accessible, facilitating collaboration between statisticians and domain experts while ensuring that domain knowledge is effectively integrated into Bayesian models.
 
 ## Table of Contents
 
