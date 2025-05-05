@@ -1,0 +1,17 @@
+name: prior-weaver
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy
+  - scipy
+  - pandas
+  - scikit-learn
+  - pip
+  - pip:
+      - fastapi[all]
+      - uvicorn
+      - fitter
+      - pymongo
+      - python-dotenv

@@ -1,5 +1,5 @@
 # PriorWeaver: Iterative Construction of Bayesian Priors
-> [Check the webpage for detailed videos and user interfaces](https://xavier-shaw.github.io/Prior-Elicitation/).
+> [Check the webpage for detailed videos and user interfaces](https://ucla-cdl.github.io/prior-weaver/).
 
 A central aspect of Bayesian analysis is incorporating **prior knowledge**—assumptions about the modeled domain before observing data. Formally, this knowledge is represented as **prior distributions** (or simply, priors), which define probability distributions over model parameters. However, specifying priors can be challenging, as it requires domain expertise that statisticians may not always possess.
 
@@ -27,26 +27,21 @@ To get a local copy up and running, follow these steps:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/xavier-shaw/Prior-Elicitation.git
+   git clone https://github.com/ucla-cdl/prior-weaver.git
    ```
 
-2. Navigate into the project directory:
-   ```bash
-   cd Prior-Elicitation
-   ```
-
-3. Install the frontend dependencies:
+2. Navigate into the project directory and install the frontend dependencies:
    ```bash
    npm install
    ```
 
-4. Install the backend dependencies:
+4. Install the backend dependencies with anaconda virtual environment:
    ```bash
    conda env create -f environment.yml
-   conda activate interactive_prior_elicitation
+   conda activate prior-weaver
    ```
 
-5. Start the  server:
+5. Start the server:
    ```bash
    sh run.sh
    ```
