@@ -32,7 +32,7 @@ export const DISTRIBUTION_TYPES = {
 };
 
 export const VariableProvider = ({ children }) => {
-    const { taskId, model, setModel, finishParseModel, setFinishParseModel, savedEnvironment } = useContext(WorkspaceContext);
+    const { taskId, model, setModel, finishParseModel, setFinishParseModel, savedEnvironment, setFinishFetchingStudySettings } = useContext(WorkspaceContext);
     const [variablesDict, setVariablesDict] = useState({});
     const sortableVariablesRef = useRef([]);
     const [parametersDict, setParametersDict] = useState({});
@@ -131,6 +131,7 @@ export const VariableProvider = ({ children }) => {
     const parseVariables = () => {
         if (savedEnvironment) {
             setFinishParseModel(true);
+            setFinishFetchingStudySettings(false);
             return;
         };
 
@@ -169,6 +170,7 @@ export const VariableProvider = ({ children }) => {
         });
 
         setFinishParseModel(true);
+        setFinishFetchingStudySettings(false);
     }
 
     // Parse the model in R code

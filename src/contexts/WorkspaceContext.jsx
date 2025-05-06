@@ -249,6 +249,8 @@ export const WorkspaceProvider = ({ children }) => {
     const [leftPanelOpen, setLeftPanelOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
+    const [finishFetchingStudySettings, setFinishFetchingStudySettings] = useState(false);
+
     const [userName, setUserName] = useState("admin");
     const [userMode, setUserMode] = useState(USER_MODE.NORMAL);
     const [taskId, setTaskId] = useState(null);
@@ -277,8 +279,6 @@ export const WorkspaceProvider = ({ children }) => {
             setSpace(spaceParam);
             setFeedback(FEEDBACK_MODE.FEEDBACK);
         } else {
-            console.log("Study Mode");
-            setUserMode(USER_MODE.STUDY);
             fetchStudySettings();
         }
     }, [location]);
@@ -293,11 +293,16 @@ export const WorkspaceProvider = ({ children }) => {
                 setSpace(response.data.elicitation_space);
                 setFeedback(response.data.feedback_mode);
 
+                if (response.data.user_name !== "admin") {
+                    setUserMode(USER_MODE.STUDY);
+                }
+
                 if (response.data?.load_record) {
-                    setUserMode(USER_MODE.NORMAL);
                     const recordName = response.data?.record_name;
                     fetchRecord(recordName);
                 }
+
+                setFinishFetchingStudySettings(true);
             })
             .catch(error => {
                 console.log("Error fetching study settings:", error);
@@ -350,7 +355,9 @@ export const WorkspaceProvider = ({ children }) => {
         setRunTutorial,
         tutorialSteps,
         userMode,
-        setUserMode
+        setUserMode,
+        finishFetchingStudySettings,
+        setFinishFetchingStudySettings
     };
 
     return (

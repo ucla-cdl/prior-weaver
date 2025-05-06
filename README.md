@@ -1,5 +1,5 @@
 # PriorWeaver: Iterative Construction of Bayesian Priors
-> [Check the webpage for detailed videos and user interfaces](https://ucla-cdl.github.io/prior-weaver/).
+> Check the webpage for detailed videos and user interfaces: https://ucla-cdl.github.io/prior-weaver/.
 
 A central aspect of Bayesian analysis is incorporating **prior knowledge**—assumptions about the modeled domain before observing data. Formally, this knowledge is represented as **prior distributions** (or simply, priors), which define probability distributions over model parameters. However, specifying priors can be challenging, as it requires domain expertise that statisticians may not always possess.
 
