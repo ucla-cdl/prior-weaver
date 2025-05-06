@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/prior-weaver/static/css/main.1cd635ba.css",
-    "main.js": "/prior-weaver/static/js/main.02c1aa62.js",
+    "main.css": "/prior-weaver/static/css/main.7603bc7f.css",
+    "main.js": "/prior-weaver/static/js/main.bd133daa.js",
     "static/js/453.cb990da4.chunk.js": "/prior-weaver/static/js/453.cb990da4.chunk.js",
     "static/media/KaTeX_AMS-Regular.ttf": "/prior-weaver/static/media/KaTeX_AMS-Regular.853be92419a6c3766b9a.ttf",
     "static/media/KaTeX_Main-Regular.ttf": "/prior-weaver/static/media/KaTeX_Main-Regular.9eba1d77abcf2aa6e94e.ttf",
@@ -64,12 +64,12 @@
     "static/media/KaTeX_Size3-Regular.woff": "/prior-weaver/static/media/KaTeX_Size3-Regular.7947224e8a9914fa332b.woff",
     "static/media/KaTeX_Size3-Regular.woff2": "/prior-weaver/static/media/KaTeX_Size3-Regular.e1951519f6f0596f7356.woff2",
     "index.html": "/prior-weaver/index.html",
-    "main.1cd635ba.css.map": "/prior-weaver/static/css/main.1cd635ba.css.map",
-    "main.02c1aa62.js.map": "/prior-weaver/static/js/main.02c1aa62.js.map",
+    "main.7603bc7f.css.map": "/prior-weaver/static/css/main.7603bc7f.css.map",
+    "main.bd133daa.js.map": "/prior-weaver/static/js/main.bd133daa.js.map",
     "453.cb990da4.chunk.js.map": "/prior-weaver/static/js/453.cb990da4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.1cd635ba.css",
-    "static/js/main.02c1aa62.js"
+    "static/css/main.7603bc7f.css",
+    "static/js/main.bd133daa.js"
   ]
 }
