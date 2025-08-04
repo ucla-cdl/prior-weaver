@@ -7,6 +7,13 @@ import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { InlineMath } from 'react-katex';
+
+const LEVELS = {
+    RELATIONAL: "relational",
+    DISTRIBUTIONAL: "distributional",
+    UNIFORM: "uniform"
+};
+
 export default function ResultsPanel() {
     const { space } = useContext(WorkspaceContext);
     const { variablesDict, parametersDict, updateParameter, translationTimes, setTranslationTimes, predictiveCheckResults, setPredictiveCheckResults, getDistributionNotation } = useContext(VariableContext);
@@ -15,8 +22,8 @@ export default function ResultsPanel() {
     const [isTranslating, setIsTranslating] = useState(false);
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
-    const svgHeight = 280;
-    const margin = { top: 10, bottom: 60, left: 60, right: 20, };
+    const svgHeight = 300;
+    const margin = { top: 30, bottom: 60, left: 60, right: 20};
     const labelOffset = 45;
 
     const [showPlot, setShowPlot] = useState("both");
@@ -24,12 +31,14 @@ export default function ResultsPanel() {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
+    const [level, setLevel] = useState(LEVELS.RELATIONAL);
+
     useEffect(() => {
-        console.log("results panel mounted");
         if (predictiveCheckResults.length > 0) {
+            console.log("plotting check results", predictiveCheckResults);
             plotCheckResults();
         }
-    }, [predictiveCheckResults, showPlot]);
+    }, [predictiveCheckResults, showPlot, level]);
 
     const translate = () => {
         if (space === ELICITATION_SPACE.OBSERVABLE) {
@@ -78,6 +87,7 @@ export default function ResultsPanel() {
     const predictiveCheck = (priors) => {
         axios
             .post(window.BACKEND_ADDRESS + "/check", {
+                entities: Object.values(entities),
                 variables: Object.values(variablesDict),
                 priors: Object.values(priors),
             })
@@ -120,8 +130,12 @@ export default function ResultsPanel() {
         const chart = svg.append('g')
             .attr('transform', `translate(${margin.left},${margin.top})`);
 
-        const results = predictiveCheckResults[predictiveCheckResults.length - 1];
-        const previousCheckResult = predictiveCheckResults.length > 1 ? predictiveCheckResults[predictiveCheckResults.length - 2] : null;
+        const results = predictiveCheckResults[predictiveCheckResults.length - 1][level];
+        const previousCheckResult = predictiveCheckResults.length > 1 ? predictiveCheckResults[predictiveCheckResults.length - 2][level] : null;
+        if (!results && !previousCheckResult) {
+            return;
+        }
+
         const minX = previousCheckResult ? Math.min(previousCheckResult["min_response_val"], results["min_response_val"]) : results["min_response_val"]
         const maxX = previousCheckResult ? Math.max(previousCheckResult["max_response_val"], results["max_response_val"]) : results["max_response_val"]
         const maxY = previousCheckResult ? Math.max(previousCheckResult["max_density_val"], results["max_density_val"]) : results["max_density_val"]
@@ -158,6 +172,75 @@ export default function ResultsPanel() {
             .attr('text-anchor', 'middle')
             .style('font-size', '12px')
             .text('Density');
+
+        // Add range indicators
+        const responseVar = Object.values(variablesDict).find(v => v.type === "response");
+        if (responseVar && responseVar.min !== undefined && responseVar.max !== undefined) {
+            const validMin = responseVar.min;
+            const validMax = responseVar.max;
+            const validMinX = x(validMin);
+            const validMaxX = x(validMax);
+
+            // Add invalid range backgrounds (left and right of valid range)
+            if (validMinX > 0) {
+                chart.append('rect')
+                    .attr('class', 'invalid-range-bg')
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('width', validMinX)
+                    .attr('height', chartHeight);
+            }
+            
+            if (validMaxX < chartWidth) {
+                chart.append('rect')
+                    .attr('class', 'invalid-range-bg')
+                    .attr('x', validMaxX)
+                    .attr('y', 0)
+                    .attr('width', chartWidth - validMaxX)
+                    .attr('height', chartHeight);
+            }
+
+            // Add valid range background
+            chart.append('rect')
+                .attr('class', 'valid-range-bg')
+                .attr('x', Math.max(0, validMinX))
+                .attr('y', 0)
+                .attr('width', Math.min(chartWidth, validMaxX) - Math.max(0, validMinX))
+                .attr('height', chartHeight);
+
+            // Add boundary lines
+            if (validMinX >= 0 && validMinX <= chartWidth) {
+                chart.append('line')
+                    .attr('class', 'range-boundary-line')
+                    .attr('x1', validMinX)
+                    .attr('y1', 0)
+                    .attr('x2', validMinX)
+                    .attr('y2', chartHeight);
+                
+                // Add min boundary label
+                // chart.append('text')
+                //     .attr('class', 'range-boundary-label')
+                //     .attr('x', validMinX)
+                //     .attr('y', -5)
+                //     .text(`Min: ${validMin}`);
+            }
+
+            if (validMaxX >= 0 && validMaxX <= chartWidth) {
+                chart.append('line')
+                    .attr('class', 'range-boundary-line')
+                    .attr('x1', validMaxX)
+                    .attr('y1', 0)
+                    .attr('x2', validMaxX)
+                    .attr('y2', chartHeight);
+                
+                // Add max boundary label
+                // chart.append('text')
+                //     .attr('class', 'range-boundary-label')
+                //     .attr('x', validMaxX)
+                //     .attr('y', -5)
+                //     .text(`Max: ${validMax}`);
+            }
+        }
 
         // Plot previous KDE if it exists
         if (previousCheckResult && (showPlot === "both" || showPlot === "previous")) {
@@ -220,7 +303,6 @@ export default function ResultsPanel() {
                 .attr("y", 10)
                 .attr("class", "legend-rect current-rect");
 
-
             chart.append("text")
                 .attr("x", chartWidth - 30)
                 .attr("y", 15)
@@ -229,8 +311,44 @@ export default function ResultsPanel() {
                 .text("Current");
         }
 
+        // // Add range legend if responseVar has valid range
+        // if (responseVar && responseVar.min !== undefined && responseVar.max !== undefined) {
+        //     const legendY = 40;
+            
+        //     // Valid range legend
+        //     chart.append("rect")
+        //         .attr("x", chartWidth - 50)
+        //         .attr("y", legendY)
+        //         .attr("width", 15)
+        //         .attr("height", 4)
+        //         .attr("class", "valid-range-bg")
+        //         .style("opacity", 0.6);
+
+        //     chart.append("text")
+        //         .attr("x", chartWidth - 30)
+        //         .attr("y", legendY + 4)
+        //         .attr("text-anchor", "start")
+        //         .style("font-size", "10px")
+        //         .text("Valid Range");
+
+        //     // Invalid range legend
+        //     chart.append("rect")
+        //         .attr("x", chartWidth - 50)
+        //         .attr("y", legendY + 10)
+        //         .attr("width", 15)
+        //         .attr("height", 4)
+        //         .attr("class", "invalid-range-bg")
+        //         .style("opacity", 0.6);
+
+        //     chart.append("text")
+        //         .attr("x", chartWidth - 30)
+        //         .attr("y", legendY + 14)
+        //         .attr("text-anchor", "start")
+        //         .style("font-size", "10px")
+        //         .text("Out of Range");
+        // }
+
         // Add title
-        const responseVar = Object.values(variablesDict).find(v => v.type === "response");
         chart.append('text')
             .attr('x', chartWidth / 2)
             .attr('y', chartHeight + labelOffset)
@@ -286,6 +404,32 @@ export default function ResultsPanel() {
             {isTranslating && <CircularProgress sx={{ my: 2 }} />}
             {!isTranslating && translationTimes > 0 &&
                 <Box className='show-plot-box' sx={{ my: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="body2" sx={{ mr: 1 }}>Level:</Typography>
+                        <Button
+                            variant={level === LEVELS.RELATIONAL ? "contained" : "outlined"}
+                            size="small"
+                            sx={{ mr: 1 }}
+                            onClick={() => setLevel(LEVELS.RELATIONAL)}
+                        >
+                            {LEVELS.RELATIONAL}
+                        </Button>
+                        <Button
+                            variant={level === LEVELS.DISTRIBUTIONAL ? "contained" : "outlined"}
+                            size="small"
+                            sx={{ mr: 1 }}
+                            onClick={() => setLevel(LEVELS.DISTRIBUTIONAL)}
+                        >
+                            {LEVELS.DISTRIBUTIONAL}
+                        </Button>
+                        <Button
+                            variant={level === LEVELS.UNIFORM ? "contained" : "outlined"}
+                            size="small"
+                            onClick={() => setLevel(LEVELS.UNIFORM)}
+                        >
+                            {LEVELS.UNIFORM}
+                        </Button>
+                    </Box>
                     <FormControl sx={{ border: '1px solid #bbb', borderRadius: '8px', padding: '15px' }}>
                         <FormLabel>Show: </FormLabel>
                         <Box sx={{ display: 'flex', flexDirection: 'row' }}>

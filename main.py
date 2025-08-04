@@ -6,6 +6,7 @@ from concurrent.futures.process import ProcessPoolExecutor
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from enum import Enum
+import json
 
 import numpy as np
 import re
@@ -16,7 +17,7 @@ import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 
-import os    
+import os
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -258,21 +259,26 @@ def translate(data: TranslationData = Body(...)):
 
 
 class PredictiveCheckData(BaseModel):
+    entities: List[dict]
     variables: List[dict]
     priors: List[dict]
 
 
 @app.post('/check')
 def update_check_results(data: PredictiveCheckData = Body(...)):
+    entities = data.entities
     variables = data.variables
     priors = data.priors
 
     predictors = [var for var in variables if var["type"] == "predictor"]
-    response = [var for var in variables if var["type"] == "response"][0]
+    response_var = [var for var in variables if var["type"] == "response"][0]
 
     prior_distributions = [prior for prior in priors]
-    check_results = prior_predictive_check(
-        predictors, response, prior_distributions)
+    # check_results = prior_predictive_check(
+    #     predictors, response_var, prior_distributions)
+
+    check_results = new_predictive_check(entities, predictors,
+                         response_var, prior_distributions)
 
     return {
         "check_results": check_results
@@ -388,11 +394,124 @@ def get_fit_var_pdf(x, fit_name, fit_params):
     return p
 
 
-def prior_predictive_check(predictors, response, prior_distributions, num_checks=10, num_samples=100):
-    # ideal data structure for the simulated dataset
-    # [{params: {a: val1, b: val2, c: val3}, dataset: [{age: val1, edu: val2, income: val3}]} ]
-    simulated_results = []
+def new_predictive_check(entities, predictors, response_var, prior_distributions, num_checks=10, num_samples=100):
+    """
+    Prior predictive check levels -> determine the type of sampling for the predictor values
+    - relational: sample from the user-constrcted dataset
+    - distribution: sample from the user-constructed histogram distribution
+    - uniform: sample from a uniform distribution over the range of the predictor
+    """
+    levels = ["relational", "distributional", "uniform"]
+    
+    check_results = {l: {} for l in levels}
+    translation_entities = [
+        entity for entity in entities if all(entity.values())]
 
+    parameter_samples = []
+    for dist in prior_distributions:
+        samples = getattr(stats, dist['name']).rvs(
+            **dist["params"], size=num_checks)
+        parameter_samples.append(samples)
+
+    predictor_samples = {l: {} for l in levels}
+    for l in levels:
+        if l == "relational":
+            # sample n sets of entities from the filtered dataset used for translation
+            sampled_entities = np.random.choice(translation_entities, size=num_samples)
+            for predictor in predictors:
+                predictor_samples[l][predictor['name']] = [entity[predictor['name']] for entity in sampled_entities]
+        elif l == "distributional":
+            # sample n predictor values from marginal distribution for each predictor
+            for predictor in predictors:
+                marginal_dist_values = [
+                    entity[predictor['name']] for entity in entities if entity[predictor['name']] is not None]
+                predictor_samples[l][predictor['name']] = np.random.choice(
+                    marginal_dist_values, size=num_samples)
+        elif l == "uniform":
+            for predictor in predictors:
+                predictor_samples[l][predictor['name']] = np.random.uniform(
+                    predictor['min'], predictor['max'], size=num_samples)
+        else:
+            raise ValueError(f"Invalid level: {l}")
+
+    for l in levels:
+        simulated_results = []
+        current_predictor_samples = predictor_samples[l]
+        min_simulated_response_val = response_var['min']
+        max_simulated_response_val = response_var['max']
+
+        for check_index in range(num_checks):
+            simu_results = {}
+            simu_results['params'] = [para_samples[check_index]
+                                      for para_samples in parameter_samples]
+            simu_results['dataset'] = []
+
+            response_values = []  # Store simulated response values for KDE fitting
+
+            for sample_index in range(num_samples):
+                simu_data = {}
+                simu_response_val = 0
+                for predictor_index, predictor in enumerate(predictors):
+                    simu_data[predictor['name']] = current_predictor_samples[predictor['name']][sample_index]
+                    simu_response_val += simu_results['params'][predictor_index] * \
+                        current_predictor_samples[predictor['name']
+                                                  ][sample_index]
+
+                simu_response_val += simu_results['params'][-1]  # Add intercept
+                simu_data[response_var['name']] = simu_response_val
+                simu_results['dataset'].append(simu_data)
+
+                response_values.append(simu_response_val)
+
+            min_simulated_response_val = min(
+                min_simulated_response_val, min(response_values))
+            max_simulated_response_val = max(
+                max_simulated_response_val, max(response_values))
+
+            simulated_results.append(simu_results)
+
+        padding_ratio = 0.1
+        padding = (max_simulated_response_val -
+                   min_simulated_response_val) * padding_ratio
+        x_min = min_simulated_response_val - padding
+        x_max = max_simulated_response_val + padding
+        x_values = np.linspace(x_min, x_max, 100)
+
+        max_density_val = 0
+        avg_kde = []
+        for check_index in range(num_checks):
+            simu_results = simulated_results[check_index]
+            response_values = [simu_data[response_var['name']]
+                               for simu_data in simu_results['dataset']]
+
+            # Fit KDE to the simulated response values
+            kde = stats.gaussian_kde(response_values)
+            density_values = kde(x_values)
+            avg_kde.append(density_values)
+
+            max_density_val = max(max_density_val, max(density_values))
+
+            # Store KDE results for visualization
+            simu_results['kde'] = [
+                {'x': x_values[i], 'density': density_values[i]} for i in range(len(x_values))]
+
+        avg_kde = np.mean(avg_kde, axis=0)
+        avg_kde_result = [
+            {'x': x_values[i], 'density': avg_kde[i]} for i in range(len(x_values))]
+
+        results = {
+            'min_response_val': x_min,
+            'max_response_val': x_max,
+            'max_density_val': max_density_val,
+            'simulated_results': simulated_results,
+            'avg_kde_result': avg_kde_result
+        }
+        check_results[l] = results
+
+    return check_results
+
+
+def prior_predictive_check(predictors, response_var, prior_distributions, num_checks=10, num_samples=100):
     # sample n sets of parameters values
     # parameter_samples = [
     # [param1_val1, param1_val2, param1_val3, ...],
@@ -406,9 +525,9 @@ def prior_predictive_check(predictors, response, prior_distributions, num_checks
 
     # sample m sets of predictor values for each set of parameter values
     # predictor_samples = [
-        # [[age_val1, age_val2, age_val3, ...], [edu_val1, edu_val2, edu_val3, ...]],
-        # [[age_val1, age_val2, age_val3, ...], [edu_val1, edu_val2, edu_val3, ...]],
-        # ...]
+    # [[age_val1, age_val2, age_val3, ...], [edu_val1, edu_val2, edu_val3, ...]],
+    # [[age_val1, age_val2, age_val3, ...], [edu_val1, edu_val2, edu_val3, ...]],
+    # ...]
     predictor_samples = [[] for _ in range(num_checks)]
     for check_index in range(num_checks):
         for predictor in predictors:
@@ -418,8 +537,8 @@ def prior_predictive_check(predictors, response, prior_distributions, num_checks
 
     # simulate the outcomes using each set of parameter values and the corresponding sets of predictor values
     simulated_results = []
-    min_simulated_response_val = response['min']
-    max_simulated_response_val = response['max']
+    min_simulated_response_val = response_var['min']
+    max_simulated_response_val = response_var['max']
 
     for check_index in range(num_checks):
         simu_results = {}
@@ -439,7 +558,7 @@ def prior_predictive_check(predictors, response, prior_distributions, num_checks
                     predictor_samples[check_index][predictor_index][sample_index]
 
             simu_response_val += simu_results['params'][-1]  # Add intercept
-            simu_data[response['name']] = simu_response_val
+            simu_data[response_var['name']] = simu_response_val
             simu_results['dataset'].append(simu_data)
 
             response_values.append(simu_response_val)
@@ -463,7 +582,7 @@ def prior_predictive_check(predictors, response, prior_distributions, num_checks
     avg_kde = []
     for check_index in range(num_checks):
         simu_results = simulated_results[check_index]
-        response_values = [simu_data[response['name']]
+        response_values = [simu_data[response_var['name']]
                            for simu_data in simu_results['dataset']]
 
         # Fit KDE to the simulated response values
@@ -561,7 +680,7 @@ def getRecords():
 @app.get('/getRecord')
 def getRecord(record_name: str):
     record = collection.find_one({'name': record_name})
-    
+
     return {
         'record': dumps(record)
     }

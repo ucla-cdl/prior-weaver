@@ -8,7 +8,11 @@ import { useEffect } from "react";
 
 const VIDEOS = [
     {
-        name: "Introduction to Prior Weaver",
+        name: "PriorWeaver Overview",
+        url: "https://drive.google.com/file/d/18LNaVSSTU0kPtOy7mjkJo7kfMb8ZYGYn/preview"
+    },
+    {
+        name: "Introduction to Prior Elicitation",
         url: "https://drive.google.com/file/d/1n4ELXYR4Lj2ml54A07S8ggVXhz_qwZRR/preview"
     },
     {
@@ -20,6 +24,7 @@ const VIDEOS = [
         url: "https://drive.google.com/file/d/1GYB1k3Eu7W1ZA4ckI_Ky9-J-eSNUM0Rh/preview"
     }
 ]
+
 export default function Home() {
     const location = useLocation();
     const navigate = useNavigate();

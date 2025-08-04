@@ -3,20 +3,20 @@ import * as d3 from 'd3';
 import { Box, Paper } from '@mui/material';
 import { EntityContext } from "../contexts/EntityContext";
 import { VariableContext } from "../contexts/VariableContext";
-import { SelectionContext } from "../contexts/SelectionContext";
+import { SelectionContext, FILTER_TYPES } from "../contexts/SelectionContext";
 import "./VariablePlot.css";
 
 // Define the Variable Component
 export default function VariablePlot({ variable }) {
     const { variablesDict } = useContext(VariableContext);
     const { entities, addEntities, updateEntities, getEntitiesCntDifference } = useContext(EntityContext);
-    const { selectedEntities } = useContext(SelectionContext);
+    const { selectedEntities, activeFilter } = useContext(SelectionContext);
 
     const svgWidthRef = useRef(0);
     const svgHeightRef = useRef(0);
     const marginLeft = 40;
     const marginRight = 10;
-    const marginTop = 25;
+    const marginTop = 15;
     const marginBottom = 37;
     const labelOffset = 35;
 
@@ -27,7 +27,7 @@ export default function VariablePlot({ variable }) {
 
     useEffect(() => {
         drawRoulette();
-    }, [variable, entities]);
+    }, [variable, entities, activeFilter]);
 
     useEffect(() => {
         updateHighlightedEntities();
@@ -42,7 +42,7 @@ export default function VariablePlot({ variable }) {
         const svgHeight = container.node().clientHeight;
         svgHeightRef.current = svgHeight;
 
-        container.append("svg")
+        const svg = container.append("svg")
             .attr("id", `univariate-svg-${variable.name}`)
             .attr("width", svgWidth)
             .attr("height", svgHeight);
@@ -59,14 +59,14 @@ export default function VariablePlot({ variable }) {
         let chartWidth = svgWidthRef.current - marginLeft - marginRight;
         let chartHeight = svgHeightRef.current - marginTop - marginBottom;
 
-        const [currentCnt, difference] = getEntitiesCntDifference(variable.name);
-        chart.append("text")
-            .attr("class", "total-entities-text")
-            .attr("text-anchor", "middle")
-            .attr("transform", `translate(${chartWidth / 2}, ${- marginTop / 2})`)
-            .style("font-size", "14px")
-            .style("fill", difference > 0 ? "red" : "#666")
-            .text(`# of Data Points: ${currentCnt} ${difference > 0 ? `(-${difference})` : ""}`);
+        // const [currentCnt, difference] = getEntitiesCntDifference(variable.name);
+        // chart.append("text")
+        //     .attr("class", "total-entities-text")
+        //     .attr("text-anchor", "middle")
+        //     .attr("transform", `translate(${chartWidth / 2}, ${- marginTop / 2})`)
+        //     .style("font-size", "14px")
+        //     .style("fill", difference > 0 ? "red" : "#666")
+        //     .text(`# of Data Points: ${currentCnt} ${difference > 0 ? `(-${difference})` : ""}`);
 
         let xScale = d3.scaleLinear()
             .domain([variable.min, variable.max])
@@ -77,8 +77,24 @@ export default function VariablePlot({ variable }) {
             const leftEdge = variable.binEdges[index];
             const rightEdge = variable.binEdges[index + 1];
             const binEntities = Object.values(entities).filter(e => e[variable.name] >= leftEdge && e[variable.name] < rightEdge && e[variable.name] !== null);
+
+            // Separate complete and incomplete entities
+            const completeEntities = binEntities.filter(entity =>
+                Object.keys(variablesDict).every(varName => entity[varName] !== null && entity[varName] !== undefined)
+            );
+            const incompleteEntities = binEntities.filter(entity =>
+                Object.keys(variablesDict).some(varName => entity[varName] === null || entity[varName] === undefined)
+            );
+
             const binHeight = binEntities.length;
-            binInfos.push({ height: binHeight, entities: binEntities });
+            binInfos.push({
+                height: binHeight,
+                entities: binEntities,
+                completeEntities: completeEntities,
+                incompleteEntities: incompleteEntities,
+                completeHeight: completeEntities.length,
+                incompleteHeight: incompleteEntities.length
+            });
         }
 
         let maxY = d3.max(binInfos.map(d => d.height)) < 8 ? 10 : d3.max(binInfos.map(d => d.height)) + 2;
@@ -125,19 +141,44 @@ export default function VariablePlot({ variable }) {
             .style("font-family", "Times New Roman")
             .text("Count");
 
-        // Draw Interactive Grid
+        // Draw Interactive Grid with stacked complete/incomplete entities
         for (let grid = 1; grid <= maxY; grid++) {
             for (let bin = 0; bin < variable.binEdges.length - 1; bin++) {
-                const binCnt = binInfos[bin].height;
+                const binInfo = binInfos[bin];
+                const binCnt = binInfo.height;
+                const incompleteHeight = binInfo.incompleteHeight;
+                const completeHeight = binInfo.completeHeight;
+
+                let cellClass = "non-fill-grid-cell";
+
+                // Determine cell class based on stacking logic
+                if (activeFilter === FILTER_TYPES.COMPLETE) {
+                    if (grid <= completeHeight) {
+                        cellClass = "filtered-entity-cell";
+                    } else if (grid <= completeHeight + incompleteHeight) {
+                        cellClass = "fill-grid-cell";
+                    }
+                }
+                else if (activeFilter === FILTER_TYPES.INCOMPLETE) {
+                    if (grid <= incompleteHeight) {
+                        cellClass = "filtered-entity-cell";
+                    } else if (grid <= completeHeight + incompleteHeight) {
+                        cellClass = "fill-grid-cell";
+                    }
+                }
+
                 chart.append("rect")
-                    .attr("class", binCnt >= grid ? "fill-grid-cell" : "non-fill-grid-cell")
+                    .attr("class", cellClass)
                     .attr("id", `${variable.name}-${bin}-${grid}`)
                     .attr("transform", `translate(${xScale(variable.binEdges[bin])}, ${yScale(grid)})`)
                     .attr("width", xScale(variable.binEdges[bin + 1]) - xScale(variable.binEdges[bin]))
                     .attr("height", yScale(grid) - yScale(grid + 1))
                     .on("click", function (event, d) {
+                        if (grid <= binInfo.completeHeight) {
+                            return;
+                        }
                         // Update entities
-                        let deltaHeight = grid - binInfos[bin].height;
+                        let deltaHeight = grid - binInfo.height;
                         // if clicked count is larger than previous, then add new entities (randomly generated in the bin)
                         if (deltaHeight > 0) {
                             let newEntitiesData = [];
@@ -151,7 +192,7 @@ export default function VariablePlot({ variable }) {
                         }
                         // if clicked count is smaller than or equal to previous, then update values of existing entities
                         else {
-                            const individualEntities = binInfos[bin].entities.filter(e => Object.entries(e).filter(([key, value]) => key !== "id" && value !== null).length === 1);
+                            const individualEntities = binInfo.entities.filter(e => Object.entries(e).filter(([key, value]) => key !== "id" && value !== null).length === 1);
                             if (individualEntities.length === 0) {
                                 alert('No individual entities can be removed. Please remove entities in the parallel coordinates plot.');
                                 return;
@@ -204,7 +245,6 @@ export default function VariablePlot({ variable }) {
         chart.selectAll("rect")
             .classed("highlight-grid-cell", false);
 
-        // Group selected entities by bin
         let binCounts = new Array(variable.binEdges.length - 1).fill(0);
 
         selectedEntities.forEach(entity => {
@@ -219,7 +259,6 @@ export default function VariablePlot({ variable }) {
             }
         });
 
-        // Add highlights for selected entities
         for (let bin = 0; bin < variable.binEdges.length - 1; bin++) {
             for (let grid = 1; grid <= binCounts[bin]; grid++) {
                 chart.select(`#${variable.name}-${bin}-${grid}`)

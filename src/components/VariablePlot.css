@@ -16,10 +16,7 @@
     fill: steelblue !important;
 }
 
-.group-1-cell {
-    fill: plum !important;
-}
-
-.group-2-cell {
-    fill: green !important;
+.filtered-entity-cell {
+    fill: rgb(151, 205, 244);
+    stroke: black;
 }
