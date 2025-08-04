@@ -208,7 +208,7 @@ export default function ResultsPanel() {
                 .attr('width', Math.min(chartWidth, validMaxX) - Math.max(0, validMinX))
                 .attr('height', chartHeight);
 
-            // Add boundary lines
+            // Add range boundary lines
             if (validMinX >= 0 && validMinX <= chartWidth) {
                 chart.append('line')
                     .attr('class', 'range-boundary-line')

@@ -113,6 +113,31 @@ export const EntityProvider = ({ children }) => {
         setEntities(newEntities);
     }
 
+    const deleteConnections = (selectedEntities) => {
+        let newEntities = { ...entities };
+        let addedEntitiesIDs = [];
+        selectedEntities.forEach((entity) => {
+            Object.keys(entity).forEach((key) => {
+                if (key !== "id" && entity[key] !== null) {
+                    let newID = uuidv4();
+                    addedEntitiesIDs.push(newID);
+                    let newEntity = {
+                        id: newID
+                    };
+                    Object.keys(variablesDict).forEach((key) => {
+                        newEntity[key] = null;
+                    });
+                    newEntity[key] = entity[key];
+                    newEntities[newID] = newEntity;
+                }
+            });
+
+            delete newEntities[entity.id];
+        });
+
+        setEntities(newEntities);
+    }
+
     // Update the entities
     const updateEntities = (entitiesIDs, entitiesData, source, description = "") => {
         console.log("update entities", entitiesIDs, entitiesData);
@@ -255,6 +280,7 @@ export const EntityProvider = ({ children }) => {
         currentVersion,
         addEntities,
         deleteEntities,
+        deleteConnections,
         updateEntities,
         combineEntities,
         undoEntityOperation,

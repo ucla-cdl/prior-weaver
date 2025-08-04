@@ -29,7 +29,7 @@ const FILTER_TYPES = {
 export default function ParallelSankeyPlot() {
     const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
     const { variablesDict, updateVariable, sortableVariablesRef } = useContext(VariableContext);
-    const { entities, addEntities, deleteEntities, combineEntities } = useContext(EntityContext);
+    const { entities, addEntities, deleteEntities, deleteConnections, combineEntities } = useContext(EntityContext);
     const { activeFilter, setActiveFilter, selections, selectedEntities, setSelectedEntities, isHidden, selectionsRef, updateSelections, selectionSource, potentialEntities, setPotentialEntities } = useContext(SelectionContext);
 
     const marginTop = 20;
@@ -706,9 +706,12 @@ export default function ParallelSankeyPlot() {
         addEntities(newEntitiesData, "multivariate", generationType);
     }
 
-    const deleteSelectedEntities = () => {
-        const deleteType = selectionsRef.current.size === 1 ? "individual" : "complete";
-        deleteEntities(selectedEntities.map(entity => entity.id), "multivariate", deleteType);
+    const deleteSelected = () => {
+        if (activeFilter === FILTER_TYPES.INCOMPLETE) {
+            deleteEntities(selectedEntities.map(entity => entity.id), "multivariate", "PCP");
+        } else {
+            deleteConnections(selectedEntities);
+        }
         clearBrushSelection();
     }
 
@@ -868,7 +871,7 @@ export default function ParallelSankeyPlot() {
                         size='small'
                         disabled={selectedEntities.length === 0}
                         variant='outlined'
-                        onClick={deleteSelectedEntities}>
+                        onClick={deleteSelected}>
                         Delete
                     </Button>
                 </Box>

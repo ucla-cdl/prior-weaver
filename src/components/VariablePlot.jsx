@@ -59,6 +59,7 @@ export default function VariablePlot({ variable }) {
         let chartWidth = svgWidthRef.current - marginLeft - marginRight;
         let chartHeight = svgHeightRef.current - marginTop - marginBottom;
 
+        // Ratio of Complete Rows versus Incomplete Rows 
         // const [currentCnt, difference] = getEntitiesCntDifference(variable.name);
         // chart.append("text")
         //     .attr("class", "total-entities-text")
@@ -151,20 +152,11 @@ export default function VariablePlot({ variable }) {
 
                 let cellClass = "non-fill-grid-cell";
 
-                // Determine cell class based on stacking logic
-                if (activeFilter === FILTER_TYPES.COMPLETE) {
-                    if (grid <= completeHeight) {
-                        cellClass = "filtered-entity-cell";
-                    } else if (grid <= completeHeight + incompleteHeight) {
-                        cellClass = "fill-grid-cell";
-                    }
-                }
-                else if (activeFilter === FILTER_TYPES.INCOMPLETE) {
-                    if (grid <= incompleteHeight) {
-                        cellClass = "filtered-entity-cell";
-                    } else if (grid <= completeHeight + incompleteHeight) {
-                        cellClass = "fill-grid-cell";
-                    }
+                // Display complete entities in a different style to indicate that they are used in the translation process --> representing the final domain knowledge
+                if (grid <= completeHeight) {
+                    cellClass = "filtered-entity-cell";
+                } else if (grid <= completeHeight + incompleteHeight) {
+                    cellClass = "fill-grid-cell";
                 }
 
                 chart.append("rect")
