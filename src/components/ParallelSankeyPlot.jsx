@@ -29,7 +29,7 @@ const FILTER_TYPES = {
 export default function ParallelSankeyPlot() {
     const { leftPanelOpen, rightPanelOpen } = useContext(WorkspaceContext);
     const { variablesDict, updateVariable, sortableVariablesRef } = useContext(VariableContext);
-    const { entities, addEntities, deleteEntities, combineEntities } = useContext(EntityContext);
+    const { entities, addEntities, deleteEntities, deleteConnections, combineEntities } = useContext(EntityContext);
     const { activeFilter, setActiveFilter, selections, selectedEntities, setSelectedEntities, isHidden, selectionsRef, updateSelections, selectionSource, potentialEntities, setPotentialEntities } = useContext(SelectionContext);
 
     const marginTop = 20;
@@ -441,7 +441,7 @@ export default function ParallelSankeyPlot() {
 
             // Keep the entities with the most axis counts
             const maxAxisCount = Math.max(...axisEntities.map(axisEntity => axisEntity.axisCount));
-            console.log("axis: ", axis, "Max axis count: ", maxAxisCount);
+            // console.log("axis: ", axis, "Max axis count: ", maxAxisCount);
             let keepEntities = axisEntities.filter(axisEntity => {
                 return axisEntity.axisCount === maxAxisCount;
             });
@@ -483,8 +483,8 @@ export default function ParallelSankeyPlot() {
             }));
         }
 
-        console.log("Potential selected entities by axis: ", potentialSelectedEntitiesByAxis);
-        console.log("Groups: ", groups);
+        // console.log("Potential selected entities by axis: ", potentialSelectedEntitiesByAxis);
+        // console.log("Groups: ", groups);
         return groups;
     }
 
@@ -706,9 +706,12 @@ export default function ParallelSankeyPlot() {
         addEntities(newEntitiesData, "multivariate", generationType);
     }
 
-    const deleteSelectedEntities = () => {
-        const deleteType = selectionsRef.current.size === 1 ? "individual" : "complete";
-        deleteEntities(selectedEntities.map(entity => entity.id), "multivariate", deleteType);
+    const deleteSelected = () => {
+        if (activeFilter === FILTER_TYPES.INCOMPLETE) {
+            deleteEntities(selectedEntities.map(entity => entity.id), "multivariate", "PCP");
+        } else {
+            deleteConnections(selectedEntities);
+        }
         clearBrushSelection();
     }
 
@@ -795,7 +798,7 @@ export default function ParallelSankeyPlot() {
                             >
                                 Connect
                             </Button>
-                            <Tooltip
+                            {/* <Tooltip
                                 title={
                                     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
                                         <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>{UI_CLIPS.link.description}</Typography>
@@ -814,7 +817,7 @@ export default function ParallelSankeyPlot() {
                                 }}
                             >
                                 <Help size="small" />
-                            </Tooltip>
+                            </Tooltip> */}
                         </Box>
                     )}
 
@@ -830,7 +833,7 @@ export default function ParallelSankeyPlot() {
                                 >
                                     Generate
                                 </Button>
-                                <Tooltip
+                                {/* <Tooltip
                                     title={
                                         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
                                             <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>{UI_CLIPS.generate.description}</Typography>
@@ -849,7 +852,7 @@ export default function ParallelSankeyPlot() {
                                     }}
                                 >
                                     <Help size="small" />
-                                </Tooltip>
+                                </Tooltip> */}
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                                 <Typography variant="body2">Num: </Typography>
@@ -868,7 +871,7 @@ export default function ParallelSankeyPlot() {
                         size='small'
                         disabled={selectedEntities.length === 0}
                         variant='outlined'
-                        onClick={deleteSelectedEntities}>
+                        onClick={deleteSelected}>
                         Delete
                     </Button>
                 </Box>

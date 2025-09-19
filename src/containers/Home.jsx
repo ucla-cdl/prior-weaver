@@ -7,19 +7,24 @@ import routes from "../shared/routes";
 import { useEffect } from "react";
 
 const VIDEOS = [
+    // {
+    //     name: "PriorWeaver Overview",
+    //     url: "https://drive.google.com/file/d/18LNaVSSTU0kPtOy7mjkJo7kfMb8ZYGYn/preview"
+    // },
+    // {
+    //     name: "Introduction to Prior Elicitation",
+    //     url: "https://drive.google.com/file/d/1n4ELXYR4Lj2ml54A07S8ggVXhz_qwZRR/preview"
+    // },
     {
-        name: "Introduction to Prior Weaver",
-        url: "https://drive.google.com/file/d/1n4ELXYR4Lj2ml54A07S8ggVXhz_qwZRR/preview"
-    },
-    {
-        name: "Parameter Space Elicitation",
+        name: "Baseline (Parameter Space Elicitation)",
         url: "https://drive.google.com/file/d/16b_8gDtYGrs3XgpUkamgTZJIxdKCdT2x/preview"
     },
     {
-        name: "Observable Space Elicitation",
+        name: "PriorWeaver (Observable Space Elicitation)",
         url: "https://drive.google.com/file/d/1GYB1k3Eu7W1ZA4ckI_Ky9-J-eSNUM0Rh/preview"
     }
 ]
+
 export default function Home() {
     const location = useLocation();
     const navigate = useNavigate();

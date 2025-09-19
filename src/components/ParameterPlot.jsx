@@ -162,7 +162,7 @@ export const ParameterPlot = ({ paraName }) => {
         // Use ReactDOM to render the InlineMath component into the foreignObject
         const xAxisLabel = document.getElementById(`parameter-x-axis-label-${parameter.name}`);
         if (xAxisLabel) {
-            ReactDOM.render(<InlineMath math={`\\alpha_{${parameter.name.replace('_', '\\_')}}`} />, xAxisLabel);
+            ReactDOM.render(<InlineMath math={`\\beta_{${parameter.name.replace('_', '\\_')}}`} />, xAxisLabel);
         }
 
         // Add y-axis
@@ -184,7 +184,7 @@ export const ParameterPlot = ({ paraName }) => {
             for (let bin = 0; bin < parameter.binEdges.length - 1; bin++) {
                 const binCnt = binInfos[bin].height;
                 chart.append("rect")
-                    .attr("class", binCnt >= grid ? "fill-grid-cell" : "non-fill-grid-cell")
+                    .attr("class", binCnt >= grid ? "param-fill-grid-cell" : "param-non-fill-grid-cell")
                     .attr("id", `${parameter.name}-${grid}-${bin}`)
                     .attr("transform", `translate(${xScale(parameter.binEdges[bin])}, ${yScale(grid)})`)
                     .attr("width", xScale(parameter.binEdges[bin + 1]) - xScale(parameter.binEdges[bin]))
@@ -257,7 +257,7 @@ export const ParameterPlot = ({ paraName }) => {
                     width: '40%',
                     height: '100%'
                 }}>
-                <Typography variant="h6"><InlineMath math={`\\alpha_{${paraName.replace('_', '\\_')}}`} /></Typography>
+                <Typography variant="h6"><InlineMath math={`\\beta_{${paraName.replace('_', '\\_')}}`} /></Typography>
                 {showFittedDistribution && parameter && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                         <Select

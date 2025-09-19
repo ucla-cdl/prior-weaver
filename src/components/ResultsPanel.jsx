@@ -7,6 +7,11 @@ import { VariableContext } from '../contexts/VariableContext';
 import { EntityContext } from '../contexts/EntityContext';
 import { ELICITATION_SPACE, WorkspaceContext } from '../contexts/WorkspaceContext';
 import { InlineMath } from 'react-katex';
+
+const LEVELS = {
+    DISTRIBUTIONAL: "distributional",
+};
+
 export default function ResultsPanel() {
     const { space } = useContext(WorkspaceContext);
     const { variablesDict, parametersDict, updateParameter, translationTimes, setTranslationTimes, predictiveCheckResults, setPredictiveCheckResults, getDistributionNotation } = useContext(VariableContext);
@@ -15,8 +20,8 @@ export default function ResultsPanel() {
     const [isTranslating, setIsTranslating] = useState(false);
     const [selectedPriorDistributions, setSelectedPriorDistributions] = useState({});
 
-    const svgHeight = 280;
-    const margin = { top: 10, bottom: 60, left: 60, right: 20, };
+    const svgHeight = 300;
+    const margin = { top: 30, bottom: 60, left: 60, right: 20 };
     const labelOffset = 45;
 
     const [showPlot, setShowPlot] = useState("both");
@@ -24,12 +29,14 @@ export default function ResultsPanel() {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
+    const [level, setLevel] = useState(LEVELS.RELATIONAL);
+
     useEffect(() => {
-        console.log("results panel mounted");
         if (predictiveCheckResults.length > 0) {
+            console.log("plotting check results", predictiveCheckResults);
             plotCheckResults();
         }
-    }, [predictiveCheckResults, showPlot]);
+    }, [predictiveCheckResults, showPlot, level]);
 
     const translate = () => {
         if (space === ELICITATION_SPACE.OBSERVABLE) {
@@ -78,6 +85,7 @@ export default function ResultsPanel() {
     const predictiveCheck = (priors) => {
         axios
             .post(window.BACKEND_ADDRESS + "/check", {
+                entities: Object.values(entities),
                 variables: Object.values(variablesDict),
                 priors: Object.values(priors),
             })
@@ -88,6 +96,12 @@ export default function ResultsPanel() {
                 setTranslationTimes(prev => prev + 1);
                 setPredictiveCheckResults(prev => [...prev, response.data.check_results]);
             })
+            .catch((error) => {
+                console.error("predictive check error", error);
+                setIsTranslating(false);
+                setSnackbarMessage('Error in predictive check');
+                setSnackbarOpen(true);
+            });
     }
 
     const plotCheckResults = () => {
@@ -120,18 +134,35 @@ export default function ResultsPanel() {
         const chart = svg.append('g')
             .attr('transform', `translate(${margin.left},${margin.top})`);
 
-        const results = predictiveCheckResults[predictiveCheckResults.length - 1];
-        const previousCheckResult = predictiveCheckResults.length > 1 ? predictiveCheckResults[predictiveCheckResults.length - 2] : null;
-        const minX = previousCheckResult ? Math.min(previousCheckResult["min_response_val"], results["min_response_val"]) : results["min_response_val"]
-        const maxX = previousCheckResult ? Math.max(previousCheckResult["max_response_val"], results["max_response_val"]) : results["max_response_val"]
-        const maxY = previousCheckResult ? Math.max(previousCheckResult["max_density_val"], results["max_density_val"]) : results["max_density_val"]
+        // Visualize All Levels in one plot
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let maxY = -1;
 
-        const x = d3.scaleLinear()
+        for (const level of Object.values(LEVELS)) {
+            const results = predictiveCheckResults[predictiveCheckResults.length - 1][level];
+            if (!results) {
+                continue;
+            }
+
+            minX = Math.min(minX, results["min_response_val"]);
+            maxX = Math.max(maxX, results["max_response_val"]);
+            maxY = Math.max(maxY, results["max_density_val"]);
+            console.log("level: ", level, "minX: ", results["min_response_val"], "maxX: ", results["max_response_val"], "maxY: ", results["max_density_val"]);
+        }
+
+        // const results = predictiveCheckResults[predictiveCheckResults.length - 1][level];
+        // const previousCheckResult = predictiveCheckResults.length > 1 ? predictiveCheckResults[predictiveCheckResults.length - 2][level] : null;
+        // if (!results) {
+        //     return;
+        // }
+
+        const xScale = d3.scaleLinear()
             .domain([minX, maxX])
             .nice()
             .range([0, chartWidth]);
 
-        const yKDE = d3.scaleLinear()
+        const yScale = d3.scaleLinear()
             .domain([0, maxY])
             .nice()
             .range([chartHeight, 0]);
@@ -139,7 +170,7 @@ export default function ResultsPanel() {
         // Create the x-axis
         chart.append('g')
             .attr('transform', `translate(0, ${chartHeight})`)
-            .call(d3.axisBottom(x))
+            .call(d3.axisBottom(xScale))
             .selectAll("text")
             .attr("transform", "rotate(-45)")
             .style("text-anchor", "end")
@@ -148,7 +179,7 @@ export default function ResultsPanel() {
 
         // Create the y-axis for the kde
         chart.append('g')
-            .call(d3.axisLeft(yKDE));
+            .call(d3.axisLeft(yScale));
 
         // add y axis label
         chart.append('text')
@@ -159,85 +190,101 @@ export default function ResultsPanel() {
             .style('font-size', '12px')
             .text('Density');
 
+        const responseVar = Object.values(variablesDict).find(v => v.type === "response");
+
         // Plot previous KDE if it exists
-        if (previousCheckResult && (showPlot === "both" || showPlot === "previous")) {
-            previousCheckResult["simulated_results"].forEach((simulatedData, index) => {
-                chart.append('path')
-                    .datum(simulatedData["kde"])
-                    .attr('class', 'kde-line previous-kde')
-                    .attr('d', d3.line()
-                        .x(d => x(d.x))
-                        .y(d => yKDE(d.density)));
-            });
+        // if (previousCheckResult && (showPlot === "both" || showPlot === "previous")) {
+        //     previousCheckResult["simulated_results"].forEach((simulatedData, index) => {
+        //         chart.append('path')
+        //             .datum(simulatedData["kde"])
+        //             .attr('class', 'kde-line previous-kde')
+        //             .attr('d', d3.line()
+        //                 .x(d => x(d.x))
+        //                 .y(d => yKDE(d.density)));
+        //     });
 
-            const previousRepKDE = previousCheckResult["avg_kde_result"];
-            chart.append('path')
-                .datum(previousRepKDE)
-                .attr('class', 'kde-line previous-kde avg-kde')
-                .attr('d', d3.line()
-                    .x(d => x(d.x))
-                    .y(d => yKDE(d.density)));
+        //     const previousRepKDE = previousCheckResult["avg_kde_result"];
+        //     chart.append('path')
+        //         .datum(previousRepKDE)
+        //         .attr('class', 'kde-line previous-kde avg-kde')
+        //         .attr('d', d3.line()
+        //             .x(d => x(d.x))
+        //             .y(d => yKDE(d.density)));
 
-            // Add legend for previous results
-            chart.append("rect")
-                .attr("x", chartWidth - 50)
-                .attr("y", 20)
-                .attr("class", "legend-rect previous-rect");
+        //     // Add legend for previous results
+        //     chart.append("rect")
+        //         .attr("x", chartWidth - 50)
+        //         .attr("y", 20)
+        //         .attr("class", "legend-rect previous-rect");
 
-            chart.append("text")
-                .attr("x", chartWidth - 30)
-                .attr("y", 25)
-                .attr("text-anchor", "start")
-                .style("font-size", "12px")
-                .text("Previous");
-        }
+        //     chart.append("text")
+        //         .attr("x", chartWidth - 30)
+        //         .attr("y", 25)
+        //         .attr("text-anchor", "start")
+        //         .style("font-size", "12px")
+        //         .text("Previous");
+        // }
 
         if ((showPlot === "both" || showPlot === "current")) {
-            const simulatedResults = results["simulated_results"];
-            simulatedResults.forEach((simulatedData, index) => {
-                // Plot current KDE
+            const colors = {
+                [LEVELS.RELATIONAL]: "green",
+                [LEVELS.DISTRIBUTIONAL]: "blue",
+                [LEVELS.UNIFORM]: "red"
+            };
+
+            Object.values(LEVELS).forEach((level, index) => {
+                const results = predictiveCheckResults[predictiveCheckResults.length - 1][level];
+                if (!results) {
+                    return;
+                }
+
+                const simulatedResults = results["simulated_results"];
+                simulatedResults.forEach((simulatedData, index) => {
+                    // Plot Sampled KDE
+                    chart.append('path')
+                        .datum(simulatedData["kde"])
+                        .attr('class', 'kde-line')
+                        .attr('stroke', colors[level])
+                        .attr('d', d3.line()
+                            .x(d => xScale(d.x))
+                            .y(d => yScale(d.density)));
+                });
+
+                const repKDE = results["avg_kde_result"];
+                // Plot Average KDE
                 chart.append('path')
-                    .datum(simulatedData["kde"])
-                    .attr('class', 'kde-line current-kde')
+                    .datum(repKDE)
+                    .attr('class', 'kde-line avg-kde')
+                    .attr('stroke', colors[level])
                     .attr('d', d3.line()
-                        .x(d => x(d.x))
-                        .y(d => yKDE(d.density)));
+                        .x(d => xScale(d.x))
+                        .y(d => yScale(d.density)))
+
+
+                // Add legend for current level
+                // chart.append("rect")
+                //     .attr("x", chartWidth - 50)
+                //     .attr("y", 10 + 15 * index)
+                //     .attr("class", "legend-rect")
+                //     .attr("fill", colors[level]);
+
+                // chart.append("text")
+                //     .attr("x", chartWidth - 30)
+                //     .attr("y", 15 + 15 * index)
+                //     .attr("text-anchor", "start")
+                //     .style("font-size", "12px")
+                //     .text(level);
             });
 
-            const repKDE = results["avg_kde_result"];
-            // Plot current KDE
-            chart.append('path')
-                .datum(repKDE)
-                .attr('class', 'kde-line current-kde avg-kde')
-                .attr('d', d3.line()
-                    .x(d => x(d.x))
-                    .y(d => yKDE(d.density)));
-
-
-            // Add legend for current results
-            chart.append("rect")
-                .attr("x", chartWidth - 50)
-                .attr("y", 10)
-                .attr("class", "legend-rect current-rect");
-
-
-            chart.append("text")
-                .attr("x", chartWidth - 30)
-                .attr("y", 15)
-                .attr("text-anchor", "start")
-                .style("font-size", "12px")
-                .text("Current");
+            chart.append('text')
+                .attr('x', chartWidth / 2)
+                .attr('y', chartHeight + labelOffset)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '14px')
+                .text(`${responseVar.name} (${responseVar.unitLabel})`);
         }
-
-        // Add title
-        const responseVar = Object.values(variablesDict).find(v => v.type === "response");
-        chart.append('text')
-            .attr('x', chartWidth / 2)
-            .attr('y', chartHeight + labelOffset)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '14px')
-            .text(`${responseVar.name} (${responseVar.unitLabel})`);
     }
+
 
     const updateSelectedPriorDistribution = (paramName, paramKey, newValue) => {
         const updatedParams = { ...selectedPriorDistributions[paramName].params, [paramKey]: newValue };
@@ -284,62 +331,28 @@ export default function ResultsPanel() {
                 {space === ELICITATION_SPACE.OBSERVABLE ? "Translate" : "Check"}
             </Button>
             {isTranslating && <CircularProgress sx={{ my: 2 }} />}
-            {!isTranslating && translationTimes > 0 &&
-                <Box className='show-plot-box' sx={{ my: 2 }}>
-                    <FormControl sx={{ border: '1px solid #bbb', borderRadius: '8px', padding: '15px' }}>
-                        <FormLabel>Show: </FormLabel>
-                        <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={(showPlot === "both" || showPlot === "previous")}
-                                        onChange={() => {
-                                            if (showPlot === "both" || showPlot === "previous") {
-                                                setShowPlot("current");
-                                            } else if (showPlot === "current") {
-                                                setShowPlot("both");
-                                            }
-                                        }}
-                                        disabled={predictiveCheckResults.length === 1}
-                                    />
-                                }
-                                label="Previous"
-                            />
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={(showPlot === "both" || showPlot === "current")}
-                                        onChange={() => {
-                                            if (showPlot === "both" || showPlot === "current") {
-                                                setShowPlot("previous");
-                                            } else if (showPlot === "previous") {
-                                                setShowPlot("both");
-                                            }
-                                        }}
-                                        disabled={predictiveCheckResults.length === 1}
-                                    />
-                                }
-                                label="Current"
-                                sx={{ mr: 2 }}
-                            />
-                        </Box>
-                    </FormControl>
+            {!isTranslating && translationTimes > 0 && (
+                <Box sx={{ width: '100%' }}>
+                    <Box sx={{ width: '100%' }} id={'predictive-check-div'} />
+                    <Box className="prior-result-div" sx={{ my: 2, p: 2 }}>
+                        <Typography variant="h6" gutterBottom>Prior Distributions</Typography>
+                        {Object.entries(parametersDict).map(([paramName, param], index) => (
+                            <Box className="prior-result-item" key={paramName} sx={{ p: 1, display: 'flex', flexDirection: 'row', alignItems: 'space-between' }}>
+                                <Typography variant="body1" color="text.primary" sx={{ mr: 1, borderRight: '1px solid #bbb', pr: 1 }}>
+                                    {paramName === "intercept" ?
+                                        <InlineMath math={`\\epsilon`} />
+                                        :
+                                        <InlineMath math={`\\beta_{${index + 1}}`} />
+                                    }
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                    {getDistributionNotation(param.distributions[param.selectedDistributionIdx])}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
                 </Box>
-            }
-            {!isTranslating && translationTimes > 0 && <Box sx={{ width: '100%' }} id={'predictive-check-div'}></Box>}
-            {!isTranslating && translationTimes > 0 &&
-                <Box className="prior-result-div" sx={{ my: 2, p: 2 }}>
-                    <Typography variant="h6" gutterBottom>Prior Distributions</Typography>
-                    {Object.entries(parametersDict).map(([paramName, param]) => (
-                        <Box className="prior-result-item" key={paramName} sx={{ p: 1, display: 'flex', flexDirection: 'row', alignItems: 'space-between' }}>
-                            <Typography variant="body1" color="text.primary" sx={{ mr: 1, borderRight: '1px solid #bbb', pr: 1 }}><InlineMath math={`\\alpha_{${paramName}}`} /></Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                {getDistributionNotation(param.distributions[param.selectedDistributionIdx])}
-                            </Typography>
-                        </Box>
-                    ))}
-                </Box>
-            }
+            )}
 
             <Snackbar
                 open={snackbarOpen}

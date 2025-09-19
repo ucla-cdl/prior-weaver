@@ -39,24 +39,33 @@ export const TASK_SETTINGS = {
         name: "Income Prediction",
         scenario: "You are a social scientist studying the factors that influence income levels in the U.S.\
                 Specifically, you want to evaluate how an individual's age and years of education impact their annual income.",
-        defaultModel: `\\text{income} \\sim \\alpha_{age} \\times \\text{age} + \\alpha_{education} \\times \\text{education} + \\alpha_{intercept}`,
+        defaultModel: `\\text{income} \\sim \\beta_1 \\times \\text{age} + \\beta_2 \\times \\text{education} + \\epsilon`,
         variables: {
             "predictor": [
                 {
                     "name": "age",
                     "unit": "yrs",
+                    "min": 25,
+                    "max": 75,
+                    "binCount": 10,
                     "description": "The individual's age."
                 },
                 {
                     "name": "education",
                     "unit": "yrs",
+                    "min": 0,
+                    "max": 25,
+                    "binCount": 10,
                     "description": "The total number of years the individual has spent in formal education."
                 }
             ],
             "response": [
                 {
                     "name": "income",
-                    "unit": "$k/yrs",
+                    "unit": "$k/yr",
+                    "min": 0,
+                    "max": 100,
+                    "binCount": 10,
                     "description": "The individual's annual income in thousands of dollars."
                 }
             ]
@@ -67,7 +76,7 @@ export const TASK_SETTINGS = {
         name: "Student Exam Score Prediction",
         scenario: "You are a data scientist investigating factors that influence student performance.\
                 Specifically, you seek to understand how the number of hours a student studies per week and their attendance rate (out of 100%) affect their exam score (out of 100 points).",
-        defaultModel: `\\text{exam\\_score} \\sim \\alpha_{hours\\_study} \\times \\text{hours\\_study} + \\alpha_{attendance\\_rate} \\times \\text{attendance\\_rate} + \\alpha_{intercept}`,
+        defaultModel: `\\text{exam\\_score} \\sim \\beta_1 \\times \\text{hours\\_study} + \\beta_2 \\times \\text{attendance\\_rate} + \\epsilon`,
         variables: {
             "predictor": [
                 {
@@ -95,7 +104,7 @@ export const TASK_SETTINGS = {
         name: "Weight Prediction",
         scenario: "You are a data scientist analyzing the factors that influence adult people's weight.\
                 Specifically, you aim to assess how adult's height and exercise hours per week affect their weight.",
-        defaultModel: `\\text{weight} \\sim \\alpha_{height} \\times \\text{height} + \\alpha_{exercise\\_hours} \\times \\text{exercise\\_hours} + \\alpha_{intercept}`,
+        defaultModel: `\\text{weight} \\sim \\beta_1 \\times \\text{height} + \\beta_2 \\times \\text{exercise\\_hours} + \\epsilon`,
         variables: {
             "predictor": [
                 {
