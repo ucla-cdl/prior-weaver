@@ -441,7 +441,7 @@ export default function ParallelSankeyPlot() {
 
             // Keep the entities with the most axis counts
             const maxAxisCount = Math.max(...axisEntities.map(axisEntity => axisEntity.axisCount));
-            console.log("axis: ", axis, "Max axis count: ", maxAxisCount);
+            // console.log("axis: ", axis, "Max axis count: ", maxAxisCount);
             let keepEntities = axisEntities.filter(axisEntity => {
                 return axisEntity.axisCount === maxAxisCount;
             });
@@ -483,8 +483,8 @@ export default function ParallelSankeyPlot() {
             }));
         }
 
-        console.log("Potential selected entities by axis: ", potentialSelectedEntitiesByAxis);
-        console.log("Groups: ", groups);
+        // console.log("Potential selected entities by axis: ", potentialSelectedEntitiesByAxis);
+        // console.log("Groups: ", groups);
         return groups;
     }
 
@@ -798,7 +798,7 @@ export default function ParallelSankeyPlot() {
                             >
                                 Connect
                             </Button>
-                            <Tooltip
+                            {/* <Tooltip
                                 title={
                                     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
                                         <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>{UI_CLIPS.link.description}</Typography>
@@ -817,7 +817,7 @@ export default function ParallelSankeyPlot() {
                                 }}
                             >
                                 <Help size="small" />
-                            </Tooltip>
+                            </Tooltip> */}
                         </Box>
                     )}
 
@@ -833,7 +833,7 @@ export default function ParallelSankeyPlot() {
                                 >
                                     Generate
                                 </Button>
-                                <Tooltip
+                                {/* <Tooltip
                                     title={
                                         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
                                             <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>{UI_CLIPS.generate.description}</Typography>
@@ -852,7 +852,7 @@ export default function ParallelSankeyPlot() {
                                     }}
                                 >
                                     <Help size="small" />
-                                </Tooltip>
+                                </Tooltip> */}
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                                 <Typography variant="body2">Num: </Typography>

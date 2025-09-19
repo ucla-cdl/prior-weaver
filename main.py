@@ -401,7 +401,7 @@ def new_predictive_check(entities, predictors, response_var, prior_distributions
     - distribution: sample from the user-constructed histogram distribution
     - uniform: sample from a uniform distribution over the range of the predictor
     """
-    levels = ["relational", "distributional", "uniform"]
+    levels = ["distributional"]
     
     check_results = {l: {} for l in levels}
     translation_entities = [
@@ -477,7 +477,7 @@ def new_predictive_check(entities, predictors, response_var, prior_distributions
         x_max = max_simulated_response_val + padding
         x_values = np.linspace(x_min, x_max, 100)
 
-        max_density_val = 0
+        max_density_val = -1
         avg_kde = []
         for check_index in range(num_checks):
             simu_results = simulated_results[check_index]

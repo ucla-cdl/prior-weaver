@@ -83,7 +83,7 @@ export default function Workspace() {
                                         <Box className="component-container univariate-container">
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
                                                 <Typography variant="h6" gutterBottom>Univariate Histogram</Typography>
-                                                <Tooltip
+                                                {/* <Tooltip
                                                     title={
                                                         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
                                                             <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>{UI_CLIPS.univariate.description}</Typography>
@@ -102,7 +102,7 @@ export default function Workspace() {
                                                     }}
                                                 >
                                                     <Help size="small" />
-                                                </Tooltip>
+                                                </Tooltip> */}
                                             </Box>
                                             <Box sx={{
                                                 boxSizing: 'border-box',
@@ -138,7 +138,7 @@ export default function Workspace() {
                                         <Box className="component-container bivariate-container">
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
                                                 <Typography variant="h6" gutterBottom>Bivariate Scatterplot</Typography>
-                                                <Tooltip
+                                                {/* <Tooltip
                                                     title={
                                                         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
                                                             <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>{UI_CLIPS.bivariate.description}</Typography>
@@ -157,7 +157,7 @@ export default function Workspace() {
                                                     }}
                                                 >
                                                     <Help size="small" />
-                                                </Tooltip>
+                                                </Tooltip> */}
                                             </Box>
                                             <Box sx={{
                                                 boxSizing: 'border-box',
@@ -190,7 +190,7 @@ export default function Workspace() {
                                     <Box className="component-container parameter-container">
                                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
                                             <Typography variant="h6" gutterBottom>Parameter Distributions</Typography>
-                                            <Tooltip
+                                            {/* <Tooltip
                                                 title={
                                                     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
                                                         <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>{UI_CLIPS.parameter_roulette.description}</Typography>
@@ -209,7 +209,7 @@ export default function Workspace() {
                                                 }}
                                             >
                                                 <Help size="small" />
-                                            </Tooltip>
+                                            </Tooltip> */}
                                         </Box>
                                         <Box
                                             sx={{

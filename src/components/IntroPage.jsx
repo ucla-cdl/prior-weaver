@@ -15,7 +15,7 @@ export default function IntroPage() {
             {finishFetchingStudySettings ?
                 <Box className='setup-panel'>
                     {/* Scenario and Code Input */}
-                    <Box sx={{ width: '100%', boxSizing: 'border-box', my: 2, p: 4, borderBottom: '1px solid #ddd' }}>
+                    <Box sx={{ width: '100%', boxSizing: 'border-box', my: 1, p: 4, borderBottom: '1px solid #ddd' }}>
                         <Typography variant="h4" gutterBottom>
                             Scenario
                         </Typography>
@@ -26,7 +26,6 @@ export default function IntroPage() {
                     <Box sx={{ width: '100%', boxSizing: 'border-box', my: 1, p: 4, borderBottom: '1px solid #ddd' }}>
                         <Typography variant="h4" gutterBottom>
                             Model Settings
-                            {/* Please input your model in R code. */}
                         </Typography>
                         <Box sx={{ my: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
                             {taskId && Object.entries(TASK_SETTINGS[taskId]?.variables)?.map(([type, variables]) => (

@@ -1,11 +1,13 @@
 .fill-grid-cell {
     fill: #ccc;
     stroke: black;
+    stroke-width: 1;
 }
 
 .non-fill-grid-cell {
     fill: transparent;
     stroke: black;
+    stroke-width: 1;
 }
 
 .non-fill-grid-cell:hover {
@@ -17,6 +19,8 @@
 }
 
 .filtered-entity-cell {
-    fill: rgb(151, 205, 244);
+    /* fill: rgb(151, 205, 244); */
+    fill: #ccc;
     stroke: black;
+    stroke-width: 1;
 }

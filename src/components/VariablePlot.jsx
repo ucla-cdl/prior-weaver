@@ -16,8 +16,8 @@ export default function VariablePlot({ variable }) {
     const svgHeightRef = useRef(0);
     const marginLeft = 40;
     const marginRight = 10;
-    const marginTop = 15;
-    const marginBottom = 37;
+    const marginTop = 10;
+    const marginBottom = 40;
     const labelOffset = 35;
 
     useEffect(() => {
@@ -159,12 +159,15 @@ export default function VariablePlot({ variable }) {
                     cellClass = "fill-grid-cell";
                 }
 
+                const gridWidth = xScale(variable.binEdges[bin + 1]) - xScale(variable.binEdges[bin]);
+                const gridHeight = yScale(grid) - yScale(grid + 1);
+
                 chart.append("rect")
                     .attr("class", cellClass)
                     .attr("id", `${variable.name}-${bin}-${grid}`)
                     .attr("transform", `translate(${xScale(variable.binEdges[bin])}, ${yScale(grid)})`)
-                    .attr("width", xScale(variable.binEdges[bin + 1]) - xScale(variable.binEdges[bin]))
-                    .attr("height", yScale(grid) - yScale(grid + 1))
+                    .attr("width", gridWidth)
+                    .attr("height", gridHeight)
                     .on("click", function (event, d) {
                         if (grid <= binInfo.completeHeight) {
                             return;
@@ -237,14 +240,13 @@ export default function VariablePlot({ variable }) {
         chart.selectAll("rect")
             .classed("highlight-grid-cell", false);
 
-        let binCounts = new Array(variable.binEdges.length - 1).fill(0);
+        let binSelectedCounts = new Array(variable.binEdges.length - 1).fill(0);
 
         selectedEntities.forEach(entity => {
             if (entity[variable.name] !== null) {
                 for (let i = 0; i < variable.binEdges.length - 1; i++) {
-                    if (entity[variable.name] >= variable.binEdges[i] &&
-                        entity[variable.name] < variable.binEdges[i + 1]) {
-                        binCounts[i]++;
+                    if (entity[variable.name] >= variable.binEdges[i] && entity[variable.name] < variable.binEdges[i + 1]) {
+                        binSelectedCounts[i]++;
                         break;
                     }
                 }
@@ -252,9 +254,19 @@ export default function VariablePlot({ variable }) {
         });
 
         for (let bin = 0; bin < variable.binEdges.length - 1; bin++) {
-            for (let grid = 1; grid <= binCounts[bin]; grid++) {
-                chart.select(`#${variable.name}-${bin}-${grid}`)
-                    .classed("highlight-grid-cell", true);
+            let count = binSelectedCounts[bin];
+            let grid = 1;
+            while (count > 0) {
+                let cell = chart.select(`#${variable.name}-${bin}-${grid}`);
+                // if in the incomplete mode, than skip the complete filled grid
+                if (activeFilter === FILTER_TYPES.INCOMPLETE && cell.classed("filtered-entity-cell")) {
+                    grid++;
+                    continue;
+                }
+
+                cell.classed("highlight-grid-cell", true);
+                count--;
+                grid++;
             }
         }
     }

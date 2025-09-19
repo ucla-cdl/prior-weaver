@@ -140,22 +140,28 @@ export const VariableProvider = ({ children }) => {
         Object.entries(variables).forEach(([type, vars]) => {
             if (type === "response") {
                 updateVariable(vars[0].name, {
+                    ...DEFAULT_VARIABLE_ATTRIBUTES,
                     name: vars[0].name,
                     type: type,
                     unitLabel: vars[0].unit,
                     sequenceNum: index,
-                    ...DEFAULT_VARIABLE_ATTRIBUTES
+                    min: vars[0].min,
+                    max: vars[0].max,
+                    binCount: vars[0].binCount,
                 });
                 index++;
             }
             else if (type === "predictor") {
                 vars.forEach((v) => {
                     addVariable({
+                        ...DEFAULT_VARIABLE_ATTRIBUTES,
                         name: v.name,
                         type: type,
                         unitLabel: v.unit,
                         sequenceNum: index,
-                        ...DEFAULT_VARIABLE_ATTRIBUTES
+                        min: v.min,
+                        max: v.max,
+                        binCount: v.binCount,
                     });
                     index++;
                 });

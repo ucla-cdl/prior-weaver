@@ -28,6 +28,8 @@
 .potential-connection {
     stroke-dasharray: 5,5;
     stroke: orange;
+    stroke-width: 2;
+    stroke-opacity: 1;
 }
 
 .brush-non-selection {
@@ -36,6 +38,8 @@
 
 .brush-selection {
     stroke: steelblue;
+    stroke-width: 2;
+    stroke-opacity: 1;
 }
 
 .hidden-selection {

@@ -1,22 +1,13 @@
-.fill-grid-cell {
+.param-fill-grid-cell {
     fill: #ccc;
     stroke: black;
 }
 
-.non-fill-grid-cell {
+.param-non-fill-grid-cell {
     fill: transparent;
-    stroke: black;
+    stroke: #ddd;
 }
 
-.non-fill-grid-cell:hover {
+.param-non-fill-grid-cell:hover {
     fill: #dd4d37;
-}
-
-.potential-connection {
-    pointer-events: none;
-}
-
-.partial-connected-entity {
-    stroke: #ff9900;
-    stroke-width: 3px;
 }

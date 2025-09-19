@@ -136,9 +136,15 @@ export default function ModelPanel() {
             <Box className="context-container">
                 <Typography variant='h6'>Parameters</Typography>
                 <Typography variant='body2'>(also known as Coefficients)</Typography>
-                {Object.entries(parametersDict).map(([paraName, parameter]) => (
-                    <Box sx={{ my: 1, display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center' }} key={paraName}>
-                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}><InlineMath math={`\\alpha_{${paraName.replace('_', '\\_')}}`} /></Typography>
+                {Object.entries(parametersDict).map(([paraName, parameter], index) => (
+                    <Box sx={{ my: 1, display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'center', alignItems: 'center' }} key={paraName}>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                            {paraName === "intercept" ?
+                                <InlineMath math={`\\epsilon`} />
+                                :
+                                <InlineMath math={`\\beta_{${index + 1}}`} />
+                            }
+                        </Typography>
                         {space === ELICITATION_SPACE.PARAMETER &&
                             <IconButton onClick={() => {
                                 setEditingParameter({ ...parameter });
